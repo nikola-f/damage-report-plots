@@ -1,0 +1,43 @@
+{
+  "defs": {
+    "report": {
+      "resource": {
+        "name": "report (Damage Rerpot Plots)",
+        "isExportable": true,
+        "kind": "fusiontables#table",
+        "columns": [
+          {
+            "name": "hashedId",
+            "type": "STRING",
+            "kind": "fusiontables#column"
+          },
+          {
+            "name": "mailId",
+            "type": "STRING",
+            "kind": "fusiontables#column"
+          },
+          {
+            "name": "mailDate",
+            "type": "NUMBER",
+            "kind": "fusiontables#column"
+          },
+          {
+            "name": "portalLocation",
+            "type": "LOCATION",
+            "kind": "fusiontables#column"
+          },
+          {
+            "name": "portalName",
+            "type": "STRING",
+            "kind": "fusiontables#column"
+          },
+          {
+            "name": "portalOwned",
+            "type": "NUMBER",
+            "kind": "fusiontables#column"
+          }
+        ]
+      }
+    }
+  }
+}

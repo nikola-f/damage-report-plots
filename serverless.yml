@@ -1,0 +1,306 @@
+service: damage-report-plots
+
+custom:
+  arnPart:
+      Fn::Join:
+        - ':'
+        - - ${self:provider.region}
+          - Ref: 'AWS::AccountId'
+  webpackIncludeModules: true
+  googleClientId:     ${file(.cred.yml):googleClientId}
+  googleClientSecret: ${file(.cred.yml):googleClientSecret}
+  hashSalt:           ${file(.cred.yml):hashSalt}
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  stage: dev
+  region: us-west-2
+  profile: drp
+  memorySize: 128
+  timeout: 30
+  environment:
+    ARN_PART: ${self:custom.arnPart}
+
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:*Item"
+      Resource:
+        - Fn::Join:
+          - ':'
+          - - 'arn:aws:dynamodb'
+            - ${self:custom.arnPart}
+            - '*'
+    - Effect: "Allow"
+      Action:
+        - "sqs:*"
+      Resource:
+        - Fn::Join:
+          - ':'
+          - - 'arn:aws:sqs'
+            - ${self:custom.arnPart}
+            - '*'
+    - Effect: "Allow"
+      Action:
+        - "sns:Publish"
+      Resource:
+        - Fn::Join:
+          - ':'
+          - - 'arn:aws:sns'
+            - ${self:custom.arnPart}
+            - '*'
+
+plugins:
+  - serverless-webpack
+  # - serverless-plugin-typescript
+# you can add statements to the Lambda function's IAM Role here
+#  iamRoleStatements:
+#    - Effect: "Allow"
+#      Action:
+#        - "s3:ListBucket"
+#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
+#    - Effect: "Allow"
+#      Action:
+#        - "s3:PutObject"
+#      Resource:
+#        Fn::Join:
+#          - ""
+#          - - "arn:aws:s3:::"
+#            - "Ref" : "ServerlessDeploymentBucket"
+#            - "/*"
+
+# you can define service wide environment variables here
+#  environment:
+#    variable1: value1
+
+# you can add packaging information here
+# package:
+#   include:
+#     ./node_modules/googleapis/**
+  # exclude:
+  #   ./node_modules/**
+
+#  include:
+#    - include-me.js
+#    - include-me-dir/**
+#  exclude:
+#    - exclude-me.js
+#    - exclude-me-dir/**
+
+functions:
+  # hello:
+  #   handler: handler.hello
+  #   events:
+  #     - http:
+  #         path: hello
+  #         method: get
+
+  generateTicket:
+    handler: handler.generateTicket
+    events:
+      - schedule:
+          rate: rate(10 minutes)
+          enabled: false
+    environment:
+      TICKET_GENERATE_UNIT: 200
+
+  consumeTicket:
+    handler: handler.consumeTicket
+    events:
+      - sns: drp-consume-ticket
+
+  queueThreads:
+    handler: handler.queueThreads
+    memorySize: 192
+    events:
+      - sns: drp-queue-threads
+    environment:
+      THREAD_COUNT: 50  # gmailから読む最大スレッド数
+      GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
+      GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
+
+  queueMails:
+    handler: handler.queueMails
+    memorySize: 192
+    events:
+      - sns: drp-queue-mails
+    environment:
+      THREAD_COUNT: 100 # sqsから読む最大スレッド数
+      THREAD_BATCH_COUNT: 50 # 1度のバッチ実行でgmailから読む最大スレッド数
+      GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
+      GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
+
+  parseMails:
+    handler: handler.parseMails
+    memorySize: 192
+    events:
+      - sns: drp-parse-mails
+    environment:
+      MAIL_COUNT: 100 # sqsから読む最大メール数
+
+  recordReports:
+    handler: handler.recordReports
+    memorySize: 192
+    events:
+      - sns: drp-record-reports
+    environment:
+      REPORTS_COUNT: 100 # sqsから読む最大レコード数
+      REPORTS_BATCH_COUNT: 50 # 1度のバッチ実行でfusiontablesへ書く最大レコード数
+      GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
+      GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
+
+  createTable:
+    handler: handler.createTable
+    events:
+      - sns: drp-create-table
+    environment:
+      GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
+      GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
+
+  checkTable:
+    handler: handler.checkTable
+    events:
+      - sns: drp-check-table
+    environment:
+      GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
+      GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
+
+  createJob:
+    handler: handler.createJob
+    events:
+      - sns: drp-create-job
+
+  putJob:
+    handler: handler.putJob
+    events:
+      - sns: drp-put-job
+
+  createAgentQueue:
+    handler: handler.createAgentQueue
+    events:
+      - sns: drp-create-agent-queue
+
+
+
+#    The following are a few example events you can configure
+#    NOTE: Please make sure to change your handler code to work with those events
+#    Check the event documentation for details
+#    events:
+#      - http:
+#          path: users/create
+#          method: get
+#      - s3: ${env:BUCKET}
+#      - schedule: rate(10 minutes)
+#      - sns: greeter-topic
+#      - stream: arn:aws:dynamodb:region:XXXXXX:table/foo/stream/1970-01-01T00:00:00.000
+#      - alexaSkill
+#      - iot:
+#          sql: "SELECT * FROM 'some_topic'"
+#      - cloudwatchEvent:
+#          event:
+#            source:
+#              - "aws.ec2"
+#            detail-type:
+#              - "EC2 Instance State-change Notification"
+#            detail:
+#              state:
+#                - pending
+#      - cloudwatchLog: '/aws/lambda/hello'
+
+#    Define function environment variables here
+#    environment:
+#      variable2: value2
+
+# you can add CloudFormation resource templates here
+resources:
+  Resources:
+    # TicketQueue:
+    #   Type: AWS::SQS::Queue
+    #   Properties:
+    #     QueueName: TicketQueue
+    #     MaximumMessageSize: 1024
+    JobQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: JobQueue
+
+    JobTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: job
+        AttributeDefinitions:
+          - AttributeName: hashedId
+            AttributeType: S
+          - AttributeName: createTime
+            AttributeType: N
+        KeySchema:
+          - AttributeName: hashedId
+            KeyType: HASH
+          - AttributeName: createTime
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+    SessionTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: session
+        AttributeDefinitions:
+          - AttributeName: sessionId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: sessionId
+            KeyType: HASH
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+    AgentTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: agent
+        AttributeDefinitions:
+          - AttributeName: hashedId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: hashedId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+    TicketTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ticket
+        AttributeDefinitions:
+          - AttributeName: name
+            AttributeType: S
+        KeySchema:
+          - AttributeName: name
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+
+    StaticResource:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: damage-report-plots-static
+        WebsiteConfiguration:
+          IndexDocument: index.html
+
+#    NewResource:
+#      Type: AWS::S3::Bucket
+#      Properties:
+#        BucketName: my-new-bucket
+#  Outputs:
+#     NewOutput:
+#       Description: "Description for the output"
+#       Value: "Some output value"

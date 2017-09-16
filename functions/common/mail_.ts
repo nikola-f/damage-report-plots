@@ -1,0 +1,174 @@
+import {MessageList, Message} from 'aws-sdk/clients/sqs';
+import {Job, JobStatus, QueueThreadsMessage,
+  OneThreadMessage, QueueMailsMessage,
+  OneMailMessage, Portal} from '../types';
+  import ut = require('../common/util');
+
+import gapi = require('googleapis');
+import Batchelor = require('batchelor');
+import base64 = require('base-64');
+import utf8 = require('utf8');
+import cheerio = require('cheerio');
+
+
+const THREAD_BATCH_COUNT = Number(process.env.THREAD_BATCH_COUNT);
+
+
+export function decodeBase64(origin: string): string {
+  // '-' -> '+' と '_' -> '/'
+  const replaced = origin.replace(/-/g, '+').replace(/_/g, '/');
+  const bytes = base64.decode(replaced);
+  const decoded = utf8.decode(bytes);
+  return decoded;
+};
+
+
+export function parseHtml(html: string): Portal[] {
+
+  // console.log(html);
+  const $ = cheerio.load(html);
+
+  const agentName = $('body')
+                      .children('div').first()
+                        .children('table').first()
+                          .children('tbody').first()
+                            .children('tr').eq(1)
+                              .children('td').first()
+                                .children('table').first()
+                                  .children('tbody').first()
+                                    .children('tr').first()
+                                      .children('td').first()
+                                        .children('span').eq(1).text();
+
+  const portals: Portal[] = [];
+  let portal: Portal = {
+    "name": '',
+    "latitude": 0,
+    "longitude": 0,
+    "owned": null
+  };
+  $('a[href]').each((i, element) => {
+    const intelUrl = $(element).attr('href');
+    // console.log(intelUrl);
+    const latlong = url2latlong(intelUrl);
+    portal.latitude = latlong.lat;
+    portal.longitude = latlong.long;
+
+    portal.name = $(element).parent().prev().text();
+    // link destroyは無視
+    if(!portal.name || portal.name === '') {
+      console.log('name not found:' + JSON.stringify(portal));
+      return true;
+    }
+
+    const owner = $(element).parent().parent().parent() // a -> div -> td -> tr
+                    .next('tr').next('tr')
+                      .find('div').eq(1)
+                        .find('span');
+
+    // console.log($(owner).html());
+    if(owner) {
+      portal.owned = agentName === $(owner).text();
+    }else{
+      portal.owned = false;
+    }
+
+    portals.push(portal);
+  });
+
+  return portals;
+};
+
+
+
+
+export async function getMails(tokens: any, threads: MessageList): Promise<OneMailMessage[]> {
+  console.log('try to get mails.');
+
+  const batchelor = new Batchelor({
+    "uri": 'https://www.googleapis.com/batch',
+    "method": 'POST',
+    "auth": {
+      "bearer": tokens.access_token
+    },
+   	"headers": {
+      "Content-Type": 'multipart/mixed'
+    }
+  });
+
+  // batch用配列の作成
+  let threadMessages = [];
+  let mails: OneMailMessage[] = [];
+  let threadGetRes;
+  for(let aThread of threads) {
+    const message: OneThreadMessage = JSON.parse(aThread.Body);
+    threadMessages.push({
+      "method": 'GET',
+      "path": `https://www.googleapis.com/gmail/v1/users/me/threads/${message.id}?fields=messages/id,messages/internalDate,messages/payload/parts/body/data`
+    });
+  }
+
+  // threadの詳細取得(mail付き)をバッチ実行
+  while(threadMessages.length > 0) {
+    // THREAD_BATCH_COUNTずつ
+    const batchSize = threadMessages.length>=THREAD_BATCH_COUNT ?
+      THREAD_BATCH_COUNT : threadMessages.length
+    const batch = threadMessages.slice(0, batchSize);
+    threadMessages.splice(0, batchSize);
+
+    batchelor.add(batch);
+    threadGetRes = await new Promise((resolve, reject) => {
+      batchelor.run((err, res) => {
+        err ? reject(err) : resolve(res);
+      });
+    });
+    batchelor.reset();
+
+    // gapiのレスポンスをOneMailMessage[]に成形
+    const mailMessages = parseBatchResponse(threadGetRes);
+    for(let aMessage of mailMessages) {
+      if(ut.isSet(() => aMessage.payload.parts[1].body.data)) {
+        mails.push({
+          "id": aMessage.id,
+          "internalDate": aMessage.internalDate,
+          "body": aMessage.payload.parts[1].body.data
+        });
+      }else{
+        console.error('mail body not found:' + aMessage.id);
+        continue;
+      }
+    }
+  }
+
+  console.log(`${mails.length} mails received.`);
+  return mails;
+};
+
+
+function parseBatchResponse(response: any): any {
+
+  let messages = [];
+  if(ut.isSet(() => response.parts)) {
+    for(let aPart of response.parts) {
+      Array.prototype.push.apply(messages, aPart.body.messages);
+    }
+  }else if(ut.isSet(() => response.body.messages)) {
+    Array.prototype.push.apply(messages, response.body.messages);
+  }else{
+    console.error('batch response contains no message part.');
+  }
+
+  console.log(`parse batch res:${messages.length} messages found.`);
+  return messages;
+}
+
+
+function url2latlong(url: string): {lat: number, long: number} {
+  let result = {
+    "lat": 0,
+    "long": 0
+  };
+  result.lat = Number(url.split('pll=')[1].split('&')[0].split(',')[0]);
+  result.long = Number(url.split('pll=')[1].split('&')[0].split(',')[1]);
+  return result;
+}
