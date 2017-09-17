@@ -9,7 +9,6 @@ custom:
   webpackIncludeModules: true
   googleClientId:     ${file(.cred.yml):googleClientId}
   googleClientSecret: ${file(.cred.yml):googleClientSecret}
-  hashSalt:           ${file(.cred.yml):hashSalt}
 
 provider:
   name: aws

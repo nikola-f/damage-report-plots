@@ -3,4 +3,3 @@ test
 .built
 .serverless
 .cred.yml
-.tokens.json
