@@ -2,7 +2,7 @@ import {MessageList, Message} from 'aws-sdk/clients/sqs';
 import {Job, JobStatus, QueueThreadsMessage,
   OneThreadMessage, QueueMailsMessage,
   OneMailMessage, Portal} from '../types';
-  import ut = require('../common/util');
+import ut = require('../common/util');
 
 import gapi = require('googleapis');
 import Batchelor = require('batchelor');

@@ -2,7 +2,8 @@ import {PublishInput} from 'aws-sdk/clients/sns';
 import AWS = require('aws-sdk');
 import {Job, CreateJobMessage, QueueThreadsMessage,
   QueueMailsMessage, ParseMailsMessage,
-  RecordReportsMessage, Agent} from '../types';
+  RecordReportsMessage, Agent, CreateTableMessage,
+  CheckTableMessage} from '../types';
 const sns: AWS.SNS = new AWS.SNS()
 ;
 
@@ -16,8 +17,28 @@ const TOPIC_PREFIX = 'arn:aws:sns:' + process.env.ARN_PART + ':',
   QUEUE_MAILS_TOPIC = TOPIC_PREFIX + 'drp-queue-mails',
   PARSE_MAILS_TOPIC = TOPIC_PREFIX + 'drp-parse-mails',
   RECORD_REPORTS_TOPIC = TOPIC_PREFIX + 'drp-record-reports',
-  PUT_AGENT_TOPIC = TOPIC_PREFIX + 'drp-put-agent'
+  PUT_AGENT_TOPIC = TOPIC_PREFIX + 'drp-put-agent',
+  CREATE_TABLE_TOPIC = TOPIC_PREFIX + 'drp-create-table',
+  CHECK_TABLE_TOPIC = TOPIC_PREFIX + 'drp-check-table'
 ;
+
+
+export function createTableAsync(ctm: CreateTableMessage): Promise<void> {
+  return publish({
+    "Message": JSON.stringify(ctm),
+    "Subject": 'CreateTable',
+    "TopicArn": CREATE_TABLE_TOPIC
+  });
+};
+
+
+export function checkTableAsync(ctm: CheckTableMessage): Promise<void> {
+  return publish({
+    "Message": JSON.stringify(ctm),
+    "Subject": 'CheckTable',
+    "TopicArn": CHECK_TABLE_TOPIC
+  });
+};
 
 
 
