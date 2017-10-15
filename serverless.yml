@@ -138,11 +138,11 @@ functions:
     environment:
       MAIL_COUNT: 100 # sqsから読む最大メール数
 
-  recordReports:
-    handler: handler.recordReports
+  insertReports:
+    handler: handler.insertReports
     memorySize: 192
     events:
-      - sns: drp-record-reports
+      - sns: drp-insert-reports
     environment:
       REPORTS_COUNT: 100 # sqsから読む最大レコード数
       REPORTS_BATCH_COUNT: 50 # 1度のバッチ実行でfusiontablesへ書く最大レコード数

@@ -14,6 +14,7 @@
     "batchelor": "^2.0.2",
     "cheerio": "^1.0.0-rc.2",
     "dateformat": "^2.0.0",
+    "escape-quotes": "^1.0.2",
     "google-auth-library": "^0.10.0",
     "googleapis": "^21.3.0",
     "react": "^15.5.4",

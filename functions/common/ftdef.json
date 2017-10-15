@@ -7,7 +7,7 @@
         "kind": "fusiontables#table",
         "columns": [
           {
-            "name": "hashedId",
+            "name": "hash",
             "type": "STRING",
             "kind": "fusiontables#column"
           },

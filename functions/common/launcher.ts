@@ -2,7 +2,7 @@ import {PublishInput} from 'aws-sdk/clients/sns';
 import AWS = require('aws-sdk');
 import {Job, CreateJobMessage, QueueThreadsMessage,
   QueueMailsMessage, ParseMailsMessage,
-  RecordReportsMessage, Agent, CreateTableMessage,
+  InsertReportsMessage, Agent, CreateTableMessage,
   CheckTableMessage} from '../types';
 const sns: AWS.SNS = new AWS.SNS()
 ;
@@ -16,7 +16,7 @@ const TOPIC_PREFIX = 'arn:aws:sns:' + process.env.ARN_PART + ':',
   QUEUE_THREADS_TOPIC = TOPIC_PREFIX + 'drp-queue-threads',
   QUEUE_MAILS_TOPIC = TOPIC_PREFIX + 'drp-queue-mails',
   PARSE_MAILS_TOPIC = TOPIC_PREFIX + 'drp-parse-mails',
-  RECORD_REPORTS_TOPIC = TOPIC_PREFIX + 'drp-record-reports',
+  INSERT_REPORTS_TOPIC = TOPIC_PREFIX + 'drp-insert-reports',
   PUT_AGENT_TOPIC = TOPIC_PREFIX + 'drp-put-agent',
   CREATE_TABLE_TOPIC = TOPIC_PREFIX + 'drp-create-table',
   CHECK_TABLE_TOPIC = TOPIC_PREFIX + 'drp-check-table'
@@ -102,11 +102,11 @@ export function parseMailsAsync(pmm: ParseMailsMessage): Promise<void> {
   });
 };
 
-export function recordReportsAsync(rrm: RecordReportsMessage): Promise<void> {
+export function insertReportsAsync(irm: InsertReportsMessage): Promise<void> {
   return publish({
-    "Message": JSON.stringify(rrm),
+    "Message": JSON.stringify(irm),
     "Subject": 'RecordReports',
-    "TopicArn": RECORD_REPORTS_TOPIC
+    "TopicArn": INSERT_REPORTS_TOPIC
   });
 };
 

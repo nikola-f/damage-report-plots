@@ -31,7 +31,8 @@ export enum JobStatus {
 }
 
 export interface Job {
-  hashedId: string,
+  agent: Agent,
+  // hashedId: string,
   createTime: number,
 
   status: JobStatus,
@@ -58,7 +59,7 @@ export interface Job {
 
 
 export interface CreateJobMessage {
-  hashedId: string,
+  agent: Agent,
   rangeFromTime: number,
   rangeToTime: number,
   tokens: any
@@ -78,7 +79,7 @@ export interface ParseMailsMessage {
   job: Job,
 }
 
-export interface RecordReportsMessage {
+export interface InsertReportsMessage {
   job: Job,
 }
 

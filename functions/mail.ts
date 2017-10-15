@@ -30,7 +30,7 @@ export async function parseMails(event: SNSEvent, context, callback): Promise<vo
 
   for(let rec of event.Records) {
     let pmm: ParseMailsMessage = JSON.parse(rec.Sns.Message);
-    console.log('try to parse mails:' + JSON.stringify(pmm.job.hashedId));
+    console.log('try to parse mails:' + JSON.stringify(pmm.job.agent.hashedId));
 
     // mailキューからmailを取得
     const mailMessages: MessageList =
@@ -84,8 +84,8 @@ export async function parseMails(event: SNSEvent, context, callback): Promise<vo
       console.log(`${mailRemain} mails remaining, recurse.`);
       lc.parseMailsAsync(pmm);
     }else{
-      lc.recordReportsAsync({
-        "job": pmm.job
+      lc.insertReportsAsync({
+        "job": pmm.job,
       })
     }
 
@@ -103,7 +103,7 @@ export async function queueMails(event: SNSEvent, context, callback): Promise<vo
 
   for(let rec of event.Records) {
     let qmm: QueueMailsMessage = JSON.parse(rec.Sns.Message);
-    console.log('try to queue mails:' + JSON.stringify(qmm.job.hashedId));
+    console.log('try to queue mails:' + JSON.stringify(qmm.job.agent.hashedId));
 
     // threadキューからthreadを取得
     const threadMessages: MessageList =
@@ -176,7 +176,7 @@ export async function queueThreads(event: SNSEvent, context, callback): Promise<
   for(let rec of event.Records) {
     let qtm: QueueThreadsMessage = JSON.parse(rec.Sns.Message);
 
-    console.log('try to queue threads:' + JSON.stringify(qtm.job.hashedId));
+    console.log('try to queue threads:' + JSON.stringify(qtm.job.agent.hashedId));
 
     // 同意済みで既にtokensあり
     const auth = au.createGapiOAuth2Client(REDIRECT_URL);
@@ -242,12 +242,12 @@ export async function queueThreads(event: SNSEvent, context, callback): Promise<
     if(res.nextPageToken) {
       console.log('go recurrsive:' + res.nextPageToken);
       lc.queueThreadsAsync({
-        job: qtm.job,
-        nextPageToken: res.nextPageToken
+        "job": qtm.job,
+        "nextPageToken": res.nextPageToken
       });
     }else{
       lc.queueMailsAsync({
-        job: qtm.job
+        "job": qtm.job
       })
     }
 

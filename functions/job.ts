@@ -22,7 +22,7 @@ export async function createJob(event: SNSEvent, context, callback): Promise<voi
     const cjm: CreateJobMessage = JSON.parse(rec.Sns.Message);
 
     const job: Job = {
-      "hashedId": cjm.hashedId,
+      "agent": cjm.agent,
       "createTime": Date.now(),
       "lastAccessTime": Date.now(),
       "rangeFromTime": cjm.rangeFromTime,
@@ -77,7 +77,7 @@ export async function createAgentQueue(event: SNSEvent, context, callback): Prom
 
     try {
       let createQueueParams: CreateQueueRequest = {
-        QueueName: String(job.createTime) + '_thread_' + job.hashedId
+        QueueName: String(job.createTime) + '_thread_' + job.agent.hashedId
       };
       const threadQueueRes = await sqs.createQueue(createQueueParams).promise();
       job.thread = {
@@ -87,7 +87,7 @@ export async function createAgentQueue(event: SNSEvent, context, callback): Prom
       };
 
       createQueueParams = {
-        QueueName: String(job.createTime) + '_mail_' + job.hashedId
+        QueueName: String(job.createTime) + '_mail_' + job.agent.hashedId
       };
       const mailQueueRes = await sqs.createQueue(createQueueParams).promise();
       job.mail = {
@@ -97,7 +97,7 @@ export async function createAgentQueue(event: SNSEvent, context, callback): Prom
       };
 
       createQueueParams = {
-        QueueName: String(job.createTime) + '_report_' + job.hashedId
+        QueueName: String(job.createTime) + '_report_' + job.agent.hashedId
       };
       const reportQueueRes = await sqs.createQueue(createQueueParams).promise();
       job.report = {
