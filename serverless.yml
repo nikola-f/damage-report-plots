@@ -145,7 +145,7 @@ functions:
       - sns: drp-insert-reports
     environment:
       REPORTS_COUNT: 100 # sqsから読む最大レコード数
-      REPORTS_BATCH_COUNT: 50 # 1度のバッチ実行でfusiontablesへ書く最大レコード数
+      REPORTS_BATCH_COUNT: 20 # 1度のバッチ実行でfusiontablesへ書く最大レコード数
       GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
       GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
 
