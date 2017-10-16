@@ -121,6 +121,10 @@ export async function insertReports(event: SNSEvent, context, callback): Promise
     // fusiontablesにinsert
     const auth = au.createGapiOAuth2Client(REDIRECT_URL)
     auth.setCredentials(irm.job.tokens);
+    const ft = gapi.fusiontables({
+      "version": 'v2',
+      "auth": auth
+    });
     while(reportMessages.length > 0) {
       // batch単位に分割
       const batchSize = reportMessages.length>=REPORTS_BATCH_COUNT ?
@@ -144,16 +148,45 @@ export async function insertReports(event: SNSEvent, context, callback): Promise
         sql += anInsert;
       }
 
-      console.log('try to isert:' + sql);
+      // insert実行
+      console.log('try to insert:' + sql);
+      const res: any = await new Promise((resolve, reject) => {
+        ft.query.sql(
+          {"sql": sql},
+          (err, res) => {
+            err ? reject(err) : resolve(res);
+          });
+      })
+      console.log('inserted:' + JSON.stringify(res));
     }
 
 
     // reportキューから削除
+    const deleted =
+      await qu.deleteMessageBatch(irm.job.report.queueUrl, queuedMessages);
+    irm.job.report.queuedCount -= queuedMessages.length;
+    irm.job.report.dequeuedCount += queuedMessages.length;
+    console.log(`${deleted} reports deleted.`);
+
     // reportキューに残があれば再帰
     // 残がなければ finalizeJobへ
+    const reportRemain: number =
+      await qu.getNumberOfMessages(irm.job.report.queueUrl);
+    if(reportRemain > 0) {
+      console.log(`${reportRemain} reports remaining, recurse.`);
+      lc.insertReportsAsync(irm);
+    }else{
+      // lc.({
+      //   "job": irm.job,
+      // })
+    }
 
 
   }
+  callback(null, {
+    "statusCode": 200,
+    "body": {}
+  });
 };
 
 
