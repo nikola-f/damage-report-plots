@@ -160,7 +160,6 @@ export async function insertReports(event: SNSEvent, context, callback): Promise
       console.log('inserted:' + JSON.stringify(res));
     }
 
-
     // reportキューから削除
     const deleted =
       await qu.deleteMessageBatch(irm.job.report.queueUrl, queuedMessages);
@@ -176,11 +175,8 @@ export async function insertReports(event: SNSEvent, context, callback): Promise
       console.log(`${reportRemain} reports remaining, recurse.`);
       lc.insertReportsAsync(irm);
     }else{
-      // lc.({
-      //   "job": irm.job,
-      // })
+      lc.finalizeJobAsync(irm.job);
     }
-
 
   }
   callback(null, {

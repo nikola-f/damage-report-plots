@@ -170,6 +170,14 @@ functions:
     events:
       - sns: drp-create-job
 
+  queueJob:
+    handler: handler.queueJob
+    events:
+      - sns: drp-queue-job
+    environment:
+      JOB_QUEUE_URL:
+        Ref: JobQueue
+
   putJob:
     handler: handler.putJob
     events:

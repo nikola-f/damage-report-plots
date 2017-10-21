@@ -12,7 +12,10 @@ const TOPIC_PREFIX = 'arn:aws:sns:' + process.env.ARN_PART + ':',
   CONSUME_TOPIC = TOPIC_PREFIX + 'drp-consume-ticket',
   CREATE_JOB_TOPIC = TOPIC_PREFIX + 'drp-create-job',
   PUT_JOB_TOPIC = TOPIC_PREFIX + 'drp-put-job',
+  QUEUE_JOB_TOPIC = TOPIC_PREFIX + 'drp-queue-job',
+  FINALIZE_JOB_TOPIC = TOPIC_PREFIX + 'drp-finalize-job',
   CREATE_AGENT_QUEUE_TOPIC = TOPIC_PREFIX + 'drp-create-agent-queue',
+  DELETE_AGENT_QUEUE_TOPIC = TOPIC_PREFIX + 'drp-delete-agent-queue',
   QUEUE_THREADS_TOPIC = TOPIC_PREFIX + 'drp-queue-threads',
   QUEUE_MAILS_TOPIC = TOPIC_PREFIX + 'drp-queue-mails',
   PARSE_MAILS_TOPIC = TOPIC_PREFIX + 'drp-parse-mails',
@@ -60,11 +63,38 @@ export function putJobAsync(job: Job): Promise<void> {
 };
 
 
+export function finalizeJobAsync(job: Job): Promise<void> {
+  return publish({
+    "Message": JSON.stringify(job),
+    "Subject": 'FinalizeJob',
+    "TopicArn": FINALIZE_JOB_TOPIC
+  });
+};
+
+
+export function queueJobAsync(job: Job): Promise<void> {
+  return publish({
+    "Message": JSON.stringify(job),
+    "Subject": 'QueueJob',
+    "TopicArn": QUEUE_JOB_TOPIC
+  });
+};
+
+
 export function createAgentQueueAsync(job: Job): Promise<void> {
   return publish({
     "Message": JSON.stringify(job),
     "Subject": 'CreateAgentQueue',
     "TopicArn": CREATE_AGENT_QUEUE_TOPIC
+  });
+};
+
+
+export function deleteAgentQueueAsync(job: Job): Promise<void> {
+  return publish({
+    "Message": JSON.stringify(job),
+    "Subject": 'DeleteAgentQueue',
+    "TopicArn": DELETE_AGENT_QUEUE_TOPIC
   });
 };
 

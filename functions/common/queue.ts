@@ -3,7 +3,8 @@ import {GetQueueAttributesRequest, GetQueueAttributesResult,
   SendMessageBatchRequestEntryList, SendMessageBatchRequest,
   ReceiveMessageResult, ReceiveMessageRequest,
   MessageList, DeleteMessageBatchRequest,
-  DeleteMessageBatchResult, DeleteMessageBatchRequestEntryList} from 'aws-sdk/clients/sqs';
+  DeleteMessageBatchResult, DeleteMessageBatchRequestEntryList,
+  Message} from 'aws-sdk/clients/sqs';
 const sqs: AWS.SQS = new AWS.SQS();
 
 const THREAD_COUNT: number = Number(process.env.THREAD_COUNT);
@@ -27,6 +28,11 @@ export function getNumberOfMessages(url: string): Promise<number> {
     .catch(reject);
   });
 };
+
+
+export async function sendMessage(url: string, message: Message): Promise<number> {
+  return sendMessageBatch(url, [message]);
+}
 
 
 /**
@@ -67,6 +73,18 @@ export async function sendMessageBatch(url: string,
     return queuedCount;
 };
 
+
+export async function receiveMessage(url: string): Promise<Message> {
+
+  console.log('try to receive message:' + url);
+
+  const messages: MessageList = await receiveMessageBatch(url, 1);
+  if(messages.length > 0) {
+    return messages[0];
+  }else{
+    return null;
+  }
+};
 
 
 export async function receiveMessageBatch(url: string, maxCount: number): Promise<MessageList> {

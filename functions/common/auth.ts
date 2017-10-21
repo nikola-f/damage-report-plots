@@ -33,6 +33,17 @@ export async function refreshAccessTokenManually(auth: any): Promise<any> {
 }
 
 
+export async function revokeTokens(auth: any): Promise<any> {
+  console.log('try to revoke tokens.');
+
+  return new Promise((resolve, reject) => {
+    auth.revokeCredentials((err, res) => {
+      err ? reject(err) : resolve(res);
+    });
+  });
+}
+
+
 
 
 export function generateRedirectURI2Refer(oauth2Client: any): string {
