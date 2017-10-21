@@ -4,15 +4,14 @@ import {GetQueueAttributesRequest, QueueAttributeName,
   ReceiveMessageRequest, ReceiveMessageResult,
   DeleteMessageBatchRequest, DeleteMessageBatchResult,
   CreateQueueRequest, DeleteQueueRequest} from 'aws-sdk/clients/sqs';
-// import {PublishInput} from 'aws-sdk/clients/sns';
 import {Job, JobStatus, CreateJobMessage} from './types';
 
 import AWS = require('aws-sdk');
 import lc = require('./common/launcher');
 import qu = require('./common/queue');
 import au = require('./common/auth');
+import ti = require('./common/ticket_');
 const sqs: AWS.SQS = new AWS.SQS(),
-      // sns: AWS.SNS = new AWS.SNS(),
       dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient(),
       REDIRECT_URL: string = 'https://plots.run/redirect',
       JOB_QUEUE_URL = process.env.JOB_QUEUE_URL
@@ -47,6 +46,24 @@ export async function createJob(event: SNSEvent, context, callback): Promise<voi
 export async function startJob(event, context, callback): Promise<void> {
   console.log(JSON.stringify(event));
 
+  // ticket残高チェック
+  if(await ti.hasAvailable()) {
+
+    // queueからjob取得
+    const message = await qu.receiveMessage(JOB_QUEUE_URL);
+    if(message) {
+      // queueThreads起動
+      const job: Job = JSON.parse(message.Body);
+      lc.queueThreadsAsync({
+        "job": job
+      });
+
+    }else{
+      console.log('JobQueue is empty.');
+    }
+  }else{
+    console.log('No tickets available.');
+  }
 
   callback(null, {
     "statusCode": 200,
@@ -64,9 +81,14 @@ export async function finalizeJob(event: SNSEvent, context, callback): Promise<v
     // agentQueue削除
     lc.deleteAgentQueueAsync(job);
 
+    // ticket消費
+    const tickets = ti.computeAmount(job);
+    lc.consumeTicketsAsync(tickets);
+
     // 保存
     job.lastAccessTime = Date.now();
     job.status = JobStatus.Done;
+    job.tokens = null;
     lc.putJobAsync(job);
 
     // tokenの無効化はauthorizer
@@ -92,6 +114,7 @@ export async function queueJob(event: SNSEvent, context, callback): Promise<void
     });
 
     lc.putJobAsync(job);
+    //jobのpopからのqueueThreadsの起動は別関数(startJob)とする
   }
 
   callback(null, {
@@ -214,7 +237,6 @@ export async function createAgentQueue(event: SNSEvent, context, callback): Prom
       console.log('created:' + JSON.stringify(job));
 
       lc.queueJobAsync(job);
-      //jobのpopからのqueueThreadsの起動は別関数(startJob)とする
 
     }catch(err){
       console.error(err);

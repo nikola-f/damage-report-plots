@@ -183,6 +183,13 @@ functions:
     events:
       - sns: drp-put-job
 
+  startJob:
+    handler: handler.startJob
+    events:
+      - schedule:
+          rate: rate(2 minutes)
+          enabled: false
+
   createAgentQueue:
     handler: handler.createAgentQueue
     events:
