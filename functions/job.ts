@@ -40,6 +40,32 @@ export async function createJob(event: SNSEvent, context, callback): Promise<voi
 };
 
 
+export async function startJob(event: SNSEvent, context, callback): Promise<void> {
+  console.log(JSON.stringify(event));
+
+  for(let rec of event.Records) {
+  }
+
+  callback(null, {
+    "statusCode": 200,
+    "body": {}
+  });
+};
+
+
+export async function finalizeJob(event: SNSEvent, context, callback): Promise<void> {
+  console.log(JSON.stringify(event));
+
+  for(let rec of event.Records) {
+  }
+
+  callback(null, {
+    "statusCode": 200,
+    "body": {}
+  });
+};
+
+
 export async function putJob(event: SNSEvent, context, callback): Promise<void> {
   console.log(JSON.stringify(event));
 
@@ -113,7 +139,7 @@ export async function createAgentQueue(event: SNSEvent, context, callback): Prom
 
       //TODO
       //jobキューイング
-      //jobのpopからのqueueThreadsの起動は別関数とする
+      //jobのpopからのqueueThreadsの起動は別関数(startJob)とする
 
     }catch(err){
       console.error(err);
