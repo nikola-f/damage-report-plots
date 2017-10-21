@@ -120,7 +120,8 @@ export async function queueMails(event: SNSEvent, context, callback): Promise<vo
 
     // gapiでthreadの詳細(mail付き)取得
     const mails: OneThreadMessage[] =
-      await ml.getMails(qmm.job.tokens, threadMessages);
+      await ml.getMails(qmm.job.tokens, threadMessages,
+        qmm.job.rangeFromTime, qmm.job.rangeToTime);
     if(mails && mails.length > 0) {
       console.log(`${mails.length} mails found.`);
     }else{

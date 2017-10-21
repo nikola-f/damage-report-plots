@@ -82,7 +82,8 @@ export function parseHtml(html: string): Portal[] {
 
 
 
-export async function getMails(tokens: any, threads: MessageList): Promise<OneMailMessage[]> {
+export async function getMails(tokens: any, threads: MessageList,
+  rangeFromTime: number, rangeToTime: number): Promise<OneMailMessage[]> {
   console.log('try to get mails.');
 
   const batchelor = new Batchelor({
@@ -127,6 +128,11 @@ export async function getMails(tokens: any, threads: MessageList): Promise<OneMa
     // gapiのレスポンスをOneMailMessage[]に成形
     const mailMessages = parseBatchResponse(threadGetRes);
     for(let aMessage of mailMessages) {
+      // 日時チェック
+      if(aMessage.internalDate < rangeFromTime ||
+          aMessage.internalDate >= rangeToTime) {
+        continue;
+      }
       if(ut.isSet(() => aMessage.payload.parts[1].body.data)) {
         mails.push({
           "id": aMessage.id,
