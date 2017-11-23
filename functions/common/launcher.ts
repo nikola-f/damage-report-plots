@@ -4,7 +4,8 @@ import {Job, CreateJobMessage, QueueThreadsMessage,
   QueueMailsMessage, ParseMailsMessage,
   InsertReportsMessage, Agent, CreateTableMessage,
   CheckTableMessage} from '../types';
-const sns: AWS.SNS = new AWS.SNS()
+const sns: AWS.SNS = new AWS.SNS(),
+      SNS_NOP: boolean = Boolean(process.env.SNS_NOP) || false;
 ;
 
 
@@ -152,6 +153,10 @@ export function consumeTicketsAsync(number: number): Promise<void> {
 
 
 async function publish(input: PublishInput): Promise<void> {
+  if(SNS_NOP) {
+    console.log('do publish nothing:' + JSON.stringify(input));
+    return Promise.resolve();
+  }
   console.log('do publish:' + JSON.stringify(input));
   sns.publish(input).promise()
   .then(() => {

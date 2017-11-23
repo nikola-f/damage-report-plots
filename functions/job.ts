@@ -33,6 +33,8 @@ export async function createJob(event: SNSEvent, context, callback): Promise<voi
       "tokens": cjm.tokens,
       "status": JobStatus.Created,
     };
+
+    console.log(`try to create job: from ${cjm.rangeFromTime} to ${cjm.rangeToTime}`);
     lc.createAgentQueueAsync(job);
   }
 

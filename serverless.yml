@@ -16,10 +16,11 @@ provider:
   stage: dev
   region: us-west-2
   profile: drp
-  memorySize: 128
+  memorySize: 256
   timeout: 30
   environment:
     ARN_PART: ${self:custom.arnPart}
+    SNS_NOP: 'true'
 
   iamRoleStatements:
     - Effect: "Allow"

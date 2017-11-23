@@ -19,6 +19,6 @@ module.exports = {
   },
   externals: {
     "aws-sdk": 'commonjs aws-sdk',
-    "googleapis": 'googleapis'
+    // "googleapis": 'googleapis'
   }
 };
