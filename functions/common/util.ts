@@ -14,3 +14,11 @@ export function isSet(fn): boolean {
     return value !== undefined;
   }
 };
+
+
+/**
+ * epoch time(ms)をISO形式日付文字列へ
+ */
+export function toString(ms: number): string {
+  return (new Date(ms)).toISOString();
+};

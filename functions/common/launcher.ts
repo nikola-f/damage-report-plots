@@ -154,7 +154,7 @@ export function consumeTicketsAsync(number: number): Promise<void> {
 
 async function publish(input: PublishInput): Promise<void> {
   if(SNS_NOP) {
-    console.log('do publish nothing:' + JSON.stringify(input));
+    console.log('do publish provisionally:' + JSON.stringify(input));
     return Promise.resolve();
   }
   console.log('do publish:' + JSON.stringify(input));

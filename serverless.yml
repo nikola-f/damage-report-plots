@@ -190,11 +190,19 @@ functions:
       - schedule:
           rate: rate(2 minutes)
           enabled: false
+    environment:
+      JOB_QUEUE_URL:
+        Ref: JobQueue
 
   createAgentQueue:
     handler: handler.createAgentQueue
     events:
       - sns: drp-create-agent-queue
+
+  deleteAgentQueue:
+    handler: handler.deleteAgentQueue
+    events:
+      - sns: drp-delete-agent-queue
 
 
 

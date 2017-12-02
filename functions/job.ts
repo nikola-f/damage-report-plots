@@ -11,6 +11,7 @@ import lc = require('./common/launcher');
 import qu = require('./common/queue');
 import au = require('./common/auth');
 import ti = require('./common/ticket_');
+import ut = require('./common/util');
 const sqs: AWS.SQS = new AWS.SQS(),
       dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient(),
       REDIRECT_URL: string = 'https://plots.run/redirect',
@@ -19,7 +20,7 @@ const sqs: AWS.SQS = new AWS.SQS(),
 
 
 export async function createJob(event: SNSEvent, context, callback): Promise<void> {
-  console.log(JSON.stringify(event));
+  // console.log(JSON.stringify(event));
 
   for(let rec of event.Records) {
     const cjm: CreateJobMessage = JSON.parse(rec.Sns.Message);
@@ -34,7 +35,7 @@ export async function createJob(event: SNSEvent, context, callback): Promise<voi
       "status": JobStatus.Created,
     };
 
-    console.log(`try to create job: from ${cjm.rangeFromTime} to ${cjm.rangeToTime}`);
+    console.log(`try to create job: from ${ut.toString(job.rangeFromTime)} to ${ut.toString(job.rangeToTime)}`);
     lc.createAgentQueueAsync(job);
   }
 
@@ -172,6 +173,7 @@ export async function deleteAgentQueue(event: SNSEvent, context, callback): Prom
       sqs.deleteQueue({
         QueueUrl: job.report.queueUrl
       }).promise();
+      console.log('queues deleted:' + JSON.stringify(job));
     }catch(err){
       console.error(err);
       callback(err, null);
@@ -236,7 +238,7 @@ export async function createAgentQueue(event: SNSEvent, context, callback): Prom
       };
 
       job.lastAccessTime = Date.now();
-      console.log('created:' + JSON.stringify(job));
+      console.log('queues created:' + JSON.stringify(job));
 
       lc.queueJobAsync(job);
 
