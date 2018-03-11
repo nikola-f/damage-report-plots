@@ -1,7 +1,7 @@
 service: damage-report-plots
 
 custom:
-  arnPart:
+  arnRegionAccount:
       Fn::Join:
         - ':'
         - - ${self:provider.region}
@@ -18,8 +18,9 @@ provider:
   profile: drp
   memorySize: 256
   timeout: 30
+  tracing: true
   environment:
-    ARN_PART: ${self:custom.arnPart}
+    ARN_REGION_ACCOUNT: ${self:custom.arnRegionAccount}
     SNS_NOP: 'true'
 
   iamRoleStatements:
@@ -30,7 +31,7 @@ provider:
         - Fn::Join:
           - ':'
           - - 'arn:aws:dynamodb'
-            - ${self:custom.arnPart}
+            - ${self:custom.arnRegionAccount}
             - '*'
     - Effect: "Allow"
       Action:
@@ -39,7 +40,7 @@ provider:
         - Fn::Join:
           - ':'
           - - 'arn:aws:sqs'
-            - ${self:custom.arnPart}
+            - ${self:custom.arnRegionAccount}
             - '*'
     - Effect: "Allow"
       Action:
@@ -48,11 +49,18 @@ provider:
         - Fn::Join:
           - ':'
           - - 'arn:aws:sns'
-            - ${self:custom.arnPart}
+            - ${self:custom.arnRegionAccount}
             - '*'
+    - Effect: "Allow"
+      Action:
+        - "xray:PutTraceSegments"
+        - "xray:PutTelemetryRecords"
+      Resource:
+        - "*"
 
 plugins:
   - serverless-webpack
+  - serverless-plugin-tracing
   # - serverless-plugin-typescript
 # you can add statements to the Lambda function's IAM Role here
 #  iamRoleStatements:
@@ -169,7 +177,9 @@ functions:
   createJob:
     handler: handler.createJob
     events:
-      - sns: drp-create-job
+      - http: post job
+    # events:
+    #   - sns: drp-create-job
 
   queueJob:
     handler: handler.queueJob
@@ -193,6 +203,11 @@ functions:
     environment:
       JOB_QUEUE_URL:
         Ref: JobQueue
+
+  listJob:
+    handler: handler.listJob
+    events:
+      - http: get jobs
 
   createAgentQueue:
     handler: handler.createAgentQueue

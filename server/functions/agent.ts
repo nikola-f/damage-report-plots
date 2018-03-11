@@ -1,13 +1,18 @@
 import {SNSEvent, Handler, ProxyResult} from 'aws-lambda';
 import {Agent, JobStatus, CreateJobMessage} from './types';
 
-import AWS = require('aws-sdk');
 import lc = require('./common/launcher');
+import awsXRay = require('aws-xray-sdk');
+import awsPlain = require('aws-sdk');
+const AWS = awsXRay.captureAWS(awsPlain);
 const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient()
 ;
 
 
-
+/**
+ * agentの保存
+ * @next -
+ */
 export async function putAgent(event: SNSEvent, context, callback): Promise<void> {
   console.log(JSON.stringify(event));
 

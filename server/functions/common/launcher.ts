@@ -9,9 +9,9 @@ const sns: AWS.SNS = new AWS.SNS(),
 ;
 
 
-const TOPIC_PREFIX = 'arn:aws:sns:' + process.env.ARN_PART + ':',
+const TOPIC_PREFIX = 'arn:aws:sns:' + process.env.ARN_REGION_ACCOUNT + ':',
   CONSUME_TOPIC = TOPIC_PREFIX + 'drp-consume-ticket',
-  CREATE_JOB_TOPIC = TOPIC_PREFIX + 'drp-create-job',
+  // CREATE_JOB_TOPIC = TOPIC_PREFIX + 'drp-create-job',
   PUT_JOB_TOPIC = TOPIC_PREFIX + 'drp-put-job',
   QUEUE_JOB_TOPIC = TOPIC_PREFIX + 'drp-queue-job',
   FINALIZE_JOB_TOPIC = TOPIC_PREFIX + 'drp-finalize-job',
@@ -46,13 +46,13 @@ export function checkTableAsync(ctm: CheckTableMessage): Promise<void> {
 
 
 
-export function createJobAsync(cjm: CreateJobMessage): Promise<void> {
-  return publish({
-    "Message": JSON.stringify(cjm),
-    "Subject": 'CreateJob',
-    "TopicArn": CREATE_JOB_TOPIC
-  });
-};
+// export function createJobAsync(cjm: CreateJobMessage): Promise<void> {
+//   return publish({
+//     "Message": JSON.stringify(cjm),
+//     "Subject": 'CreateJob',
+//     "TopicArn": CREATE_JOB_TOPIC
+//   });
+// };
 
 
 export function putJobAsync(job: Job): Promise<void> {

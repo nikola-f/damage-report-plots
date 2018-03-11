@@ -10,7 +10,6 @@ import {Job, JobStatus, QueueThreadsMessage,
   ParseMailsMessage, OneMailMessage, Portal,
   OneReportMessage} from './types';
 
-import AWS = require('aws-sdk');
 import gapi = require('googleapis');
 import dateformat = require('dateformat');
 import lc = require('./common/launcher');
@@ -24,7 +23,10 @@ const REDIRECT_URL: string = 'https://plots.run/redirect',
       MAIL_COUNT: number = Number(process.env.MAIL_COUNT);
 
 
-
+/**
+ * mailの解析およびreportのキューイング
+ * @next putJob, parseMails, insertReports
+ */
 export async function parseMails(event: SNSEvent, context, callback): Promise<void> {
   console.log(JSON.stringify(event));
 
@@ -77,7 +79,7 @@ export async function parseMails(event: SNSEvent, context, callback): Promise<vo
     lc.putJobAsync(pmm.job);
 
     // mailキューに残があれば再帰
-    // なければrecordReportsを起動
+    // なければinsertReportsを起動
     const mailRemain: number =
       await qu.getNumberOfMessages(pmm.job.mail.queueUrl);
     if(mailRemain > 0) {
@@ -97,7 +99,10 @@ export async function parseMails(event: SNSEvent, context, callback): Promise<vo
 };
 
 
-
+/**
+ * mailの取得およびキューイング
+ * @next putJob, queueMails, parseMails
+ */
 export async function queueMails(event: SNSEvent, context, callback): Promise<void> {
   console.log(JSON.stringify(event));
 
@@ -171,6 +176,10 @@ export async function queueMails(event: SNSEvent, context, callback): Promise<vo
 };
 
 
+/**
+ * threadの取得およびキューイング
+ * @next putJob, queueThreads, queueMails
+ */
 export async function queueThreads(event: SNSEvent, context, callback): Promise<void> {
   console.log(JSON.stringify(event));
 

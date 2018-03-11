@@ -4,7 +4,6 @@ import {CreateTableMessage, CheckTableMessage,
   InsertReportsMessage, Agent, OneReportMessage} from './types';
 // import * as ftdef from './common/ftdef.json';
 
-import AWS = require('aws-sdk');
 import gapi = require('googleapis');
 import crypto = require('crypto');
 import escape = require('escape-quotes');
@@ -12,14 +11,16 @@ import lc = require('./common/launcher');
 import au = require('./common/auth');
 import qu = require('./common/queue');
 import ut = require('./common/util');
-// const sqs: AWS.SQS = new AWS.SQS(),
-//       dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
 const REDIRECT_URL: string = 'https://plots.run/redirect',
       FTDEFS = require('./common/ftdef.json'),
       REPORTS_COUNT: number = Number(process.env.REPORTS_COUNT),
       REPORTS_BATCH_COUNT: number = Number(process.env.REPORTS_BATCH_COUNT);
 
 
+/**
+ * fusionTableの作成
+ * @next putAgent
+ */
 export async function createTable(event: SNSEvent, context, callback): Promise<void> {
   console.log(JSON.stringify(event));
 
@@ -48,8 +49,8 @@ export async function createTable(event: SNSEvent, context, callback): Promise<v
 
 
 /**
- * fusiontablesの存在チェック
- * 不存在ならcreateTable
+ * fusiontableの存在チェック
+ * @next createTable
  */
 export async function checkTable(event: SNSEvent, context, callback): Promise<void> {
   console.log(JSON.stringify(event));
@@ -97,7 +98,10 @@ export async function checkTable(event: SNSEvent, context, callback): Promise<vo
 };
 
 
-
+/**
+ * reportデータの保存
+ * @next insertReports, finalizeJob
+ */
 export async function insertReports(event: SNSEvent, context, callback): Promise<void> {
   console.log(JSON.stringify(event));
 

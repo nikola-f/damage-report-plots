@@ -1,17 +1,23 @@
-import {SNSEvent, Handler, ProxyResult} from 'aws-lambda';
+import {SNSEvent, Handler, ProxyResult,
+  APIGatewayEvent} from 'aws-lambda';
 import {GetQueueAttributesRequest, QueueAttributeName,
   GetQueueAttributesResult, SendMessageBatchRequest,
   ReceiveMessageRequest, ReceiveMessageResult,
   DeleteMessageBatchRequest, DeleteMessageBatchResult,
   CreateQueueRequest, DeleteQueueRequest} from 'aws-sdk/clients/sqs';
-import {Job, JobStatus, CreateJobMessage} from './types';
+import {QueryOutput} from 'aws-sdk/clients/dynamodb';
+import {Job, JobStatus, CreateJobMessage, Session, Agent} from './types';
 
-import AWS = require('aws-sdk');
 import lc = require('./common/launcher');
 import qu = require('./common/queue');
 import au = require('./common/auth');
 import ti = require('./common/ticket_');
 import ut = require('./common/util');
+import jo = require('./common/job_');
+import se = require('./common/session_');
+import awsXRay = require('aws-xray-sdk');
+import awsPlain = require('aws-sdk');
+const AWS = awsXRay.captureAWS(awsPlain);
 const sqs: AWS.SQS = new AWS.SQS(),
       dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient(),
       REDIRECT_URL: string = 'https://plots.run/redirect',
@@ -19,33 +25,66 @@ const sqs: AWS.SQS = new AWS.SQS(),
 ;
 
 
-export async function createJob(event: SNSEvent, context, callback): Promise<void> {
+/**
+ * jobの一覧を返す
+ * @next -
+ */
+export async function listJob(event: APIGatewayEvent, context, callback): Promise<void> {
+};
+
+/**
+ * jobの作成
+ * @next createAgentQueue
+ */
+export async function createJob(event: APIGatewayEvent, context, callback): Promise<void> {
   // console.log(JSON.stringify(event));
 
-  for(let rec of event.Records) {
-    const cjm: CreateJobMessage = JSON.parse(rec.Sns.Message);
+  try {
+    const cjm: CreateJobMessage = JSON.parse(event.body);
+
+    // session読み込み, 検証
+    const session: Session = await se.getSession(event.headers.Cookie, cjm.stateToken);
+    if(!session || !await jo.checkCreateJobMessage(cjm, session.hashedId)) {
+      throw new Error('check ng');
+    }
+    
+    // agent読み込み
+    const agent: Agent = undefined;
 
     const job: Job = {
-      "agent": cjm.agent,
+      "agent": agent,
       "createTime": Date.now(),
       "lastAccessTime": Date.now(),
       "rangeFromTime": cjm.rangeFromTime,
       "rangeToTime": cjm.rangeToTime,
-      "tokens": cjm.tokens,
+      "tokens": session.tokens,
       "status": JobStatus.Created,
     };
-
+  
     console.log(`try to create job: from ${ut.toString(job.rangeFromTime)} to ${ut.toString(job.rangeToTime)}`);
     lc.createAgentQueueAsync(job);
+    
+  
+    callback(null, {
+      "statusCode": 200,
+      "body": {}
+    });
+
+  }catch(err){
+    console.log(JSON.stringify(err));
+    callback(null, {
+      "statusCode": 400,
+      "body": 'System running hot!'
+    });
   }
 
-  callback(null, {
-    "statusCode": 200,
-    "body": {}
-  });
 };
 
 
+/**
+ * jobの開始
+ * @next queueThreads
+ */
 export async function startJob(event, context, callback): Promise<void> {
   console.log(JSON.stringify(event));
 
@@ -75,6 +114,10 @@ export async function startJob(event, context, callback): Promise<void> {
 };
 
 
+/**
+ * jobの終了
+ * @next deleteAgentQueue, consumeTicket, putJob
+ */
 export async function finalizeJob(event: SNSEvent, context, callback): Promise<void> {
   console.log(JSON.stringify(event));
 
@@ -104,6 +147,10 @@ export async function finalizeJob(event: SNSEvent, context, callback): Promise<v
 };
 
 
+/**
+ * jobのキューイング
+ * @next putJob
+ */
 export async function queueJob(event: SNSEvent, context, callback): Promise<void> {
   console.log(JSON.stringify(event));
 
@@ -117,7 +164,7 @@ export async function queueJob(event: SNSEvent, context, callback): Promise<void
     });
 
     lc.putJobAsync(job);
-    //jobのpopからのqueueThreadsの起動は別関数(startJob)とする
+    //jobのpopからのqueueThreadsの起動はstartJobで
   }
 
   callback(null, {
@@ -127,6 +174,10 @@ export async function queueJob(event: SNSEvent, context, callback): Promise<void
 };
 
 
+/**
+ * jobのdb保存
+ * @next -
+ */
 export async function putJob(event: SNSEvent, context, callback): Promise<void> {
   console.log(JSON.stringify(event));
 
@@ -156,7 +207,10 @@ export async function putJob(event: SNSEvent, context, callback): Promise<void> 
 };
 
 
-
+/**
+ * agent queueの削除
+ * @next -
+ */
 export async function deleteAgentQueue(event: SNSEvent, context, callback): Promise<void> {
   console.log('event:' + JSON.stringify(event));
 
@@ -188,6 +242,10 @@ export async function deleteAgentQueue(event: SNSEvent, context, callback): Prom
 };
 
 
+/**
+ * agent queueの作成
+ * @next queueJob
+ */
 export async function createAgentQueue(event: SNSEvent, context, callback): Promise<void> {
   console.log('event:' + JSON.stringify(event));
 

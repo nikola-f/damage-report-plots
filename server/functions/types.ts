@@ -6,6 +6,7 @@ export interface Session {
   lastAccessTime: number,
   ttl: number,
   hashedId: string,
+  tokens: any,
   stateToken: string
 }
 
@@ -59,10 +60,11 @@ export interface Job {
 
 
 export interface CreateJobMessage {
-  agent: Agent,
+  // agent: Agent,
   rangeFromTime: number,
   rangeToTime: number,
-  tokens: any
+  stateToken: string
+  // tokens: any
 }
 
 

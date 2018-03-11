@@ -1,3 +1,4 @@
+import cookieLib = require('cookie');
 
 /**
  * 階層オブジェクトの存在チェック
@@ -22,3 +23,4 @@ export function isSet(fn): boolean {
 export function toString(ms: number): string {
   return (new Date(ms)).toISOString();
 };
+
