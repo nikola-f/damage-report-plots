@@ -1,18 +1,17 @@
 import {SNSEvent, Handler, ProxyResult} from 'aws-lambda';
 import {MessageList, Message} from 'aws-sdk/clients/sqs';
 import {CreateTableMessage, CheckTableMessage,
-  InsertReportsMessage, Agent, OneReportMessage} from './types';
-// import * as ftdef from './common/ftdef.json';
+  InsertReportsMessage, Agent, OneReportMessage} from '../types';
 
 import gapi = require('googleapis');
 import crypto = require('crypto');
 import escape = require('escape-quotes');
-import lc = require('./common/launcher');
-import au = require('./common/auth');
-import qu = require('./common/queue');
-import ut = require('./common/util');
+import lc = require('../launcher');
+import ut = require('../util');
+import au = require('./sub/_auth');
+import qu = require('./sub/_queue');
 const REDIRECT_URL: string = 'https://plots.run/redirect',
-      FTDEFS = require('./common/ftdef.json'),
+      FTDEFS = require('./sub/ftdef.json'),
       REPORTS_COUNT: number = Number(process.env.REPORTS_COUNT),
       REPORTS_BATCH_COUNT: number = Number(process.env.REPORTS_BATCH_COUNT);
 

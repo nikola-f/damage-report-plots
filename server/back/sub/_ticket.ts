@@ -1,7 +1,10 @@
 import {GetItemOutput} from 'aws-sdk/clients/dynamodb';
-import {Job} from '../types';
-import lc = require('../common/launcher');
-import AWS = require('aws-sdk');
+import {Job} from '../../types';
+import lc = require('../../launcher');
+
+import awsXRay = require('aws-xray-sdk');
+import awsPlain = require('aws-sdk');
+const AWS = awsXRay.captureAWS(awsPlain);
 const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient()
 
 

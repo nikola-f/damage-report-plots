@@ -1,10 +1,13 @@
-import AWS = require('aws-sdk');
 import {GetQueueAttributesRequest, GetQueueAttributesResult,
   SendMessageBatchRequestEntryList, SendMessageBatchRequest,
   ReceiveMessageResult, ReceiveMessageRequest,
   MessageList, DeleteMessageBatchRequest,
   DeleteMessageBatchResult, DeleteMessageBatchRequestEntryList,
   Message} from 'aws-sdk/clients/sqs';
+
+import awsXRay = require('aws-xray-sdk');
+import awsPlain = require('aws-sdk');
+const AWS = awsXRay.captureAWS(awsPlain);
 const sqs: AWS.SQS = new AWS.SQS();
 
 const THREAD_COUNT: number = Number(process.env.THREAD_COUNT);

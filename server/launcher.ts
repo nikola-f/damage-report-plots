@@ -3,7 +3,7 @@ import AWS = require('aws-sdk');
 import {Job, CreateJobMessage, QueueThreadsMessage,
   QueueMailsMessage, ParseMailsMessage,
   InsertReportsMessage, Agent, CreateTableMessage,
-  CheckTableMessage} from '../types';
+  CheckTableMessage} from './types';
 const sns: AWS.SNS = new AWS.SNS(),
       SNS_NOP: boolean = Boolean(process.env.SNS_NOP) || false;
 ;
@@ -11,7 +11,6 @@ const sns: AWS.SNS = new AWS.SNS(),
 
 const TOPIC_PREFIX = 'arn:aws:sns:' + process.env.ARN_REGION_ACCOUNT + ':',
   CONSUME_TOPIC = TOPIC_PREFIX + 'drp-consume-ticket',
-  // CREATE_JOB_TOPIC = TOPIC_PREFIX + 'drp-create-job',
   PUT_JOB_TOPIC = TOPIC_PREFIX + 'drp-put-job',
   QUEUE_JOB_TOPIC = TOPIC_PREFIX + 'drp-queue-job',
   FINALIZE_JOB_TOPIC = TOPIC_PREFIX + 'drp-finalize-job',
@@ -44,15 +43,6 @@ export function checkTableAsync(ctm: CheckTableMessage): Promise<void> {
   });
 };
 
-
-
-// export function createJobAsync(cjm: CreateJobMessage): Promise<void> {
-//   return publish({
-//     "Message": JSON.stringify(cjm),
-//     "Subject": 'CreateJob',
-//     "TopicArn": CREATE_JOB_TOPIC
-//   });
-// };
 
 
 export function putJobAsync(job: Job): Promise<void> {

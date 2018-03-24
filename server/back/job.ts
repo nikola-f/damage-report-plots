@@ -6,15 +6,16 @@ import {GetQueueAttributesRequest, QueueAttributeName,
   DeleteMessageBatchRequest, DeleteMessageBatchResult,
   CreateQueueRequest, DeleteQueueRequest} from 'aws-sdk/clients/sqs';
 import {QueryOutput} from 'aws-sdk/clients/dynamodb';
-import {Job, JobStatus, CreateJobMessage, Session, Agent} from './types';
+import {Job, JobStatus, CreateJobMessage, Session, Agent} from '../types';
 
-import lc = require('./common/launcher');
-import qu = require('./common/queue');
-import au = require('./common/auth');
-import ti = require('./common/ticket_');
-import ut = require('./common/util');
-import jo = require('./common/job_');
-import se = require('./common/session_');
+import lc = require('../launcher');
+import ut = require('../util');
+import qu = require('./sub/_queue');
+import au = require('./sub/_auth');
+import ti = require('./sub/_ticket');
+import jo = require('./sub/_job');
+import se = require('./sub/_session');
+import ag = require('./sub/_agent');
 import awsXRay = require('aws-xray-sdk');
 import awsPlain = require('aws-sdk');
 const AWS = awsXRay.captureAWS(awsPlain);
@@ -49,7 +50,7 @@ export async function createJob(event: APIGatewayEvent, context, callback): Prom
     }
     
     // agent読み込み
-    const agent: Agent = undefined;
+    const agent: Agent = await ag.getAgent(session.hashedId);
 
     const job: Job = {
       "agent": agent,
@@ -63,8 +64,7 @@ export async function createJob(event: APIGatewayEvent, context, callback): Prom
   
     console.log(`try to create job: from ${ut.toString(job.rangeFromTime)} to ${ut.toString(job.rangeToTime)}`);
     lc.createAgentQueueAsync(job);
-    
-  
+
     callback(null, {
       "statusCode": 200,
       "body": {}

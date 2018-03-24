@@ -8,14 +8,14 @@ import {GetQueueAttributesRequest, QueueAttributeName,
 import {Job, JobStatus, QueueThreadsMessage,
   OneThreadMessage, QueueMailsMessage,
   ParseMailsMessage, OneMailMessage, Portal,
-  OneReportMessage} from './types';
+  OneReportMessage} from '../types';
 
 import gapi = require('googleapis');
 import dateformat = require('dateformat');
-import lc = require('./common/launcher');
-import au = require('./common/auth');
-import qu = require('./common/queue');
-import ml = require('./common/mail_');
+import lc = require('../launcher');
+import au = require('./sub/_auth');
+import qu = require('./sub/_queue');
+import ml = require('./sub/_mail');
 const gmail = gapi.gmail('v1');
 
 const REDIRECT_URL: string = 'https://plots.run/redirect',

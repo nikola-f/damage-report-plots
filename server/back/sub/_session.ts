@@ -1,5 +1,5 @@
 import cookieLib = require('cookie');
-import {Session} from '../types';
+import {Session} from '../../types';
 import {GetItemOutput} from 'aws-sdk/clients/dynamodb';
 
 import awsXRay = require('aws-xray-sdk');
@@ -25,7 +25,7 @@ export function toSession(cookie: string): string {
 
 export async function getSession(cookie: string, stateToken: string): Promise<Session> {
 
-  let session = undefined;
+  let session: Session = undefined;
 
   try {
     const sessionId = cookieLib.parse(cookie).Session;
@@ -40,7 +40,13 @@ export async function getSession(cookie: string, stateToken: string): Promise<Se
       }).promise();
       
       if(res.Item && stateToken && stateToken === res.Item.stateToken) {
-        session = res.Item;
+        session.sessionId = sessionId;
+        session.createTime = <number>res.Item.createTime;
+        session.lastAccessTime = Date.now();
+        session.ttl = <number>res.Item.ttl;
+        session.hashedId = <string>res.Item.hashedId;
+        session.tokens = res.Item.tokens;
+        session.stateToken = <string>res.Item.stateToken;
       }
     }
     

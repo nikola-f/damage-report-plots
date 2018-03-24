@@ -1,7 +1,7 @@
 import {SNSEvent, Handler, ProxyResult} from 'aws-lambda';
-import {Agent, JobStatus, CreateJobMessage} from './types';
+import {Agent, JobStatus, CreateJobMessage} from '../types';
 
-import lc = require('./common/launcher');
+import lc = require('../launcher');
 import awsXRay = require('aws-xray-sdk');
 import awsPlain = require('aws-sdk');
 const AWS = awsXRay.captureAWS(awsPlain);

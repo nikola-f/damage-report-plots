@@ -1,11 +1,10 @@
 import {SNSEvent, Handler, ProxyHandler,
   APIGatewayEvent} from 'aws-lambda';
 import {GetItemOutput} from 'aws-sdk/clients/dynamodb';
-import {Session} from './types';
+import {Session} from '../types';
 
-import ss = require('./common/session_');
+import se = require('./sub/_session');
 
-// import cookie = require('cookie');
 import awsXRay = require('aws-xray-sdk');
 import awsPlain = require('aws-sdk');
 const AWS = awsXRay.captureAWS(awsPlain);
@@ -19,7 +18,7 @@ const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
  */
 export async function isValid(event: APIGatewayEvent, context, callback): Promise<void> {
   
-  const session = ss.toSession(event.headers.Cookie);
+  const session = se.toSession(event.headers.Cookie);
   
   let effect = 'Deny';
 

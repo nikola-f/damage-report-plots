@@ -1,6 +1,6 @@
 import {GetItemOutput, QueryOutput} from 'aws-sdk/clients/dynamodb';
 import {APIGatewayEvent} from 'aws-lambda';
-import {Job, JobStatus, CreateJobMessage, Session} from '../types';
+import {Job, JobStatus, CreateJobMessage, Session} from '../../types';
 
 import awsXRay = require('aws-xray-sdk');
 import awsPlain = require('aws-sdk');

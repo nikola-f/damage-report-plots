@@ -6,7 +6,7 @@ import {GetQueueAttributesRequest, QueueAttributeName,
 import {UpdateItemOutput} from 'aws-sdk/clients/dynamodb';
 
 
-import qu = require('./common/queue');
+import qu = require('./sub/_queue');
 import awsXRay = require('aws-xray-sdk');
 import awsPlain = require('aws-sdk');
 const AWS = awsXRay.captureAWS(awsPlain);
