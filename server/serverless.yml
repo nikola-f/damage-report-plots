@@ -97,12 +97,6 @@ plugins:
 #    - exclude-me-dir/**
 
 functions:
-  # hello:
-  #   handler: handler.hello
-  #   events:
-  #     - http:
-  #         path: hello
-  #         method: get
 
   generateTicket:
     handler: handler.generateTicket
@@ -174,13 +168,6 @@ functions:
       GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
       GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
 
-  createJob:
-    handler: handler.createJob
-    events:
-      - http: post job
-    # events:
-    #   - sns: drp-create-job
-
   queueJob:
     handler: handler.queueJob
     events:
@@ -204,11 +191,6 @@ functions:
       JOB_QUEUE_URL:
         Ref: JobQueue
 
-  listJob:
-    handler: handler.listJob
-    events:
-      - http: get jobs
-
   createAgentQueue:
     handler: handler.createAgentQueue
     events:
@@ -219,6 +201,13 @@ functions:
     events:
       - sns: drp-delete-agent-queue
 
+
+
+  front:
+    handler: handler.front
+    events:
+      - http: ANY /
+      - http: 'ANY {proxy+}'
 
 
 #    The following are a few example events you can configure

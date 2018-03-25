@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "aws-serverless-express": "^3.1.3",
     "aws-xray-sdk": "^1.2.0",
     "base-64": "^0.1.0",
     "batchelor": "^2.0.2",
@@ -17,6 +18,7 @@
     "cookie": "^0.3.1",
     "dateformat": "^2.0.0",
     "escape-quotes": "^1.0.2",
+    "express": "^4.16.3",
     "google-auth-library": "^0.10.0",
     "googleapis": "^23.0.0",
     "utf8": "^2.1.2"

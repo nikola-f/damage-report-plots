@@ -1,12 +1,14 @@
-var path = require('path');
+const path = require('path');
+const slsw = require('serverless-webpack');
 
 module.exports = {
-  entry: './handler.ts',
+  // entry: './handler.ts',
+  entry: slsw.lib.entries,
   target: 'node',
   module: {
     loaders: [
       {test: /\.ts(x?)$/, loader: 'ts-loader' },
-      { test: /\.json$/, loader: 'json-loader' }
+      {test: /\.json$/, loader: 'json-loader' }
     ]
   },
   resolve: {
@@ -19,6 +21,5 @@ module.exports = {
   },
   externals: {
     "aws-sdk": 'commonjs aws-sdk',
-    // "googleapis": 'googleapis'
   }
 };

@@ -15,3 +15,5 @@ export * from './back/job';
 export * from './back/mail';
 export * from './back/fusiontables';
 export * from './back/session';
+
+export * from './front/front';
