@@ -204,7 +204,7 @@ functions:
 
 
   front:
-    handler: handler.front
+    handler: handler.proxy
     events:
       - http: ANY /
       - http: 'ANY {proxy+}'
