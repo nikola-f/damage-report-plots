@@ -32,7 +32,7 @@ export async function parseMails(event: SNSEvent, context, callback): Promise<vo
 
   for(let rec of event.Records) {
     let pmm: ParseMailsMessage = JSON.parse(rec.Sns.Message);
-    console.log('try to parse mails:' + JSON.stringify(pmm.job.agent.hashedId));
+    console.log('try to parse mails:' + JSON.stringify(pmm.job.agent.openId));
 
     // mailキューからmailを取得
     const mailMessages: MessageList =
@@ -108,7 +108,7 @@ export async function queueMails(event: SNSEvent, context, callback): Promise<vo
 
   for(let rec of event.Records) {
     let qmm: QueueMailsMessage = JSON.parse(rec.Sns.Message);
-    console.log('try to queue mails:' + JSON.stringify(qmm.job.agent.hashedId));
+    console.log('try to queue mails:' + JSON.stringify(qmm.job.agent.openId));
 
     // threadキューからthreadを取得
     const threadMessages: MessageList =
@@ -186,7 +186,7 @@ export async function queueThreads(event: SNSEvent, context, callback): Promise<
   for(let rec of event.Records) {
     let qtm: QueueThreadsMessage = JSON.parse(rec.Sns.Message);
 
-    console.log('try to queue threads:' + JSON.stringify(qtm.job.agent.hashedId));
+    console.log('try to queue threads:' + JSON.stringify(qtm.job.agent.openId));
 
     // 同意済みで既にtokensあり
     const auth = au.createGapiOAuth2Client(REDIRECT_URL);

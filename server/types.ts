@@ -1,22 +1,29 @@
 
 export interface Session {
-  sessionId: string,
+  id: string,
 
   createTime: number,
   lastAccessTime: number,
   ttl: number,
-  hashedId: string,
-  tokens: any,
-  stateToken: string
+  openId: string,
+  tokens: Tokens
+}
+
+export interface Tokens {
+  meAccessToken?: string,
+  jobAccessToken?: string,
+  jobRefreshToken?: string,
+  stateToken?: string
 }
 
 
 export interface Agent {
-  hashedId: string,
+  openId: string,
 
   createTime: number,
   lastAccessTime: number,
   reportTableId?: string,
+  photoUrl?: string
   // plotTableId?: string,
   // statTableId?: string
 

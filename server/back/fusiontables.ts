@@ -106,7 +106,7 @@ export async function insertReports(event: SNSEvent, context, callback): Promise
 
   for(let rec of event.Records) {
     let irm: InsertReportsMessage = JSON.parse(rec.Sns.Message);
-    console.log('try to insert reports:' + JSON.stringify(irm.job.agent.hashedId));
+    console.log('try to insert reports:' + JSON.stringify(irm.job.agent.openId));
 
     // reportキューからreportを取得
     const queuedMessages: MessageList =

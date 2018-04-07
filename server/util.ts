@@ -1,4 +1,4 @@
-import cookieLib = require('cookie');
+// import cookieLib = require('cookie');
 
 /**
  * 階層オブジェクトの存在チェック

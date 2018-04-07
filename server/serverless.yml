@@ -9,6 +9,13 @@ custom:
   webpackIncludeModules: true
   googleClientId:     ${file(.cred.yml):googleClientId}
   googleClientSecret: ${file(.cred.yml):googleClientSecret}
+  sessionSecret:      ${file(.cred.yml):sessionSecret}
+  stretchSecret:      ${file(.cred.yml):stretchSecret}
+  googleCallbackUrlMe:  'https://plots.run/auth/callback/me'
+  # googleCallbackUrlMe:  'https://2u2eb8fiug.execute-api.us-west-2.amazonaws.com/dev/auth/callback/me'
+  googleCallbackUrlJob:  'https://plots.run/auth/callback/job'
+  serializerKey:      ${file(.cred.yml):serializerKey}
+  serializerSecret:   ${file(.cred.yml):serializerSecret}
 
 provider:
   name: aws
@@ -16,7 +23,7 @@ provider:
   stage: dev
   region: us-west-2
   profile: drp
-  memorySize: 256
+  memorySize: 128
   timeout: 30
   tracing: true
   environment:
@@ -61,40 +68,7 @@ provider:
 plugins:
   - serverless-webpack
   - serverless-plugin-tracing
-  # - serverless-plugin-typescript
-# you can add statements to the Lambda function's IAM Role here
-#  iamRoleStatements:
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:ListBucket"
-#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:PutObject"
-#      Resource:
-#        Fn::Join:
-#          - ""
-#          - - "arn:aws:s3:::"
-#            - "Ref" : "ServerlessDeploymentBucket"
-#            - "/*"
 
-# you can define service wide environment variables here
-#  environment:
-#    variable1: value1
-
-# you can add packaging information here
-# package:
-#   include:
-#     ./node_modules/googleapis/**
-  # exclude:
-  #   ./node_modules/**
-
-#  include:
-#    - include-me.js
-#    - include-me-dir/**
-#  exclude:
-#    - exclude-me.js
-#    - exclude-me-dir/**
 
 functions:
 
@@ -208,6 +182,16 @@ functions:
     events:
       - http: ANY /
       - http: 'ANY {proxy+}'
+    memorySize: 384
+    environment:
+      GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
+      GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
+      GOOGLE_CALLBACK_URL_ME:  ${self:custom.googleCallbackUrlMe}
+      GOOGLE_CALLBACK_URL_JOB: ${self:custom.googleCallbackUrlJob}
+      SESSION_SECRET: ${self:custom.sessionSecret}
+      # STRETCH_SECRET: ${self:custom.stretchSecret}
+      SERIALIZER_KEY:    ${self:custom.serializerKey}
+      SERIALIZER_SECRET: ${self:custom.serializerSecret}
 
 
 #    The following are a few example events you can configure
@@ -259,12 +243,12 @@ resources:
       Properties:
         TableName: job
         AttributeDefinitions:
-          - AttributeName: hashedId
+          - AttributeName: openId
             AttributeType: S
           - AttributeName: createTime
             AttributeType: N
         KeySchema:
-          - AttributeName: hashedId
+          - AttributeName: openId
             KeyType: HASH
           - AttributeName: createTime
             KeyType: RANGE
@@ -277,14 +261,11 @@ resources:
       Properties:
         TableName: session
         AttributeDefinitions:
-          - AttributeName: sessionId
+          - AttributeName: id
             AttributeType: S
         KeySchema:
-          - AttributeName: sessionId
+          - AttributeName: id
             KeyType: HASH
-        TimeToLiveSpecification:
-          AttributeName: ttl
-          Enabled: true
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
@@ -294,10 +275,10 @@ resources:
       Properties:
         TableName: agent
         AttributeDefinitions:
-          - AttributeName: hashedId
+          - AttributeName: openId
             AttributeType: S
         KeySchema:
-          - AttributeName: hashedId
+          - AttributeName: openId
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1

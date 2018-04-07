@@ -26,34 +26,35 @@ export function toSession(cookie: string): string {
 export async function getSession(cookie: string, stateToken: string): Promise<Session> {
 
   let session: Session = undefined;
+  return undefined;
 
-  try {
-    const sessionId = cookieLib.parse(cookie).Session;
-    if(sessionId) {
+  // try {
+  //   const sessionId = cookieLib.parse(cookie).Session;
+  //   if(sessionId) {
     
-      const res: GetItemOutput = await dynamo.get({
-        "TableName": "session",
-        "Key": {
-          "sessionId": sessionId
-        },
-        "ConsistentRead": false
-      }).promise();
+  //     const res: GetItemOutput = await dynamo.get({
+  //       "TableName": "session",
+  //       "Key": {
+  //         "sessionId": sessionId
+  //       },
+  //       "ConsistentRead": false
+  //     }).promise();
       
-      if(res.Item && stateToken && stateToken === res.Item.stateToken) {
-        session.sessionId = sessionId;
-        session.createTime = <number>res.Item.createTime;
-        session.lastAccessTime = Date.now();
-        session.ttl = <number>res.Item.ttl;
-        session.hashedId = <string>res.Item.hashedId;
-        session.tokens = res.Item.tokens;
-        session.stateToken = <string>res.Item.stateToken;
-      }
-    }
+  //     if(res.Item && stateToken && stateToken === res.Item.stateToken) {
+  //       session.sessionId = sessionId;
+  //       session.createTime = <number>res.Item.createTime;
+  //       session.lastAccessTime = Date.now();
+  //       session.ttl = <number>res.Item.ttl;
+  //       session.hashedId = <string>res.Item.hashedId;
+  //       session.tokens = res.Item.tokens;
+  //       session.stateToken = <string>res.Item.stateToken;
+  //     }
+  //   }
     
-  }catch(err){
-    console.log(JSON.stringify(err));
-  }finally{
-    return Promise.resolve(session);
-  }
+  // }catch(err){
+  //   console.log(JSON.stringify(err));
+  // }finally{
+  //   return Promise.resolve(session);
+  // }
 
 };

@@ -10,7 +10,7 @@ const AWS = awsXRay.captureAWS(awsPlain);
 const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
 
 
-export async function getAgent(hashedId: string): Promise<Agent> {
+export async function getAgent(openId: string): Promise<Agent> {
   console.log(JSON.stringify(event));
 
   let agent: Agent = undefined;
@@ -19,13 +19,13 @@ export async function getAgent(hashedId: string): Promise<Agent> {
     const res: GetItemOutput = await dynamo.get({
       "TableName": "agent",
       "Key": {
-        "hashedId": hashedId
+        "openId": openId
       },
       "ConsistentRead": false
     }).promise();
 
     if(res.Item) {
-      agent.hashedId = hashedId;
+      agent.openId = openId;
       agent.createTime = <number>res.Item.createTime;
       agent.lastAccessTime = Date.now();
       agent.reportTableId = <string>res.Item.reportTableId;

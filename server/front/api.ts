@@ -3,12 +3,12 @@ const router = express.Router();
 
 
 
-router.get('/jobs', function (req, res) {
+router.get('/jobs', (req, res) => {
   res.json({ message: 'jobs' });
 });
 
 
-router.post('/job', function (req, res) {
+router.post('/job', (req, res) => {
   res.json({ message: 'job' });
 });
 

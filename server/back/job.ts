@@ -45,12 +45,12 @@ export async function createJob(event: APIGatewayEvent, context, callback): Prom
 
     // session読み込み, 検証
     const session: Session = await se.getSession(event.headers.Cookie, cjm.stateToken);
-    if(!session || !await jo.checkCreateJobMessage(cjm, session.hashedId)) {
+    if(!session || !await jo.checkCreateJobMessage(cjm, session.openId)) {
       throw new Error('check ng');
     }
     
     // agent読み込み
-    const agent: Agent = await ag.getAgent(session.hashedId);
+    const agent: Agent = await ag.getAgent(session.openId);
 
     const job: Job = {
       "agent": agent,
@@ -254,7 +254,7 @@ export async function createAgentQueue(event: SNSEvent, context, callback): Prom
 
     try {
       let createQueueParams: CreateQueueRequest = {
-        "QueueName": String(job.createTime) + '_thread_' + job.agent.hashedId + '.fifo',
+        "QueueName": String(job.createTime) + '_thread_' + job.agent.openId + '.fifo',
         "Attributes": {
           "FifoQueue": 'true',
           "ContentBasedDeduplication": 'false'
@@ -268,7 +268,7 @@ export async function createAgentQueue(event: SNSEvent, context, callback): Prom
       };
 
       createQueueParams = {
-        "QueueName": String(job.createTime) + '_mail_' + job.agent.hashedId + '.fifo',
+        "QueueName": String(job.createTime) + '_mail_' + job.agent.openId + '.fifo',
         "Attributes": {
           "FifoQueue": 'true',
           "ContentBasedDeduplication": 'false'
@@ -282,7 +282,7 @@ export async function createAgentQueue(event: SNSEvent, context, callback): Prom
       };
 
       createQueueParams = {
-        "QueueName": String(job.createTime) + '_report_' + job.agent.hashedId + '.fifo',
+        "QueueName": String(job.createTime) + '_report_' + job.agent.openId + '.fifo',
         "Attributes": {
           "FifoQueue": 'true',
           "ContentBasedDeduplication": 'false'
