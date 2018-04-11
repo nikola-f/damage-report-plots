@@ -14,14 +14,12 @@ import qu = require('./sub/_queue');
 import au = require('./sub/_auth');
 import ti = require('./sub/_ticket');
 import jo = require('./sub/_job');
-import se = require('./sub/_session');
 import ag = require('./sub/_agent');
 import awsXRay = require('aws-xray-sdk');
 import awsPlain = require('aws-sdk');
 const AWS = awsXRay.captureAWS(awsPlain);
 const sqs: AWS.SQS = new AWS.SQS(),
       dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient(),
-      REDIRECT_URL: string = 'https://plots.run/redirect',
       JOB_QUEUE_URL = process.env.JOB_QUEUE_URL
 ;
 
@@ -40,43 +38,43 @@ export async function listJob(event: APIGatewayEvent, context, callback): Promis
 export async function createJob(event: APIGatewayEvent, context, callback): Promise<void> {
   // console.log(JSON.stringify(event));
 
-  try {
-    const cjm: CreateJobMessage = JSON.parse(event.body);
+  // try {
+  //   const cjm: CreateJobMessage = JSON.parse(event.body);
 
-    // session読み込み, 検証
-    const session: Session = await se.getSession(event.headers.Cookie, cjm.stateToken);
-    if(!session || !await jo.checkCreateJobMessage(cjm, session.openId)) {
-      throw new Error('check ng');
-    }
+  //   // session読み込み, 検証
+  //   const session: Session = await se.getSession(event.headers.Cookie, cjm.stateToken);
+  //   if(!session || !await jo.checkCreateJobMessage(cjm, session.openId)) {
+  //     throw new Error('check ng');
+  //   }
     
-    // agent読み込み
-    const agent: Agent = await ag.getAgent(session.openId);
+  //   // agent読み込み
+  //   const agent: Agent = await ag.getAgent(session.openId);
 
-    const job: Job = {
-      "agent": agent,
-      "createTime": Date.now(),
-      "lastAccessTime": Date.now(),
-      "rangeFromTime": cjm.rangeFromTime,
-      "rangeToTime": cjm.rangeToTime,
-      "tokens": session.tokens,
-      "status": JobStatus.Created,
-    };
+  //   const job: Job = {
+  //     "agent": agent,
+  //     "createTime": Date.now(),
+  //     "lastAccessTime": Date.now(),
+  //     "rangeFromTime": cjm.rangeFromTime,
+  //     "rangeToTime": cjm.rangeToTime,
+  //     "tokens": session.tokens,
+  //     "status": JobStatus.Created,
+  //   };
   
-    console.log(`try to create job: from ${ut.toString(job.rangeFromTime)} to ${ut.toString(job.rangeToTime)}`);
-    lc.createAgentQueueAsync(job);
+  //   console.log(`try to create job: from ${ut.toString(job.rangeFromTime)} to ${ut.toString(job.rangeToTime)}`);
+  //   lc.createAgentQueueAsync(job);
 
-    callback(null, {
-      "statusCode": 200,
-      "body": {}
-    });
+  //   callback(null, {
+  //     "statusCode": 200,
+  //     "body": {}
+  //   });
 
-  }catch(err){
-    console.log(JSON.stringify(err));
-    callback(null, {
-      "statusCode": 400,
-      "body": 'System running hot!'
-    });
-  }
+  // }catch(err){
+  //   console.log(JSON.stringify(err));
+  //   callback(null, {
+  //     "statusCode": 400,
+  //     "body": 'System running hot!'
+  //   });
+  // }
 
 };
 
@@ -186,6 +184,7 @@ export async function putJob(event: SNSEvent, context, callback): Promise<void> 
 
     job.lastAccessTime = Date.now();
 
+    //FIXME データ構造違い
     dynamo.put({
       "TableName": "job",
       "Item": job

@@ -14,6 +14,7 @@
     "aws-xray-sdk": "^1.2.0",
     "base-64": "^0.1.0",
     "batchelor": "^2.0.2",
+    "body-parser": "^1.18.2",
     "cheerio": "^1.0.0-rc.2",
     "connect-dynamodb-session": "^1.1.0",
     "cookie": "^0.3.1",

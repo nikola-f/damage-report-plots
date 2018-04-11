@@ -19,7 +19,7 @@ custom:
 
 provider:
   name: aws
-  runtime: nodejs6.10
+  runtime: nodejs8.10
   stage: dev
   region: us-west-2
   profile: drp
@@ -34,6 +34,7 @@ provider:
     - Effect: "Allow"
       Action:
         - "dynamodb:*Item"
+        - "dynamodb:Query"
       Resource:
         - Fn::Join:
           - ':'

@@ -1,11 +1,11 @@
 
 export interface Session {
-  id: string,
+  openId: string,
 
   createTime: number,
   lastAccessTime: number,
-  ttl: number,
-  openId: string,
+  // ttl: number,
+  photoUrl?: string
   tokens: Tokens
 }
 
@@ -23,7 +23,6 @@ export interface Agent {
   createTime: number,
   lastAccessTime: number,
   reportTableId?: string,
-  photoUrl?: string
   // plotTableId?: string,
   // statTableId?: string
 
