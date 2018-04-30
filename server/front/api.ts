@@ -1,19 +1,19 @@
 import {QueryOutput} from 'aws-sdk/clients/dynamodb';
-import {Job} from '../types';
+import {Job} from '../sub/types';
 
-import express = require('express');
-import bodyParser = require('body-parser');
+import * as express from 'express';
+import * as bodyParser from 'body-parser';
 
-import awsXRay = require('aws-xray-sdk');
-import awsPlain = require('aws-sdk');
+import * as awsXRay from 'aws-xray-sdk';
+import * as awsPlain from 'aws-sdk';
 const AWS = awsXRay.captureAWS(awsPlain);
 const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
 
 
-const router = express.Router();
+export const api = express.Router();
 
-router.use(bodyParser.urlencoded({"extended": true}));
-router.use(bodyParser.json());
+api.use(bodyParser.urlencoded({"extended": true}));
+api.use(bodyParser.json());
 
 
 const isAuthenticated = (req, res, next) => {
@@ -26,7 +26,7 @@ const isAuthenticated = (req, res, next) => {
 
 
 // jobテーブルから降順で10件取得
-async function getJobs(req, res, next): Promise<void> {
+const getJobs = async (req, res, next): Promise<void> => {
 
   let jobs: Job[] = [];
   let qo: QueryOutput;
@@ -65,8 +65,9 @@ async function getJobs(req, res, next): Promise<void> {
 };
 
 
+
 // job一覧
-router.get('/jobs',
+api.get('/jobs',
   isAuthenticated,
   getJobs,
   (req, res) => {
@@ -76,7 +77,9 @@ router.get('/jobs',
 
 
 // job登録
-router.post('/job', isAuthenticated,
+api.post('/job',
+  isAuthenticated,
+  // checkRequest,
   (req, res) => {
     res.json({ message: 'job' });
   }
@@ -84,7 +87,7 @@ router.post('/job', isAuthenticated,
 
 
 // 通常Map, heatMap等 URL一覧
-router.get('/maps', isAuthenticated,
+api.get('/maps', isAuthenticated,
   (req, res) => {
 
     res.json(req.user);
@@ -93,7 +96,7 @@ router.get('/maps', isAuthenticated,
 
 
 // 統計値
-router.get('/stats', isAuthenticated,
+api.get('/stats', isAuthenticated,
   (req, res) => {
   //pUPV, pUPC
   //週ごとのレポート数サマリ
@@ -103,4 +106,5 @@ router.get('/stats', isAuthenticated,
 );
 
 
-module.exports = router;
+// module.exports = router;
+// export = api;

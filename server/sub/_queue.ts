@@ -5,8 +5,8 @@ import {GetQueueAttributesRequest, GetQueueAttributesResult,
   DeleteMessageBatchResult, DeleteMessageBatchRequestEntryList,
   Message} from 'aws-sdk/clients/sqs';
 
-import awsXRay = require('aws-xray-sdk');
-import awsPlain = require('aws-sdk');
+import * as awsXRay from 'aws-xray-sdk';
+import * as awsPlain from 'aws-sdk';
 const AWS = awsXRay.captureAWS(awsPlain);
 const sqs: AWS.SQS = new AWS.SQS();
 

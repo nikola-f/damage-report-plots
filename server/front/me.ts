@@ -1,4 +1,4 @@
-import express = require('express');
+import * as express from 'express';
 const router = express.Router();
 
 // FIXME /me は静的コンテンツに振る。サーバ側処理は/api/maps,statsで。

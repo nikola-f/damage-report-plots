@@ -6,17 +6,17 @@ import {GetQueueAttributesRequest, QueueAttributeName,
   DeleteMessageBatchRequest, DeleteMessageBatchResult,
   CreateQueueRequest, DeleteQueueRequest} from 'aws-sdk/clients/sqs';
 import {QueryOutput} from 'aws-sdk/clients/dynamodb';
-import {Job, JobStatus, CreateJobMessage, Session, Agent} from '../types';
+import {Job, JobStatus, CreateJobMessage, Session, Agent} from '../sub/types';
 
-import lc = require('../launcher');
-import ut = require('../util');
-import qu = require('./sub/_queue');
-import au = require('./sub/_auth');
-import ti = require('./sub/_ticket');
-import jo = require('./sub/_job');
-import ag = require('./sub/_agent');
-import awsXRay = require('aws-xray-sdk');
-import awsPlain = require('aws-sdk');
+import * as lc from '../sub/launcher';
+// import * as ut from '../sub/util';
+import * as ut from '../sub/util';
+import * as qu from '../sub/_queue';
+import * as ti from '../sub/_ticket';
+import * as jo from '../sub/_job';
+// import ag = require('../sub/_agent');
+import * as awsXRay from 'aws-xray-sdk';
+import * as awsPlain from 'aws-sdk';
 const AWS = awsXRay.captureAWS(awsPlain);
 const sqs: AWS.SQS = new AWS.SQS(),
       dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient(),

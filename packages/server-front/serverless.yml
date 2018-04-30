@@ -1,0 +1,99 @@
+service: damage-report-plots-server-front
+
+custom:
+  arnRegionAccount:
+      Fn::Join:
+        - ':'
+        - - ${self:provider.region}
+          - Ref: 'AWS::AccountId'
+  webpack:
+    # webpackConfig: '../webpack.config.js'
+    includeModules: true
+    # packagePath: '../package.json'
+  # webpackIncludeModules: true
+  googleClientId:     ${file(.cred.yml):googleClientId}
+  googleClientSecret: ${file(.cred.yml):googleClientSecret}
+  sessionSecret:      ${file(.cred.yml):sessionSecret}
+  googleCallbackUrlMe:  'https://plots.run/auth/callback/me'
+  # googleCallbackUrlMe:  'https://08ztxeepyf.execute-api.us-west-2.amazonaws.com/dev/auth/callback/me'
+  googleCallbackUrlJob:  'https://plots.run/auth/callback/job'
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: dev
+  region: us-west-2
+  profile: drp
+  memorySize: 192
+  timeout: 10
+  tracing: false
+  environment:
+    ARN_REGION_ACCOUNT: ${self:custom.arnRegionAccount}
+    SNS_NOP: 'true'
+
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:*Item"
+        - "dynamodb:Query"
+      Resource:
+        - Fn::Join:
+          - ':'
+          - - 'arn:aws:dynamodb'
+            - ${self:custom.arnRegionAccount}
+            - '*'
+    - Effect: "Allow"
+      Action:
+        - "sns:Publish"
+      Resource:
+        - Fn::Join:
+          - ':'
+          - - 'arn:aws:sns'
+            - ${self:custom.arnRegionAccount}
+            - '*'
+    - Effect: "Allow"
+      Action:
+        - "xray:PutTraceSegments"
+        - "xray:PutTelemetryRecords"
+      Resource:
+        - "*"
+
+plugins:
+  - serverless-webpack
+  - serverless-plugin-tracing
+
+package:
+  individually: false
+
+functions:
+
+  front:
+    handler: handler.proxy
+    events:
+      - http: ANY /
+      - http: 'ANY {proxy+}'
+    memorySize: 320
+    environment:
+      GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
+      GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
+      GOOGLE_CALLBACK_URL_ME:  ${self:custom.googleCallbackUrlMe}
+      GOOGLE_CALLBACK_URL_JOB: ${self:custom.googleCallbackUrlJob}
+      SESSION_SECRET: ${self:custom.sessionSecret}
+
+
+resources:
+  Resources:
+    SessionTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: session
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+

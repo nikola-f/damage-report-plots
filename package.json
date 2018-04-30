@@ -1,0 +1,10 @@
+{
+	"name": "damage-report-plots",
+	"version": "0.0.1",
+	"author": "nikola-f",
+  "license": "Apache License 2.0",
+	"devDependencies": {
+		"lerna": "^2.11.0"
+	},
+	"private": true
+}

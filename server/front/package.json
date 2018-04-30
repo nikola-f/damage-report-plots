@@ -1,0 +1,40 @@
+{
+  "name": "drp-front",
+  "version": "0.0.1",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-serverless-express": "^3.2.0",
+    "aws-xray-sdk": "^1.2.0",
+    "body-parser": "^1.18.2",
+    "connect-dynamodb-session": "^1.1.0",
+    "cookie": "^0.3.1",
+    "dateformat": "^3.0.3",
+    "escape-quotes": "^1.0.2",
+    "express": "^4.16.3",
+    "express-session": "^1.15.6",
+    "googleapis": "^28.1.0",
+    "passport": "^0.4.0",
+    "passport-google-oauth": "^1.0.0",
+    "utf8": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "8.10.1",
+    "@types/aws-sdk": "^2.7.0",
+    "@types/node": "^9.6.6",
+    "aws-sdk": "^2.226.1",
+    "json-loader": "^0.5.7",
+    "serverless-plugin-tracing": "^2.0.0",
+    "serverless-webpack": "^2.2.3",
+    "ts-loader": "^2.3.4",
+    "typescript": "^2.4.2",
+    "webpack": "^3.6.0",
+    "webpack-node-externals": "^1.7.2"
+  },
+  "description": ""
+}

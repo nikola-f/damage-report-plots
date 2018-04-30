@@ -1,9 +1,12 @@
 import {PublishInput} from 'aws-sdk/clients/sns';
-import AWS = require('aws-sdk');
 import {Job, CreateJobMessage, QueueThreadsMessage,
   QueueMailsMessage, ParseMailsMessage,
   InsertReportsMessage, Agent, CreateTableMessage,
   CheckTableMessage} from './types';
+
+import * as awsXRay from 'aws-xray-sdk';
+import * as awsPlain from 'aws-sdk';
+const AWS = awsXRay.captureAWS(awsPlain);
 const sns: AWS.SNS = new AWS.SNS(),
       SNS_NOP: boolean = Boolean(process.env.SNS_NOP) || false;
 ;
@@ -26,7 +29,7 @@ const TOPIC_PREFIX = 'arn:aws:sns:' + process.env.ARN_REGION_ACCOUNT + ':',
 ;
 
 
-export function createTableAsync(ctm: CreateTableMessage): Promise<void> {
+export const createTableAsync = (ctm: CreateTableMessage): Promise<void> => {
   return publish({
     "Message": JSON.stringify(ctm),
     "Subject": 'CreateTable',
@@ -142,7 +145,7 @@ export function consumeTicketsAsync(number: number): Promise<void> {
 };
 
 
-async function publish(input: PublishInput): Promise<void> {
+const publish = async (input: PublishInput): Promise<void> => {
   if(SNS_NOP) {
     console.log('do publish provisionally:' + JSON.stringify(input));
     return Promise.resolve();

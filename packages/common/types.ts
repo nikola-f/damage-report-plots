@@ -39,7 +39,7 @@ export enum JobStatus {
 
 export interface Job {
   agent: Agent,
-  // hashedId: string,
+  // openId: string,
   createTime: number,
 
   status: JobStatus,

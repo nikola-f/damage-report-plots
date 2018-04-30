@@ -1,14 +1,14 @@
 import {MessageList, Message} from 'aws-sdk/clients/sqs';
 import {Job, JobStatus, QueueThreadsMessage,
   OneThreadMessage, QueueMailsMessage,
-  OneMailMessage, Portal} from '../../types';
-import ut = require('../../util');
+  OneMailMessage, Portal} from './types';
 
-import gapi = require('googleapis');
-import Batchelor = require('batchelor');
-import base64 = require('base-64');
-import utf8 = require('utf8');
-import cheerio = require('cheerio');
+import * as ut from './util';
+import * as gapi from 'googleapis';
+import * as Batchelor from 'batchelor';
+import * as base64 from 'base-64';
+import * as utf8 from 'utf8';
+import * as cheerio from 'cheerio';
 
 
 const THREAD_BATCH_COUNT = Number(process.env.THREAD_BATCH_COUNT);

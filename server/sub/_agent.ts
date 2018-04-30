@@ -1,11 +1,11 @@
 import {SNSEvent, Handler, ProxyHandler,
   APIGatewayEvent} from 'aws-lambda';
-import {GetItemOutput} from 'aws-sdk/clients/dynamodb';
-import {Agent} from '../../types';
+import {GetItemOutput} from '../back/aws-sdk/clients/dynamodb';
+import {Agent} from './types';
 
 
-import awsXRay = require('aws-xray-sdk');
-import awsPlain = require('aws-sdk');
+import * as awsXRay from 'aws-xray-sdk';
+import * as awsPlain from 'aws-sdk';
 const AWS = awsXRay.captureAWS(awsPlain);
 const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
 

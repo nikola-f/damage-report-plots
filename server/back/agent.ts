@@ -1,9 +1,10 @@
 import {SNSEvent, Handler, ProxyResult} from 'aws-lambda';
-import {Agent, JobStatus, CreateJobMessage} from '../types';
+import {Agent, JobStatus, CreateJobMessage} from '../sub/types';
 
-import lc = require('../launcher');
-import awsXRay = require('aws-xray-sdk');
-import awsPlain = require('aws-sdk');
+// import lc = require('../sub/launcher');
+import * as lc from '../sub/launcher';
+import * as awsXRay from 'aws-xray-sdk';
+import * as awsPlain from 'aws-sdk';
 const AWS = awsXRay.captureAWS(awsPlain);
 const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient()
 ;

@@ -1,15 +1,17 @@
-import express = require('express');
-import session = require('express-session');
-import passport = require('passport');
-const DynamoStore = require('connect-dynamodb-session')(session);
-const GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
-import {Session, Tokens} from '../types';
+import {Session, Tokens} from '@damage-report-plots/common/types';
 
-import awsServerlessExpressMiddleware = require('aws-serverless-express/middleware');
-import api = require('./api');
-import util = require('../util');
-import me = require('./me');
-const app = express();
+const express = require('express');
+const session = require('express-session');
+const passport = require('passport');
+const connectDynamodbSession = require('connect-dynamodb-session');
+const DynamoStore = connectDynamodbSession(session);
+const OAuth2Strategy = require('passport-google-oauth').OAuth2Strategy;
+
+const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware');
+// const api = require('./api');
+const util = require('@damage-report-plots/common/util');
+// import {me} from './me';
+export const app = express();
 
 
 const GOOGLE_CLIENT_ID: string = process.env.GOOGLE_CLIENT_ID;
@@ -45,7 +47,7 @@ app.use(passport.session());
 
 
 // 認証時のGoogle OAuth2, openidとfusiontables照会
-passport.use('google-me', new GoogleStrategy({
+passport.use('google-me', new OAuth2Strategy({
   clientID: GOOGLE_CLIENT_ID,
   clientSecret: GOOGLE_CLIENT_SECRET,
   callbackURL: GOOGLE_CALLBACK_URL_ME
@@ -133,8 +135,8 @@ passport.deserializeUser((user, done) => {
   done(null, user);
 });
 
-app.use('/api', api);
-app.use('/me', me);
+// app.use('/api', api);
+// app.use('/me', me);
 
 
 app.use((err, req, res, next) => {

@@ -8,17 +8,20 @@ import {GetQueueAttributesRequest, QueueAttributeName,
 import {Job, JobStatus, QueueThreadsMessage,
   OneThreadMessage, QueueMailsMessage,
   ParseMailsMessage, OneMailMessage, Portal,
-  OneReportMessage} from '../types';
+  OneReportMessage} from '../sub/types';
 
-import gapi = require('googleapis');
-import dateformat = require('dateformat');
-import lc = require('../launcher');
-import au = require('./sub/_auth');
-import qu = require('./sub/_queue');
-import ml = require('./sub/_mail');
-const gmail = gapi.gmail('v1');
+import {dateformat} from 'dateformat';
+import * as lc from '../sub/launcher';
+import * as au from '../sub/_auth';
+import * as qu from '../sub/_queue';
+import * as ml from '../sub/_mail';
+// const {google} = require('googleapis');
+import {google} from 'googleapis';
+const gmail = google.gmail('v1');
+// const gmail = google.gmail;
 
-const REDIRECT_URL: string = 'https://plots.run/redirect',
+
+const REDIRECT_URL: string = 'https://plots.run/redirect', //FIXME
       THREAD_COUNT: number = Number(process.env.THREAD_COUNT),
       MAIL_COUNT: number = Number(process.env.MAIL_COUNT);
 
@@ -214,6 +217,7 @@ export async function queueThreads(event: SNSEvent, context, callback): Promise<
     let res;
     try {
       res = await new Promise((resolve, reject) => {
+        // gmail.users.threads.list(req, (err, res) => {
         gmail.users.threads.list(req, (err, res) => {
           err ? reject(err) : resolve(res);
         });

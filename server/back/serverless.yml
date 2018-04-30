@@ -1,4 +1,4 @@
-service: damage-report-plots
+service: damage-report-plots-backend
 
 custom:
   arnRegionAccount:
@@ -6,16 +6,19 @@ custom:
         - ':'
         - - ${self:provider.region}
           - Ref: 'AWS::AccountId'
-  webpackIncludeModules: true
-  googleClientId:     ${file(.cred.yml):googleClientId}
-  googleClientSecret: ${file(.cred.yml):googleClientSecret}
-  sessionSecret:      ${file(.cred.yml):sessionSecret}
-  stretchSecret:      ${file(.cred.yml):stretchSecret}
+  webpack:
+    # webpackConfig: '../webpack.config.js'
+    includeModules: true
+      # packagePath: '../package.json'
+  googleClientId:     ${file(../.cred.yml):googleClientId}
+  googleClientSecret: ${file(../.cred.yml):googleClientSecret}
+  sessionSecret:      ${file(../.cred.yml):sessionSecret}
+  # stretchSecret:      ${file(.cred.yml):stretchSecret}
   googleCallbackUrlMe:  'https://plots.run/auth/callback/me'
   # googleCallbackUrlMe:  'https://2u2eb8fiug.execute-api.us-west-2.amazonaws.com/dev/auth/callback/me'
   googleCallbackUrlJob:  'https://plots.run/auth/callback/job'
-  serializerKey:      ${file(.cred.yml):serializerKey}
-  serializerSecret:   ${file(.cred.yml):serializerSecret}
+  serializerKey:      ${file(../.cred.yml):serializerKey}
+  serializerSecret:   ${file(../.cred.yml):serializerSecret}
 
 provider:
   name: aws
@@ -23,7 +26,7 @@ provider:
   stage: dev
   region: us-west-2
   profile: drp
-  memorySize: 128
+  memorySize: 192
   timeout: 30
   tracing: true
   environment:
@@ -70,6 +73,8 @@ plugins:
   - serverless-webpack
   - serverless-plugin-tracing
 
+package:
+  individually: false
 
 functions:
 
@@ -178,60 +183,8 @@ functions:
 
 
 
-  front:
-    handler: handler.proxy
-    events:
-      - http: ANY /
-      - http: 'ANY {proxy+}'
-    memorySize: 384
-    environment:
-      GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
-      GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
-      GOOGLE_CALLBACK_URL_ME:  ${self:custom.googleCallbackUrlMe}
-      GOOGLE_CALLBACK_URL_JOB: ${self:custom.googleCallbackUrlJob}
-      SESSION_SECRET: ${self:custom.sessionSecret}
-      # STRETCH_SECRET: ${self:custom.stretchSecret}
-      SERIALIZER_KEY:    ${self:custom.serializerKey}
-      SERIALIZER_SECRET: ${self:custom.serializerSecret}
-
-
-#    The following are a few example events you can configure
-#    NOTE: Please make sure to change your handler code to work with those events
-#    Check the event documentation for details
-#    events:
-#      - http:
-#          path: users/create
-#          method: get
-#      - s3: ${env:BUCKET}
-#      - schedule: rate(10 minutes)
-#      - sns: greeter-topic
-#      - stream: arn:aws:dynamodb:region:XXXXXX:table/foo/stream/1970-01-01T00:00:00.000
-#      - alexaSkill
-#      - iot:
-#          sql: "SELECT * FROM 'some_topic'"
-#      - cloudwatchEvent:
-#          event:
-#            source:
-#              - "aws.ec2"
-#            detail-type:
-#              - "EC2 Instance State-change Notification"
-#            detail:
-#              state:
-#                - pending
-#      - cloudwatchLog: '/aws/lambda/hello'
-
-#    Define function environment variables here
-#    environment:
-#      variable2: value2
-
-# you can add CloudFormation resource templates here
 resources:
   Resources:
-    # TicketQueue:
-    #   Type: AWS::SQS::Queue
-    #   Properties:
-    #     QueueName: TicketQueue
-    #     MaximumMessageSize: 1024
     JobQueue:
       Type: AWS::SQS::Queue
       Properties:
@@ -253,20 +206,6 @@ resources:
             KeyType: HASH
           - AttributeName: createTime
             KeyType: RANGE
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
-
-    SessionTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: session
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:
-          - AttributeName: id
-            KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
@@ -307,11 +246,3 @@ resources:
         WebsiteConfiguration:
           IndexDocument: index.html
 
-#    NewResource:
-#      Type: AWS::S3::Bucket
-#      Properties:
-#        BucketName: my-new-bucket
-#  Outputs:
-#     NewOutput:
-#       Description: "Description for the output"
-#       Value: "Some output value"
