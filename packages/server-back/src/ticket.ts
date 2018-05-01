@@ -1,12 +1,12 @@
 import {SNSEvent, Handler, ProxyResult} from 'aws-lambda';
-import {GetQueueAttributesRequest, QueueAttributeName,
-  GetQueueAttributesResult, SendMessageBatchRequest,
-  ReceiveMessageRequest, ReceiveMessageResult,
-  DeleteMessageBatchRequest, DeleteMessageBatchResult} from 'aws-sdk/clients/sqs';
+// import {GetQueueAttributesRequest, QueueAttributeName,
+//   GetQueueAttributesResult, SendMessageBatchRequest,
+//   ReceiveMessageRequest, ReceiveMessageResult,
+//   DeleteMessageBatchRequest, DeleteMessageBatchResult} from 'aws-sdk/clients/sqs';
 import {UpdateItemOutput} from 'aws-sdk/clients/dynamodb';
 
 
-import * as qu from '../sub/_queue';
+// import * as queue from './lib/queue';
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
 const AWS = awsXRay.captureAWS(awsPlain);

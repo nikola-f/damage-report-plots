@@ -8,13 +8,13 @@ import {GetQueueAttributesRequest, QueueAttributeName,
 import {Job, JobStatus, QueueThreadsMessage,
   OneThreadMessage, QueueMailsMessage,
   ParseMailsMessage, OneMailMessage, Portal,
-  OneReportMessage} from '../sub/types';
+  OneReportMessage} from '@damage-report-plots/common/types';
 
 import {dateformat} from 'dateformat';
-import * as lc from '../sub/launcher';
-import * as au from '../sub/_auth';
-import * as qu from '../sub/_queue';
-import * as ml from '../sub/_mail';
+import * as launcher from '@damage-report-plots/common/launcher';
+import * as auth from './lib/auth';
+import * as queue from './lib/queue';
+import * as mailUtil from './lib/mail';
 // const {google} = require('googleapis');
 import {google} from 'googleapis';
 const gmail = google.gmail('v1');
@@ -39,7 +39,7 @@ export async function parseMails(event: SNSEvent, context, callback): Promise<vo
 
     // mailキューからmailを取得
     const mailMessages: MessageList =
-      await qu.receiveMessageBatch(pmm.job.mail.queueUrl, MAIL_COUNT);
+      await queue.receiveMessageBatch(pmm.job.mail.queueUrl, MAIL_COUNT);
     if(mailMessages.length <= 0) {
       console.log('no mails queued.');
       continue;
@@ -49,8 +49,8 @@ export async function parseMails(event: SNSEvent, context, callback): Promise<vo
     const reportMessages: MessageList = [];
     for(let message of mailMessages) {
       const mail: OneMailMessage = JSON.parse(message.Body);
-      const html: string = ml.decodeBase64(mail.body);
-      const portals: Portal[] = ml.parseHtml(html);
+      const html: string = mailUtil.decodeBase64(mail.body);
+      const portals: Portal[] = mailUtil.parseHtml(html);
 
       for(let aPortal of portals) {
         const oneReportMessage: OneReportMessage = {
@@ -67,29 +67,29 @@ export async function parseMails(event: SNSEvent, context, callback): Promise<vo
     console.log(JSON.stringify(reportMessages));
 
     // reportキューにキューイング
-    const queued = await qu.sendMessageBatch(pmm.job.report.queueUrl, reportMessages);
+    const queued = await queue.sendMessageBatch(pmm.job.report.queueUrl, reportMessages);
     pmm.job.report.queuedCount += queued;
     console.log(`${queued} reports queued.`);
 
     // mailキューから削除
     const deleted =
-      await qu.deleteMessageBatch(pmm.job.mail.queueUrl, mailMessages);
+      await queue.deleteMessageBatch(pmm.job.mail.queueUrl, mailMessages);
     pmm.job.mail.queuedCount -= mailMessages.length;
     pmm.job.mail.dequeuedCount += mailMessages.length;
     console.log(`${deleted} mails deleted.`);
 
     // job保存
-    lc.putJobAsync(pmm.job);
+    launcher.putJobAsync(pmm.job);
 
     // mailキューに残があれば再帰
     // なければinsertReportsを起動
     const mailRemain: number =
-      await qu.getNumberOfMessages(pmm.job.mail.queueUrl);
+      await queue.getNumberOfMessages(pmm.job.mail.queueUrl);
     if(mailRemain > 0) {
       console.log(`${mailRemain} mails remaining, recurse.`);
-      lc.parseMailsAsync(pmm);
+      launcher.parseMailsAsync(pmm);
     }else{
-      lc.insertReportsAsync({
+      launcher.insertReportsAsync({
         "job": pmm.job,
       })
     }
@@ -115,20 +115,20 @@ export async function queueMails(event: SNSEvent, context, callback): Promise<vo
 
     // threadキューからthreadを取得
     const threadMessages: MessageList =
-      await qu.receiveMessageBatch(qmm.job.thread.queueUrl, THREAD_COUNT);
+      await queue.receiveMessageBatch(qmm.job.thread.queueUrl, THREAD_COUNT);
     if(threadMessages.length <= 0) {
       console.log('no threads queued.');
       continue;
     }
 
     // access_token 再作成
-    let auth = au.createGapiOAuth2Client(REDIRECT_URL);
-    auth.setCredentials(qmm.job.tokens);
-    qmm.job.tokens = await au.refreshAccessTokenManually(auth);
+    let client = auth.createGapiOAuth2Client(REDIRECT_URL);
+    client.setCredentials(qmm.job.tokens);
+    qmm.job.tokens = await auth.refreshAccessTokenManually(client);
 
     // gapiでthreadの詳細(mail付き)取得
     const mails: OneThreadMessage[] =
-      await ml.getMails(qmm.job.tokens, threadMessages,
+      await mailUtil.getMails(qmm.job.tokens, threadMessages,
         qmm.job.rangeFromTime, qmm.job.rangeToTime);
     if(mails && mails.length > 0) {
       console.log(`${mails.length} mails found.`);
@@ -146,27 +146,27 @@ export async function queueMails(event: SNSEvent, context, callback): Promise<vo
       });
     }
     qmm.job.mail.queuedCount +=
-      await qu.sendMessageBatch(qmm.job.mail.queueUrl, mailMessages);
+      await queue.sendMessageBatch(qmm.job.mail.queueUrl, mailMessages);
     console.log('queued.' + JSON.stringify(qmm.job.mail));
 
     // threadキューから削除
     const deleted =
-      await qu.deleteMessageBatch(qmm.job.thread.queueUrl, threadMessages);
+      await queue.deleteMessageBatch(qmm.job.thread.queueUrl, threadMessages);
     qmm.job.thread.queuedCount -= threadMessages.length;
     qmm.job.thread.dequeuedCount += threadMessages.length;
     console.log(`${deleted} threads deleted.`);
 
     // jobをdb保存
-    lc.putJobAsync(qmm.job);
+    launcher.putJobAsync(qmm.job);
 
     // threadキューに残があれば再帰
     // なければparseMailsを起動
     let threadRemain: number =
-      await qu.getNumberOfMessages(qmm.job.thread.queueUrl);
+      await queue.getNumberOfMessages(qmm.job.thread.queueUrl);
     if(threadRemain > 0) {
-      lc.queueMailsAsync(qmm);
+      launcher.queueMailsAsync(qmm);
     }else{
-      lc.parseMailsAsync({
+      launcher.parseMailsAsync({
         "job": qmm.job
       })
     }
@@ -192,8 +192,8 @@ export async function queueThreads(event: SNSEvent, context, callback): Promise<
     console.log('try to queue threads:' + JSON.stringify(qtm.job.agent.openId));
 
     // 同意済みで既にtokensあり
-    const auth = au.createGapiOAuth2Client(REDIRECT_URL);
-    auth.setCredentials(qtm.job.tokens);
+    const client = auth.createGapiOAuth2Client(REDIRECT_URL);
+    client.setCredentials(qtm.job.tokens);
 
     // yyyy-mm-ddに変換
     const after = dateformat(new Date(qtm.job.rangeFromTime), 'isoDate'),
@@ -201,7 +201,7 @@ export async function queueThreads(event: SNSEvent, context, callback): Promise<
 
     // gapiでthread一覧の取得
     let req = {
-      "auth": auth,
+      "auth": client,
       "userId": 'me',
       "maxResults": String(THREAD_COUNT),
       "fields": 'threads/id,nextPageToken',
@@ -246,21 +246,21 @@ export async function queueThreads(event: SNSEvent, context, callback): Promise<
       });
     }
     qtm.job.thread.queuedCount +=
-      await qu.sendMessageBatch(qtm.job.thread.queueUrl, messages);
+      await queue.sendMessageBatch(qtm.job.thread.queueUrl, messages);
 
     // jobをdb保存
-    lc.putJobAsync(qtm.job);
+    launcher.putJobAsync(qtm.job);
 
     //残りがあればnextPageTokenが返るのでそれをsetして再帰
     //残りがなければqueueMailsを起動
     if(res.nextPageToken) {
       console.log('go recurrsive:' + res.nextPageToken);
-      lc.queueThreadsAsync({
+      launcher.queueThreadsAsync({
         "job": qtm.job,
         "nextPageToken": res.nextPageToken
       });
     }else{
-      lc.queueMailsAsync({
+      launcher.queueMailsAsync({
         "job": qtm.job
       })
     }

@@ -1,9 +1,9 @@
 import {MessageList, Message} from 'aws-sdk/clients/sqs';
 import {Job, JobStatus, QueueThreadsMessage,
   OneThreadMessage, QueueMailsMessage,
-  OneMailMessage, Portal} from './types';
+  OneMailMessage, Portal} from '@damage-report-plots/common/types';
 
-import * as ut from './util';
+import * as util from '@damage-report-plots/common/util';
 import * as gapi from 'googleapis';
 import * as Batchelor from 'batchelor';
 import * as base64 from 'base-64';
@@ -133,7 +133,7 @@ export async function getMails(tokens: any, threads: MessageList,
           aMessage.internalDate >= rangeToTime) {
         continue;
       }
-      if(ut.isSet(() => aMessage.payload.parts[1].body.data)) {
+      if(util.isSet(() => aMessage.payload.parts[1].body.data)) {
         mails.push({
           "id": aMessage.id,
           "internalDate": aMessage.internalDate,
@@ -154,11 +154,11 @@ export async function getMails(tokens: any, threads: MessageList,
 function parseBatchResponse(response: any): any {
 
   let messages = [];
-  if(ut.isSet(() => response.parts)) {
+  if(util.isSet(() => response.parts)) {
     for(let aPart of response.parts) {
       Array.prototype.push.apply(messages, aPart.body.messages);
     }
-  }else if(ut.isSet(() => response.body.messages)) {
+  }else if(util.isSet(() => response.body.messages)) {
     Array.prototype.push.apply(messages, response.body.messages);
   }else{
     console.error('batch response contains no message part.');

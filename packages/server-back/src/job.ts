@@ -6,14 +6,14 @@ import {GetQueueAttributesRequest, QueueAttributeName,
   DeleteMessageBatchRequest, DeleteMessageBatchResult,
   CreateQueueRequest, DeleteQueueRequest} from 'aws-sdk/clients/sqs';
 import {QueryOutput} from 'aws-sdk/clients/dynamodb';
-import {Job, JobStatus, CreateJobMessage, Session, Agent} from '../sub/types';
+import {Job, JobStatus, CreateJobMessage, Session, Agent} 
+  from '@damage-report-plots/common/types';
 
-import * as lc from '../sub/launcher';
-// import * as ut from '../sub/util';
-import * as ut from '../sub/util';
-import * as qu from '../sub/_queue';
-import * as ti from '../sub/_ticket';
-import * as jo from '../sub/_job';
+import * as launcher from '@damage-report-plots/common/launcher';
+// import * as util from '@damage-report-plots/common/util';
+import * as queue from './lib/queue';
+import * as ticketUtil from './lib/ticket';
+// import * as jobUtil from './lib/job';
 // import ag = require('../sub/_agent');
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
@@ -87,14 +87,14 @@ export async function startJob(event, context, callback): Promise<void> {
   console.log(JSON.stringify(event));
 
   // ticket残高チェック
-  if(await ti.hasAvailable()) {
+  if(await ticketUtil.hasAvailable()) {
 
     // queueからjob取得
-    const message = await qu.receiveMessage(JOB_QUEUE_URL);
+    const message = await queue.receiveMessage(JOB_QUEUE_URL);
     if(message) {
       // queueThreads起動
       const job: Job = JSON.parse(message.Body);
-      lc.queueThreadsAsync({
+      launcher.queueThreadsAsync({
         "job": job
       });
 
@@ -123,17 +123,17 @@ export async function finalizeJob(event: SNSEvent, context, callback): Promise<v
     const job: Job = JSON.parse(rec.Sns.Message);
 
     // agentQueue削除
-    lc.deleteAgentQueueAsync(job);
+    launcher.deleteAgentQueueAsync(job);
 
     // ticket消費
-    const tickets = ti.computeAmount(job);
-    lc.consumeTicketsAsync(tickets);
+    const tickets = ticketUtil.computeAmount(job);
+    launcher.consumeTicketsAsync(tickets);
 
     // 保存
     job.lastAccessTime = Date.now();
     job.status = JobStatus.Done;
     job.tokens = null;
-    lc.putJobAsync(job);
+    launcher.putJobAsync(job);
 
     // tokenの無効化はauthorizer
   }
@@ -156,12 +156,12 @@ export async function queueJob(event: SNSEvent, context, callback): Promise<void
     const job: Job = JSON.parse(rec.Sns.Message);
 
     job.lastAccessTime = Date.now();
-    qu.sendMessage(JOB_QUEUE_URL, {
+    queue.sendMessage(JOB_QUEUE_URL, {
       "MessageId": '0',
       "Body": JSON.stringify(job)
     });
 
-    lc.putJobAsync(job);
+    launcher.putJobAsync(job);
     //jobのpopからのqueueThreadsの起動はstartJobで
   }
 
@@ -297,7 +297,7 @@ export async function createAgentQueue(event: SNSEvent, context, callback): Prom
       job.lastAccessTime = Date.now();
       console.log('queues created:' + JSON.stringify(job));
 
-      lc.queueJobAsync(job);
+      launcher.queueJobAsync(job);
 
     }catch(err){
       console.error(err);

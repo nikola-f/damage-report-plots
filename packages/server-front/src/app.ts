@@ -8,17 +8,14 @@ const DynamoStore = connectDynamodbSession(session);
 const OAuth2Strategy = require('passport-google-oauth').OAuth2Strategy;
 
 const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware');
-// const api = require('./api');
 const util = require('@damage-report-plots/common/util');
+const env = require('@damage-report-plots/common/env');
+const api = require('./api');
 // import {me} from './me';
-export const app = express();
+
+const app = express();
 
 
-const GOOGLE_CLIENT_ID: string = process.env.GOOGLE_CLIENT_ID;
-const GOOGLE_CLIENT_SECRET: string = process.env.GOOGLE_CLIENT_SECRET;
-const GOOGLE_CALLBACK_URL_ME: string = process.env.GOOGLE_CALLBACK_URL_ME;
-const GOOGLE_CALLBACK_URL_JOB: string = process.env.GOOGLE_CALLBACK_URL_JOB;
-const SESSION_SECRET: string = process.env.SESSION_SECRET;
 const SESSION_MAXAGE: number = 1000 * 60 * 60; //1時間
 
 
@@ -27,12 +24,12 @@ app.use(awsServerlessExpressMiddleware.eventContext());
 // sessionとストレージ(dynamo)設定
 app.use(session({
   store: new DynamoStore({
-    region: process.env.AWS_REGION,
+    region: env.AWS_REGION,
     tableName: 'session',
     cleanupInterval: SESSION_MAXAGE,
     touchAfter: 0
   }),
-  secret: SESSION_SECRET,
+  secret: env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -48,9 +45,9 @@ app.use(passport.session());
 
 // 認証時のGoogle OAuth2, openidとfusiontables照会
 passport.use('google-me', new OAuth2Strategy({
-  clientID: GOOGLE_CLIENT_ID,
-  clientSecret: GOOGLE_CLIENT_SECRET,
-  callbackURL: GOOGLE_CALLBACK_URL_ME
+  clientID: env.GOOGLE_CLIENT_ID,
+  clientSecret: env.GOOGLE_CLIENT_SECRET,
+  callbackURL: env.GOOGLE_CALLBACK_URL_ME
 }, (accessToken, refreshToken, profile, done) => {
   console.log('profile:', profile);
 
@@ -135,7 +132,7 @@ passport.deserializeUser((user, done) => {
   done(null, user);
 });
 
-// app.use('/api', api);
+app.use('/api', api);
 // app.use('/me', me);
 
 

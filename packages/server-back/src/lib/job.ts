@@ -1,6 +1,6 @@
 import {GetItemOutput, QueryOutput} from 'aws-sdk/clients/dynamodb';
 import {APIGatewayEvent} from 'aws-lambda';
-import {Job, JobStatus, CreateJobMessage, Session} from './types';
+import {Job, JobStatus, CreateJobMessage, Session} from '@damage-report-plots/common/types';
 
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';

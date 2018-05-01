@@ -1,17 +1,17 @@
 import {SNSEvent, Handler, ProxyResult} from 'aws-lambda';
 import {MessageList, Message} from 'aws-sdk/clients/sqs';
 import {CreateTableMessage, CheckTableMessage,
-  InsertReportsMessage, Agent, OneReportMessage} from '../sub/types';
+  InsertReportsMessage, Agent, OneReportMessage} from '@damage-report-plots/common/types';
 
 import * as crypto from 'crypto';
 import * as escape from 'escape-quotes';
-import * as lc from '../sub/launcher';
-import * as ut from '../sub/util';
-import * as au from '../sub/_auth';
-import * as qu from '../sub/_queue';
+import * as launcher from '@damage-report-plots/common/launcher';
+import * as util from '@damage-report-plots/common/util';
+import * as env from '@damage-report-plots/common/env';
+import * as auth from './lib/auth';
+import * as queue from './lib/queue';
 const gapi = require('googleapis');
-const REDIRECT_URL: string = 'https://plots.run/redirect', //FIXME
-      FTDEFS = require('../sub/ftdef.json'),
+const FTDEFS = require('./ftdef.json'),
       REPORTS_COUNT: number = Number(process.env.REPORTS_COUNT),
       REPORTS_BATCH_COUNT: number = Number(process.env.REPORTS_BATCH_COUNT);
 
@@ -25,13 +25,13 @@ export async function createTable(event: SNSEvent, context, callback): Promise<v
 
   for(let rec of event.Records) {
     const ctm: CreateTableMessage = JSON.parse(rec.Sns.Message);
-    const auth = au.createGapiOAuth2Client(REDIRECT_URL)
-    auth.setCredentials(ctm.tokens);
+    const client = auth.createGapiOAuth2Client(env.GOOGLE_CALLBACK_URL_JOB);
+    client.setCredentials(ctm.tokens);
 
     // table作成
     const ft = gapi.fusiontables({
       "version": 'v2',
-      "auth": auth
+      "auth": client
     });
     const res: any = await new Promise((resolve, reject) => {
       ft.table.insert(FTDEFS.defs.report, (err, res) => {
@@ -42,7 +42,7 @@ export async function createTable(event: SNSEvent, context, callback): Promise<v
     // agentデータ保存
     console.log('created:' + JSON.stringify(res));
     ctm.agent.reportTableId = res.tableId;
-    lc.putAgentAsync(ctm.agent);
+    launcher.putAgentAsync(ctm.agent);
   }
 };
 
@@ -59,14 +59,14 @@ export async function checkTable(event: SNSEvent, context, callback): Promise<vo
     let notFound: boolean;
     const ctm: CheckTableMessage = JSON.parse(rec.Sns.Message);
 
-    if(ut.isSet(() => ctm.agent.reportTableId)) {
-      const auth = au.createGapiOAuth2Client(REDIRECT_URL)
-      auth.setCredentials(ctm.tokens);
+    if(util.isSet(() => ctm.agent.reportTableId)) {
+      const client = auth.createGapiOAuth2Client(env.GOOGLE_CALLBACK_URL_ME);
+      client.setCredentials(ctm.tokens);
 
       // fusiontablesの存在チェック(項目はチェックしない)
       const ft = gapi.fusiontables({
         "version": 'v2',
-        "auth": auth
+        "auth": client
       });
       const res: any = await new Promise((resolve, reject) => {
         ft.table.get(
@@ -88,7 +88,7 @@ export async function checkTable(event: SNSEvent, context, callback): Promise<vo
     // 存在しなければcreateTable
     if(notFound) {
       console.log('tableId not found, try to create');
-      lc.createTableAsync({
+      launcher.createTableAsync({
         "agent": ctm.agent,
         "tokens": ctm.tokens
       });
@@ -110,7 +110,7 @@ export async function insertReports(event: SNSEvent, context, callback): Promise
 
     // reportキューからreportを取得
     const queuedMessages: MessageList =
-      await qu.receiveMessageBatch(irm.job.report.queueUrl, REPORTS_COUNT);
+      await queue.receiveMessageBatch(irm.job.report.queueUrl, REPORTS_COUNT);
     if(queuedMessages.length <= 0) {
       console.log('no reports queued.');
       continue;
@@ -122,11 +122,11 @@ export async function insertReports(event: SNSEvent, context, callback): Promise
     }
 
     // fusiontablesにinsert
-    const auth = au.createGapiOAuth2Client(REDIRECT_URL)
-    auth.setCredentials(irm.job.tokens);
+    const client = auth.createGapiOAuth2Client(env.GOOGLE_CALLBACK_URL_JOB)
+    client.setCredentials(irm.job.tokens);
     const ft = gapi.fusiontables({
       "version": 'v2',
-      "auth": auth
+      "auth": client
     });
     while(reportMessages.length > 0) {
       // batch単位に分割
@@ -165,7 +165,7 @@ export async function insertReports(event: SNSEvent, context, callback): Promise
 
     // reportキューから削除
     const deleted =
-      await qu.deleteMessageBatch(irm.job.report.queueUrl, queuedMessages);
+      await queue.deleteMessageBatch(irm.job.report.queueUrl, queuedMessages);
     irm.job.report.queuedCount -= queuedMessages.length;
     irm.job.report.dequeuedCount += queuedMessages.length;
     console.log(`${deleted} reports deleted.`);
@@ -173,12 +173,12 @@ export async function insertReports(event: SNSEvent, context, callback): Promise
     // reportキューに残があれば再帰
     // 残がなければ finalizeJobへ
     const reportRemain: number =
-      await qu.getNumberOfMessages(irm.job.report.queueUrl);
+      await queue.getNumberOfMessages(irm.job.report.queueUrl);
     if(reportRemain > 0) {
       console.log(`${reportRemain} reports remaining, recurse.`);
-      lc.insertReportsAsync(irm);
+      launcher.insertReportsAsync(irm);
     }else{
-      lc.finalizeJobAsync(irm.job);
+      launcher.finalizeJobAsync(irm.job);
     }
 
   }

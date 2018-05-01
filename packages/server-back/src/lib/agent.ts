@@ -1,7 +1,7 @@
 import {SNSEvent, Handler, ProxyHandler,
   APIGatewayEvent} from 'aws-lambda';
-import {GetItemOutput} from '../back/aws-sdk/clients/dynamodb';
-import {Agent} from './types';
+import {GetItemOutput} from 'aws-sdk/clients/dynamodb';
+import {Agent} from '@damage-report-plots/common/types';
 
 
 import * as awsXRay from 'aws-xray-sdk';

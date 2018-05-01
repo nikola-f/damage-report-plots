@@ -1,5 +1,5 @@
 import {QueryOutput} from 'aws-sdk/clients/dynamodb';
-import {Job} from '../sub/types';
+import {Job} from '@damage-report-plots/common/types';
 
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
@@ -9,8 +9,8 @@ import * as awsPlain from 'aws-sdk';
 const AWS = awsXRay.captureAWS(awsPlain);
 const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
 
+const api = express.Router();
 
-export const api = express.Router();
 
 api.use(bodyParser.urlencoded({"extended": true}));
 api.use(bodyParser.json());
@@ -106,5 +106,4 @@ api.get('/stats', isAuthenticated,
 );
 
 
-// module.exports = router;
-// export = api;
+export = api;

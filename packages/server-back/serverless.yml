@@ -1,4 +1,4 @@
-service: damage-report-plots-backend
+service: damage-report-plots-server-back
 
 custom:
   arnRegionAccount:
@@ -7,18 +7,13 @@ custom:
         - - ${self:provider.region}
           - Ref: 'AWS::AccountId'
   webpack:
-    # webpackConfig: '../webpack.config.js'
     includeModules: true
-      # packagePath: '../package.json'
-  googleClientId:     ${file(../.cred.yml):googleClientId}
-  googleClientSecret: ${file(../.cred.yml):googleClientSecret}
-  sessionSecret:      ${file(../.cred.yml):sessionSecret}
-  # stretchSecret:      ${file(.cred.yml):stretchSecret}
+  googleClientId:     ${file(.cred.yml):googleClientId}
+  googleClientSecret: ${file(.cred.yml):googleClientSecret}
+  # sessionSecret:      ${file(../.cred.yml):sessionSecret}
   googleCallbackUrlMe:  'https://plots.run/auth/callback/me'
   # googleCallbackUrlMe:  'https://2u2eb8fiug.execute-api.us-west-2.amazonaws.com/dev/auth/callback/me'
   googleCallbackUrlJob:  'https://plots.run/auth/callback/job'
-  serializerKey:      ${file(../.cred.yml):serializerKey}
-  serializerSecret:   ${file(../.cred.yml):serializerSecret}
 
 provider:
   name: aws
@@ -27,7 +22,7 @@ provider:
   region: us-west-2
   profile: drp
   memorySize: 192
-  timeout: 30
+  timeout: 15
   tracing: true
   environment:
     ARN_REGION_ACCOUNT: ${self:custom.arnRegionAccount}
@@ -94,7 +89,6 @@ functions:
 
   queueThreads:
     handler: handler.queueThreads
-    memorySize: 192
     events:
       - sns: drp-queue-threads
     environment:
@@ -104,7 +98,6 @@ functions:
 
   queueMails:
     handler: handler.queueMails
-    memorySize: 192
     events:
       - sns: drp-queue-mails
     environment:
@@ -115,7 +108,6 @@ functions:
 
   parseMails:
     handler: handler.parseMails
-    memorySize: 192
     events:
       - sns: drp-parse-mails
     environment:
@@ -123,7 +115,6 @@ functions:
 
   insertReports:
     handler: handler.insertReports
-    memorySize: 192
     events:
       - sns: drp-insert-reports
     environment:

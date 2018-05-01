@@ -6,4 +6,3 @@ const server = awsServerlessExpress.createServer(app);
 
 exports.proxy = (event, context) => awsServerlessExpress.proxy(server, event, context);
 
-// exports.proxy = (event, context) => {};
