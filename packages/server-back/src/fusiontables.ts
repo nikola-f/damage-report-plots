@@ -8,8 +8,9 @@ import * as escape from 'escape-quotes';
 import * as launcher from '@damage-report-plots/common/launcher';
 import * as util from '@damage-report-plots/common/util';
 import * as env from '@damage-report-plots/common/env';
-import * as auth from './lib/auth';
-import * as queue from './lib/queue';
+import * as libAuth from './lib/auth';
+import * as libQueue from './lib/queue';
+import * as libAgent from './lib/agent';
 const gapi = require('googleapis');
 const FTDEFS = require('./ftdef.json'),
       REPORTS_COUNT: number = Number(process.env.REPORTS_COUNT),
@@ -25,7 +26,7 @@ export async function createTable(event: SNSEvent, context, callback): Promise<v
 
   for(let rec of event.Records) {
     const ctm: CreateTableMessage = JSON.parse(rec.Sns.Message);
-    const client = auth.createGapiOAuth2Client(env.GOOGLE_CALLBACK_URL_JOB);
+    const client = libAuth.createGapiOAuth2Client(env.GOOGLE_CALLBACK_URL_JOB);
     client.setCredentials(ctm.tokens);
 
     // table作成
@@ -60,7 +61,7 @@ export async function checkTable(event: SNSEvent, context, callback): Promise<vo
     const ctm: CheckTableMessage = JSON.parse(rec.Sns.Message);
 
     if(util.isSet(() => ctm.agent.reportTableId)) {
-      const client = auth.createGapiOAuth2Client(env.GOOGLE_CALLBACK_URL_ME);
+      const client = libAuth.createGapiOAuth2Client(env.GOOGLE_CALLBACK_URL_ME);
       client.setCredentials(ctm.tokens);
 
       // fusiontablesの存在チェック(項目はチェックしない)
@@ -106,11 +107,15 @@ export async function insertReports(event: SNSEvent, context, callback): Promise
 
   for(let rec of event.Records) {
     let irm: InsertReportsMessage = JSON.parse(rec.Sns.Message);
-    console.log('try to insert reports:' + JSON.stringify(irm.job.agent.openId));
+    console.log('try to insert reports:' + JSON.stringify(irm.job.openId));
+    
+    //agentテーブルからreportTableIdを取得
+    const agent: Agent = await libAgent.getAgent(irm.job.openId);
+    const reportTableId = agent.reportTableId;
 
     // reportキューからreportを取得
     const queuedMessages: MessageList =
-      await queue.receiveMessageBatch(irm.job.report.queueUrl, REPORTS_COUNT);
+      await libQueue.receiveMessageBatch(irm.job.report.queueUrl, REPORTS_COUNT);
     if(queuedMessages.length <= 0) {
       console.log('no reports queued.');
       continue;
@@ -122,7 +127,7 @@ export async function insertReports(event: SNSEvent, context, callback): Promise
     }
 
     // fusiontablesにinsert
-    const client = auth.createGapiOAuth2Client(env.GOOGLE_CALLBACK_URL_JOB)
+    const client = libAuth.createGapiOAuth2Client(env.GOOGLE_CALLBACK_URL_JOB)
     client.setCredentials(irm.job.tokens);
     const ft = gapi.fusiontables({
       "version": 'v2',
@@ -136,14 +141,14 @@ export async function insertReports(event: SNSEvent, context, callback): Promise
       reportMessages.splice(0, batchSize);
 
       // insert文の組み立て
-      const tableId: string = irm.job.agent.reportTableId;
+      // const tableId: string = agent.reportTableId;
       let sql: string = '';
       for(const aReport of batch) {
         const hash: string = getHash(aReport);
         const location: string = `${String(aReport.portal.latitude)},${String(aReport.portal.longitude)}`;
         const ownedNumber: number = aReport.portal.owned ? 1 : 0;
         const anInsert: string =
-          `INSERT INTO ${tableId} (hash, mailId, mailDate, portalLocation, portalName, portalOwned) ` +
+          `INSERT INTO ${reportTableId} (hash, mailId, mailDate, portalLocation, portalName, portalOwned) ` +
           'VALUES (' +
             `'${hash}', '${escape(aReport.mailId)}', ${String(aReport.mailDate)}, ` +
             `'${location}', '${escape(aReport.portal.name)}', ${ownedNumber}` +
@@ -165,7 +170,7 @@ export async function insertReports(event: SNSEvent, context, callback): Promise
 
     // reportキューから削除
     const deleted =
-      await queue.deleteMessageBatch(irm.job.report.queueUrl, queuedMessages);
+      await libQueue.deleteMessageBatch(irm.job.report.queueUrl, queuedMessages);
     irm.job.report.queuedCount -= queuedMessages.length;
     irm.job.report.dequeuedCount += queuedMessages.length;
     console.log(`${deleted} reports deleted.`);
@@ -173,7 +178,7 @@ export async function insertReports(event: SNSEvent, context, callback): Promise
     // reportキューに残があれば再帰
     // 残がなければ finalizeJobへ
     const reportRemain: number =
-      await queue.getNumberOfMessages(irm.job.report.queueUrl);
+      await libQueue.getNumberOfMessages(irm.job.report.queueUrl);
     if(reportRemain > 0) {
       console.log(`${reportRemain} reports remaining, recurse.`);
       launcher.insertReportsAsync(irm);

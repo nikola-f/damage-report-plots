@@ -28,8 +28,8 @@ export interface Agent {
 
   // threadQueueUrl: string,
   // mailQueueUrl: string,
-  // pUpv: number,
-  // pUpc: number
+  mUpv?: number,
+  mUpc?: number
 
 }
 
@@ -38,8 +38,8 @@ export enum JobStatus {
 }
 
 export interface Job {
-  agent: Agent,
-  // openId: string,
+  // agent: Agent,
+  openId: string,
   createTime: number,
 
   status: JobStatus,

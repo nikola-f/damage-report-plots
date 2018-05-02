@@ -10,11 +10,8 @@ import {Job, JobStatus, CreateJobMessage, Session, Agent}
   from '@damage-report-plots/common/types';
 
 import * as launcher from '@damage-report-plots/common/launcher';
-// import * as util from '@damage-report-plots/common/util';
-import * as queue from './lib/queue';
-import * as ticketUtil from './lib/ticket';
-// import * as jobUtil from './lib/job';
-// import ag = require('../sub/_agent');
+import * as libQueue from './lib/queue';
+import * as libTicket from './lib/ticket';
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
 const AWS = awsXRay.captureAWS(awsPlain);
@@ -28,8 +25,9 @@ const sqs: AWS.SQS = new AWS.SQS(),
  * jobの一覧を返す
  * @next -
  */
-export async function listJob(event: APIGatewayEvent, context, callback): Promise<void> {
-};
+// export async function listJob(event: APIGatewayEvent, context, callback): Promise<void> {
+// };
+
 
 /**
  * jobの作成
@@ -83,14 +81,14 @@ export async function createJob(event: APIGatewayEvent, context, callback): Prom
  * jobの開始
  * @next queueThreads
  */
-export async function startJob(event, context, callback): Promise<void> {
+export const startJob = async (event, context, callback): Promise<void> => {
   console.log(JSON.stringify(event));
 
   // ticket残高チェック
-  if(await ticketUtil.hasAvailable()) {
+  if(await libTicket.hasAvailable()) {
 
     // queueからjob取得
-    const message = await queue.receiveMessage(JOB_QUEUE_URL);
+    const message = await libQueue.receiveMessage(JOB_QUEUE_URL);
     if(message) {
       // queueThreads起動
       const job: Job = JSON.parse(message.Body);
@@ -116,7 +114,7 @@ export async function startJob(event, context, callback): Promise<void> {
  * jobの終了
  * @next deleteAgentQueue, consumeTicket, putJob
  */
-export async function finalizeJob(event: SNSEvent, context, callback): Promise<void> {
+export const finalizeJob = async (event: SNSEvent, context, callback): Promise<void> => {
   console.log(JSON.stringify(event));
 
   for(let rec of event.Records) {
@@ -126,7 +124,7 @@ export async function finalizeJob(event: SNSEvent, context, callback): Promise<v
     launcher.deleteAgentQueueAsync(job);
 
     // ticket消費
-    const tickets = ticketUtil.computeAmount(job);
+    const tickets = libTicket.computeAmount(job);
     launcher.consumeTicketsAsync(tickets);
 
     // 保存
@@ -149,14 +147,14 @@ export async function finalizeJob(event: SNSEvent, context, callback): Promise<v
  * jobのキューイング
  * @next putJob
  */
-export async function queueJob(event: SNSEvent, context, callback): Promise<void> {
+export const queueJob = async (event: SNSEvent, context, callback): Promise<void> => {
   console.log(JSON.stringify(event));
 
   for(let rec of event.Records) {
     const job: Job = JSON.parse(rec.Sns.Message);
 
     job.lastAccessTime = Date.now();
-    queue.sendMessage(JOB_QUEUE_URL, {
+    libQueue.sendMessage(JOB_QUEUE_URL, {
       "MessageId": '0',
       "Body": JSON.stringify(job)
     });
@@ -176,7 +174,7 @@ export async function queueJob(event: SNSEvent, context, callback): Promise<void
  * jobのdb保存
  * @next -
  */
-export async function putJob(event: SNSEvent, context, callback): Promise<void> {
+export const putJob = async (event: SNSEvent, context, callback): Promise<void> => {
   console.log(JSON.stringify(event));
 
   for(let rec of event.Records) {
@@ -210,7 +208,7 @@ export async function putJob(event: SNSEvent, context, callback): Promise<void> 
  * agent queueの削除
  * @next -
  */
-export async function deleteAgentQueue(event: SNSEvent, context, callback): Promise<void> {
+export const deleteAgentQueue = async (event: SNSEvent, context, callback): Promise<void> => {
   console.log('event:' + JSON.stringify(event));
 
   for(let rec of event.Records) {
@@ -245,7 +243,7 @@ export async function deleteAgentQueue(event: SNSEvent, context, callback): Prom
  * agent queueの作成
  * @next queueJob
  */
-export async function createAgentQueue(event: SNSEvent, context, callback): Promise<void> {
+export const createAgentQueue = async (event: SNSEvent, context, callback): Promise<void> => {
   console.log('event:' + JSON.stringify(event));
 
   for(let rec of event.Records) {
@@ -253,7 +251,7 @@ export async function createAgentQueue(event: SNSEvent, context, callback): Prom
 
     try {
       let createQueueParams: CreateQueueRequest = {
-        "QueueName": String(job.createTime) + '_thread_' + job.agent.openId + '.fifo',
+        "QueueName": String(job.createTime) + '_thread_' + job.openId + '.fifo',
         "Attributes": {
           "FifoQueue": 'true',
           "ContentBasedDeduplication": 'false'
@@ -267,7 +265,7 @@ export async function createAgentQueue(event: SNSEvent, context, callback): Prom
       };
 
       createQueueParams = {
-        "QueueName": String(job.createTime) + '_mail_' + job.agent.openId + '.fifo',
+        "QueueName": String(job.createTime) + '_mail_' + job.openId + '.fifo',
         "Attributes": {
           "FifoQueue": 'true',
           "ContentBasedDeduplication": 'false'
@@ -281,7 +279,7 @@ export async function createAgentQueue(event: SNSEvent, context, callback): Prom
       };
 
       createQueueParams = {
-        "QueueName": String(job.createTime) + '_report_' + job.agent.openId + '.fifo',
+        "QueueName": String(job.createTime) + '_report_' + job.openId + '.fifo',
         "Attributes": {
           "FifoQueue": 'true',
           "ContentBasedDeduplication": 'false'

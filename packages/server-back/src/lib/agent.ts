@@ -10,7 +10,7 @@ const AWS = awsXRay.captureAWS(awsPlain);
 const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
 
 
-export async function getAgent(openId: string): Promise<Agent> {
+export const getAgent = async (openId: string): Promise<Agent> => {
   console.log(JSON.stringify(event));
 
   let agent: Agent = undefined;

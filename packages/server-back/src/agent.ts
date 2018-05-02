@@ -1,8 +1,6 @@
 import {SNSEvent, Handler, ProxyResult} from 'aws-lambda';
 import {Agent, JobStatus, CreateJobMessage} from '@damage-report-plots/common/types';
 
-// import lc = require('../sub/launcher');
-// import * as launcher from '@damage-report-plots/common/launcher';
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
 const AWS = awsXRay.captureAWS(awsPlain);
@@ -41,3 +39,5 @@ export async function putAgent(event: SNSEvent, context, callback): Promise<void
     "body": {}
   });
 };
+
+

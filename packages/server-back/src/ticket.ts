@@ -1,8 +1,4 @@
 import {SNSEvent, Handler, ProxyResult} from 'aws-lambda';
-// import {GetQueueAttributesRequest, QueueAttributeName,
-//   GetQueueAttributesResult, SendMessageBatchRequest,
-//   ReceiveMessageRequest, ReceiveMessageResult,
-//   DeleteMessageBatchRequest, DeleteMessageBatchResult} from 'aws-sdk/clients/sqs';
 import {UpdateItemOutput} from 'aws-sdk/clients/dynamodb';
 
 
