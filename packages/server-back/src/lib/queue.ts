@@ -15,8 +15,8 @@ const THREAD_COUNT: number = Number(process.env.THREAD_COUNT);
 /**
  * queueに入っているメッセージの数を返す
  */
-export function getNumberOfMessages(url: string): Promise<number> {
-  return new Promise((resolve, reject) => {
+export const getNumberOfMessages = async (url: string): Promise<number> => {
+  return new Promise<number>((resolve, reject) => {
 
     const params: GetQueueAttributesRequest = {
       QueueUrl: url,
@@ -33,16 +33,16 @@ export function getNumberOfMessages(url: string): Promise<number> {
 };
 
 
-export async function sendMessage(url: string, message: Message): Promise<number> {
+export const sendMessage = async (url: string, message: Message): Promise<number> => {
   return sendMessageBatch(url, [message]);
-}
+};
 
 
 /**
  * 10件ずつキューイング
  */
-export async function sendMessageBatch(url: string,
-  messages: MessageList): Promise<number> {
+export const sendMessageBatch = async (url: string,
+  messages: MessageList): Promise<number> => {
 
     console.log('try to send messages:' + url);
 
@@ -77,7 +77,7 @@ export async function sendMessageBatch(url: string,
 };
 
 
-export async function receiveMessage(url: string): Promise<Message> {
+export const receiveMessage = async (url: string): Promise<Message> => {
 
   console.log('try to receive message:' + url);
 
@@ -90,7 +90,7 @@ export async function receiveMessage(url: string): Promise<Message> {
 };
 
 
-export async function receiveMessageBatch(url: string, maxCount: number): Promise<MessageList> {
+export const receiveMessageBatch = async (url: string, maxCount: number): Promise<MessageList> => {
 
   console.log('try to receive messages:' + url);
 
@@ -125,7 +125,7 @@ export async function receiveMessageBatch(url: string, maxCount: number): Promis
 };
 
 
-export async function deleteMessageBatch(url: string, messages: MessageList): Promise<number> {
+export const deleteMessageBatch = async (url: string, messages: MessageList): Promise<number> => {
 
   console.log('try to delete messages:' + url);
 

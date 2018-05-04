@@ -21,7 +21,7 @@ const FTDEFS = require('./ftdef.json'),
  * fusionTableの作成
  * @next putAgent
  */
-export async function createTable(event: SNSEvent, context, callback): Promise<void> {
+export const createTable = async (event: SNSEvent, context, callback): Promise<void> => {
   console.log(JSON.stringify(event));
 
   for(let rec of event.Records) {
@@ -52,7 +52,7 @@ export async function createTable(event: SNSEvent, context, callback): Promise<v
  * fusiontableの存在チェック
  * @next createTable
  */
-export async function checkTable(event: SNSEvent, context, callback): Promise<void> {
+export const checkTable = async (event: SNSEvent, context, callback): Promise<void> => {
   console.log(JSON.stringify(event));
 
   for(let rec of event.Records) {
@@ -102,7 +102,7 @@ export async function checkTable(event: SNSEvent, context, callback): Promise<vo
  * reportデータの保存
  * @next insertReports, finalizeJob
  */
-export async function insertReports(event: SNSEvent, context, callback): Promise<void> {
+export const insertReports = async (event: SNSEvent, context, callback): Promise<void> => {
   console.log(JSON.stringify(event));
 
   for(let rec of event.Records) {
@@ -195,7 +195,7 @@ export async function insertReports(event: SNSEvent, context, callback): Promise
 
 
 
-function getHash(report: OneReportMessage): string {
+const getHash = (report: OneReportMessage): string => {
 
   const shasum = crypto.createHash('md5');
   return shasum

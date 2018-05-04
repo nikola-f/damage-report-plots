@@ -9,12 +9,12 @@ const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient()
 
 
 
-export function computeAmount(job: Job): number {
+export const computeAmount = (job: Job): number => {
   return 100;
 };
 
 
-export async function hasAvailable(): Promise<boolean> {
+export const hasAvailable = async (): Promise<boolean> => {
   let result: boolean = false;
   try {
     const res: GetItemOutput = await dynamo.get({

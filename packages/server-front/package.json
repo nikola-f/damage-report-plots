@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "webpack": "sls webpack",
-    "deploy" : "sls deploy"
+    "deploy": "sls deploy"
   },
   "author": "nikola-f",
   "license": "Apache License 2.0",
@@ -15,6 +15,8 @@
     "aws-serverless-express": "^3.2.0",
     "aws-xray-sdk": "^1.2.0",
     "connect-dynamodb-session": "^1.1.0",
+    "cookie-parser": "^1.4.3",
+    "csurf": "^1.9.0",
     "express": "^4.16.3",
     "express-session": "^1.15.6",
     "passport": "^0.4.0",

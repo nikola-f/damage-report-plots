@@ -14,7 +14,7 @@ import * as cheerio from 'cheerio';
 const THREAD_BATCH_COUNT = Number(process.env.THREAD_BATCH_COUNT);
 
 
-export function decodeBase64(origin: string): string {
+export const decodeBase64 = (origin: string): string => {
   // '-' -> '+' と '_' -> '/'
   const replaced = origin.replace(/-/g, '+').replace(/_/g, '/');
   const bytes = base64.decode(replaced);
@@ -23,7 +23,7 @@ export function decodeBase64(origin: string): string {
 };
 
 
-export function parseHtml(html: string): Portal[] {
+export const parseHtml = (html: string): Portal[] => {
 
   // console.log(html);
   const $ = cheerio.load(html);
@@ -82,8 +82,8 @@ export function parseHtml(html: string): Portal[] {
 
 
 
-export async function getMails(tokens: any, threads: MessageList,
-  rangeFromTime: number, rangeToTime: number): Promise<OneMailMessage[]> {
+export const getMails = async (tokens: any, threads: MessageList,
+  rangeFromTime: number, rangeToTime: number): Promise<OneMailMessage[]> => {
   console.log('try to get mails.');
 
   const batchelor = new Batchelor({
@@ -151,7 +151,7 @@ export async function getMails(tokens: any, threads: MessageList,
 };
 
 
-function parseBatchResponse(response: any): any {
+const parseBatchResponse = (response: any): any => {
 
   let messages = [];
   if(util.isSet(() => response.parts)) {
@@ -169,7 +169,7 @@ function parseBatchResponse(response: any): any {
 }
 
 
-function url2latlong(url: string): {lat: number, long: number} {
+const url2latlong = (url: string): {lat: number, long: number} => {
   let result = {
     "lat": 0,
     "long": 0

@@ -31,7 +31,7 @@ const //REDIRECT_URL: string = 'https://plots.run/redirect', //FIXME
  * mailの解析およびreportのキューイング
  * @next putJob, parseMails, insertReports
  */
-export async function parseMails(event: SNSEvent, context, callback): Promise<void> {
+export const parseMails = async (event: SNSEvent, context, callback): Promise<void> => {
   console.log(JSON.stringify(event));
 
   for(let rec of event.Records) {
@@ -107,7 +107,7 @@ export async function parseMails(event: SNSEvent, context, callback): Promise<vo
  * mailの取得およびキューイング
  * @next putJob, queueMails, parseMails
  */
-export async function queueMails(event: SNSEvent, context, callback): Promise<void> {
+export const queueMails = async (event: SNSEvent, context, callback): Promise<void> => {
   console.log(JSON.stringify(event));
 
   for(let rec of event.Records) {
@@ -184,7 +184,7 @@ export async function queueMails(event: SNSEvent, context, callback): Promise<vo
  * threadの取得およびキューイング
  * @next putJob, queueThreads, queueMails
  */
-export async function queueThreads(event: SNSEvent, context, callback): Promise<void> {
+export const queueThreads = async (event: SNSEvent, context, callback): Promise<void> => {
   console.log(JSON.stringify(event));
 
   for(let rec of event.Records) {

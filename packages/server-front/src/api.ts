@@ -1,13 +1,17 @@
-import {QueryOutput} from 'aws-sdk/clients/dynamodb';
-import {Job} from '@damage-report-plots/common/types';
+// import {QueryOutput} from 'aws-sdk/clients/dynamodb';
+import {Job, CreateJobMessage} from '@damage-report-plots/common/types';
 
-import * as express from 'express';
-import * as bodyParser from 'body-parser';
+const express = require('express');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const csrf = require('csurf');
 
-import * as awsXRay from 'aws-xray-sdk';
-import * as awsPlain from 'aws-sdk';
-const AWS = awsXRay.captureAWS(awsPlain);
-const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
+// const awsXRay = require('aws-xray-sdk');
+// const awsPlain = require('aws-sdk');
+// const AWS = awsXRay.captureAWS(awsPlain);
+// const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
+
+const libJob = require('@damage-report-plots/common/job');
 
 const api = express.Router();
 
@@ -20,48 +24,33 @@ const isAuthenticated = (req, res, next) => {
   if(req.isAuthenticated()) {
     next();
   }else{
-    res.redirect('/403.html');
+    res.redirect('/401.html');
   }
 };
 
 
-// jobテーブルから降順で10件取得
 const getJobs = async (req, res, next): Promise<void> => {
 
-  let jobs: Job[] = [];
-  let qo: QueryOutput;
-  try {
-    qo = await dynamo.query({
-      "TableName": 'job',
-      "ScanIndexForward": false,
-      "KeyConditionExpression": 'openId = :o',
-      "ExpressionAttributeValues": {
-        ":o": req.user.openId
-      },
-      "Limit": 10
-    }).promise();
-    
-    if(!qo.Items) {
-      next();
-      return Promise.resolve();
-    }
-
-    for(let item of qo.Items) {
-      //TODO マッピング
-      console.log('item:', item);
-    }
-
-  }catch(err){
-    console.error('getJobList:', req);
-    // res.json({"err": err, "req/user": req.user});
-    next();
-    return Promise.resolve(err);
-  }
+  const jobs: Job[] = await libJob.getJobList(req.user.openId);
 
   req.jobs = jobs;
   next();
   return Promise.resolve();
+};
 
+
+
+const checkCreateJobMessage = async (req, res, next): Promise<void> => {
+
+  let isValid: boolean = false;
+
+  if(req.user) {
+    const cjm: CreateJobMessage = req.body;
+    isValid = await libJob.validateCreateMessage(cjm, req.user);
+  }
+
+  isValid ? next(): res.redirect('/400.html');
+  return Promise.resolve();
 };
 
 
@@ -79,7 +68,7 @@ api.get('/jobs',
 // job登録
 api.post('/job',
   isAuthenticated,
-  // checkRequest,
+  checkCreateJobMessage,
   (req, res) => {
     res.json({ message: 'job' });
   }

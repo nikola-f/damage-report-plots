@@ -7,7 +7,7 @@ const {gapi} = require('googleapis');
 // const oauth2 = gapi.auth.OAuth2;
 
 
-export function createGapiOAuth2Client(redirectUrl: string): any {
+export const createGapiOAuth2Client = (redirectUrl: string): any => {
   // if(!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
   //   throw(new Error('google credential ENV not set.'))
   // }
@@ -25,7 +25,7 @@ export function createGapiOAuth2Client(redirectUrl: string): any {
  * @param  {any}    auth [tokensセット済みのclient]
  * @return {[type]}      [description]
  */
-export async function refreshAccessTokenManually(auth: any): Promise<any> {
+export const refreshAccessTokenManually = async (auth: any): Promise<any> => {
   console.log('try to refresh tokens.');
 
   return new Promise((resolve, reject) => {
@@ -36,7 +36,7 @@ export async function refreshAccessTokenManually(auth: any): Promise<any> {
 }
 
 
-export async function revokeTokens(auth: any): Promise<any> {
+export const revokeTokens = async (auth: any): Promise<any> => {
   console.log('try to revoke tokens.');
 
   return new Promise((resolve, reject) => {
@@ -49,7 +49,7 @@ export async function revokeTokens(auth: any): Promise<any> {
 
 
 
-export function generateRedirectURI2Refer(oauth2Client: any): string {
+export const generateRedirectURI2Refer = (oauth2Client: any): string => {
   return oauth2Client.generateAuthUrl({
     "access_type": "online",
     "scope": [
@@ -62,7 +62,7 @@ export function generateRedirectURI2Refer(oauth2Client: any): string {
 
 
 
-export function generateRedirectURI2Update(oauth2Client: any): string {
+export const generateRedirectURI2Update = (oauth2Client: any): string => {
   return oauth2Client.generateAuthUrl({
     "access_type": "offline",
     "approval_prompt": "force",

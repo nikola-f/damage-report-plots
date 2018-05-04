@@ -12,7 +12,7 @@ const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient()
  * agentの保存
  * @next -
  */
-export async function putAgent(event: SNSEvent, context, callback): Promise<void> {
+export const putAgent = async (event: SNSEvent, context, callback): Promise<void> => {
   console.log(JSON.stringify(event));
 
   for(let rec of event.Records) {
