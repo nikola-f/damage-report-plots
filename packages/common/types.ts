@@ -69,7 +69,7 @@ export interface CreateJobMessage {
   // agent: Agent,
   rangeFromTime: number,
   rangeToTime: number,
-  stateToken: string
+  // stateToken: string
   // tokens: any
 }
 

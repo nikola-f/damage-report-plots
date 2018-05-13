@@ -43,6 +43,9 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 
+app.use('/api', api);
+
+
 // 認証時のGoogle OAuth2, openidとfusiontables照会
 passport.use('google-me', new OAuth2Strategy({
   clientID: env.GOOGLE_CLIENT_ID,
@@ -96,24 +99,71 @@ app.get('/auth/callback/me',
 
 
 // job作成時のGoogle OAuth2, gmail照会とfusiontables更新, offline
-// passport.use('google-job', new GoogleStrategy({
-//   clientID: GOOGLE_CLIENT_ID,
-//   clientSecret: GOOGLE_CLIENT_SECRET,
-//   callbackURL: GOOGLE_CALLBACK_URL_JOB,
-//   accessType: 'offline'
-// }, (accessToken, refreshToken, profile, done) => {
-//   console.log('profile:', profile);
-// }));
+passport.use('google-job', new OAuth2Strategy({
+  clientID: env.GOOGLE_CLIENT_ID,
+  clientSecret: env.GOOGLE_CLIENT_SECRET,
+  callbackURL: env.GOOGLE_CALLBACK_URL_JOB,
+}, (accessToken, refreshToken, profile, done) => {
+  console.log('profile:', profile);
 
-// app.get('/auth/job', 
-//   passport.authenticate('google-job', {
-//     scope: [
-//       'https://www.googleapis.com/auth/fusiontables',
-//       'https://www.googleapis.com/auth/gmail.readonly'
-//     ],
-//     failureRedirect: '/401.html'
-//   })
-// );
+  //iconのURL
+  const photoUrl = util.isSet(() => profile.photos[0].value) ?
+    profile.photos[0].value : undefined;
+  const tokens: Tokens = {
+    "jobAccessToken": accessToken,
+    "jobRefreshToken": refreshToken,
+    // "meAccessToken": accessToken
+  };
+  const user: Session = {
+    "openId": profile.id,
+    "createTime": Date.now(),
+    "lastAccessTime": Date.now(),
+    "photoUrl": photoUrl,
+    "tokens": tokens,
+  }
+  done(null, user);
+}));
+
+
+app.get('/auth/job', 
+  (req, res, next) => {
+    if(req.isAuthenticated() &&
+       util.isSet(() => req.user.tokens.jobRefreshToken) &&
+       req.user.tokens.jobRefreshToken) {
+      res.json({
+        "message": 'token generated'
+      });
+    }else{
+      next();
+    }
+  },
+  passport.authenticate('google-job', {
+    scope: [
+      'openid',
+      'https://www.googleapis.com/auth/fusiontables',
+      'https://www.googleapis.com/auth/gmail.readonly'
+    ],
+    session: false,
+    accessType: 'offline',
+    prompt: 'consent',
+    failureRedirect: '/401.html'
+  })
+);
+
+
+
+app.get('/auth/callback/job',
+  passport.authenticate('google-job', {
+    failureRedirect: '/401.html'
+  }),
+  (req, res) => {
+    console.log('session:', req.session);
+    res.json({
+      "message": 'token generated'
+    });
+  }
+);
+
 
 // router.get('/auth/callback/job', (req, res) => {
 //   res.json({ message: 'callback' });
@@ -132,7 +182,6 @@ passport.deserializeUser((user, done) => {
   done(null, user);
 });
 
-app.use('/api', api);
 // app.use('/me', me);
 
 

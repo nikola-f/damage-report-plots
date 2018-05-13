@@ -1,6 +1,7 @@
 import {GetItemOutput, QueryOutput} from 'aws-sdk/clients/dynamodb';
 import {Job, JobStatus, CreateJobMessage, Session} from './types';
 
+import * as util from './util';
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
 const AWS = awsXRay.captureAWS(awsPlain);
@@ -39,37 +40,66 @@ export const getJobList = async (openId: string): Promise<Job[]> => {
 };
 
 
-export const validateCreateMessage = async (cjm: CreateJobMessage, user: Session): Promise<boolean> => {
+export const validateCreateMessage = async (message: any, user: Session): Promise<boolean> => {
+
+  console.log('validateCreateMessage:', {
+    "message": message,
+    "user": user
+  });
+  let result: boolean = false;
 
   // csrf対策はfront側で。
-  
-  // rangeが0-90日でないならNG
-  const range: number = cjm.rangeToTime - cjm.rangeFromTime;
-  if(range < 0 ||
-     range > 1000*60*60*24*90) {
-    return Promise.resolve(false);
-  }
-  
-  // job実行に必要なtokenがないならNG
-  if(!user.tokens.jobAccessToken || !user.tokens.jobRefreshToken) {
-    return Promise.resolve(false);
-  }
-  
-  // 同agentの未完了のjobが存在するならNG
-  const jobRes: QueryOutput = await dynamo.query({
-    "TableName": 'job',
-    "KeyConditionExpression": 'openId = :o',
-    "FilterExpression": 'status IN (:s0, :s1)',
-    "ExpressionAttributeValues": {
-      ":o": user.openId,
-      ":s0": JobStatus.Created,
-      ":s1": JobStatus.Processing
-    },
-    "Limit": 1
-  }).promise();
-  if(jobRes.Items) {
-    return Promise.resolve(false);
-  }
 
-  return Promise.resolve(true);
+  try {
+
+    // rangeが未定義ならNG  
+    if(!util.isSet(() => message.rangeFromTime) ||
+       !util.isSet(() => message.rangeToTime)) {
+      throw new Error('create message/:undefined range');
+    }
+    const cjm: CreateJobMessage = {
+      "rangeFromTime": message.rangeFromTime,
+      "rangeToTime": message.rangeToTime
+    };
+    
+    // rangeが0-90日でないならNG
+    const range: number = cjm.rangeToTime - cjm.rangeFromTime;
+    if(range < 0 ||
+       range > 1000*60*60*24*90) {
+      throw new Error(`create message/invalid range:${range}`);
+    }
+    
+    // job実行に必要なtokenがないならNG
+    if(!user.tokens.jobAccessToken || !user.tokens.jobRefreshToken) {
+      throw new Error('create message/invalid token');
+    }
+
+    // 同agentの未完了のjobが存在するならNG
+    const jobRes: QueryOutput = await dynamo.query({
+      "TableName": 'job',
+      "KeyConditionExpression": 'openId = :o',
+      "FilterExpression": '#st IN (:s0, :s1)',
+      "ExpressionAttributeNames": {
+        "#st": 'status'
+      },
+      "ExpressionAttributeValues": {
+        ":o": user.openId,
+        ":s0": JobStatus.Created,
+        ":s1": JobStatus.Processing
+      },
+      "Limit": 1
+    }).promise();
+    if(jobRes.Items && jobRes.Items.length > 0) {
+      throw new Error(`create message/already exists:${JSON.stringify(jobRes.Items)}`);
+    }
+    
+    result = true;
+
+  }catch(err){
+    console.log(err);
+  }finally{
+    return Promise.resolve(result);
+  }
+  
+
 };

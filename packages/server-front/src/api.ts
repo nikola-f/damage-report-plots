@@ -1,4 +1,3 @@
-// import {QueryOutput} from 'aws-sdk/clients/dynamodb';
 import {Job, CreateJobMessage} from '@damage-report-plots/common/types';
 
 const express = require('express');
@@ -6,15 +5,13 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const csrf = require('csurf');
 
-// const awsXRay = require('aws-xray-sdk');
-// const awsPlain = require('aws-sdk');
-// const AWS = awsXRay.captureAWS(awsPlain);
-// const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
 
 const libJob = require('@damage-report-plots/common/job');
 
 const api = express.Router();
 
+const csrfProtection = csrf({"cookie": true});
+api.use(cookieParser());
 
 api.use(bodyParser.urlencoded({"extended": true}));
 api.use(bodyParser.json());
@@ -29,36 +26,14 @@ const isAuthenticated = (req, res, next) => {
 };
 
 
-const getJobs = async (req, res, next): Promise<void> => {
-
-  const jobs: Job[] = await libJob.getJobList(req.user.openId);
-
-  req.jobs = jobs;
-  next();
-  return Promise.resolve();
-};
-
-
-
-const checkCreateJobMessage = async (req, res, next): Promise<void> => {
-
-  let isValid: boolean = false;
-
-  if(req.user) {
-    const cjm: CreateJobMessage = req.body;
-    isValid = await libJob.validateCreateMessage(cjm, req.user);
-  }
-
-  isValid ? next(): res.redirect('/400.html');
-  return Promise.resolve();
-};
-
-
-
 // job一覧
 api.get('/jobs',
   isAuthenticated,
-  getJobs,
+  async (req, res, next) => {
+    const jobs: Job[] = await libJob.getJobList(req.user.openId);
+    req.jobs = jobs;
+    next();
+  },
   (req, res) => {
     req.jobs ? res.json(req.jobs) : res.json([]);
   }
@@ -67,10 +42,17 @@ api.get('/jobs',
 
 // job登録
 api.post('/job',
+  // csrfProtection,
   isAuthenticated,
-  checkCreateJobMessage,
+  async (req, res, next) => {
+    let isValid: boolean = false;
+    if(req.body && req.user) {
+      isValid = await libJob.validateCreateMessage(req.body, req.user);
+    }
+    isValid ? next(): res.redirect('/400.html');
+  },
   (req, res) => {
-    res.json({ message: 'job' });
+    res.json({ message: 'job created' });
   }
 );
 
