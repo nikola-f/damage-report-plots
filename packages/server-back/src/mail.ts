@@ -122,10 +122,14 @@ export const queueMails = async (event: SNSEvent, context, callback): Promise<vo
       continue;
     }
 
-    // access_token 再作成
-    let client = libAuth.createGapiOAuth2Client(env.GOOGLE_CALLBACK_URL_JOB);
-    client.setCredentials(qmm.job.tokens);
-    qmm.job.tokens = await libAuth.refreshAccessTokenManually(client);
+    // access_token 再作成 //TODEL
+    let client = libAuth.createGapiOAuth2Client(
+      env.GOOGLE_CALLBACK_URL_JOB,
+      qmm.job.tokens.jobAccessToken,
+      qmm.job.tokens.jobRefreshToken
+    );
+    // client.setCredentials(qmm.job.tokens);
+    // qmm.job.tokens = await libAuth.refreshAccessTokenManually(client);
 
     // gapiでthreadの詳細(mail付き)取得
     const mails: OneThreadMessage[] =
@@ -162,7 +166,7 @@ export const queueMails = async (event: SNSEvent, context, callback): Promise<vo
 
     // threadキューに残があれば再帰
     // なければparseMailsを起動
-    let threadRemain: number =
+    const threadRemain: number =
       await libQueue.getNumberOfMessages(qmm.job.thread.queueUrl);
     if(threadRemain > 0) {
       launcher.queueMailsAsync(qmm);
@@ -192,11 +196,15 @@ export const queueThreads = async (event: SNSEvent, context, callback): Promise<
 
     console.log('try to queue threads:' + JSON.stringify(qtm.job.openId));
 
-    const client = libAuth.createGapiOAuth2Client(env.GOOGLE_CALLBACK_URL_JOB);
-    client.setCredentials({
-      "access_token": qtm.job.tokens.jobAccessToken,
-      "refresh_token": qtm.job.tokens.jobRefreshToken
-    });
+    const client = libAuth.createGapiOAuth2Client(
+      env.GOOGLE_CALLBACK_URL_JOB,
+      qtm.job.tokens.jobAccessToken,
+      qtm.job.tokens.jobRefreshToken
+    );
+    // client.setCredentials({
+    //   "access_token": qtm.job.tokens.jobAccessToken,
+    //   "refresh_token": qtm.job.tokens.jobRefreshToken
+    // });
 
     // yyyy-mm-ddに変換
     const after = dateformat(new Date(qtm.job.rangeFromTime), 'isoDate'),

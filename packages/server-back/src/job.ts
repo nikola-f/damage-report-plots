@@ -9,9 +9,12 @@ import {QueryOutput} from 'aws-sdk/clients/dynamodb';
 import {Job, JobStatus, CreateJobMessage, Session, Agent} 
   from '@damage-report-plots/common/types';
 
+const env = require('@damage-report-plots/common/env');
+
 import * as launcher from '@damage-report-plots/common/launcher';
 import * as libQueue from './lib/queue';
 import * as libTicket from './lib/ticket';
+import * as libAuth from './lib/auth';
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
 const AWS = awsXRay.captureAWS(awsPlain);
@@ -71,13 +74,19 @@ export const finalizeJob = async (event: SNSEvent, context, callback): Promise<v
     const tickets = libTicket.computeAmount(job);
     launcher.consumeTicketsAsync(tickets);
 
-    // 保存
+    // token無効化
+    libAuth.revokeTokens(
+      env.GOOGLE_CALLBACK_URL_JOB,
+      job.tokens.jobAccessToken,
+      job.tokens.jobRefreshToken
+    );
+    job.tokens = null;
+
+    // DB保存
     job.lastAccessTime = Date.now();
     job.status = JobStatus.Done;
-    job.tokens = null;
     launcher.putJobAsync(job);
 
-    // tokenの無効化はauthorizer
   }
 
   callback(null, {

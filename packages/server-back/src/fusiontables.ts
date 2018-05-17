@@ -126,13 +126,18 @@ export const insertReports = async (event: SNSEvent, context, callback): Promise
       reportMessages.push(aReport);
     }
 
-    // fusiontablesにinsert
-    const client = libAuth.createGapiOAuth2Client(env.GOOGLE_CALLBACK_URL_JOB)
-    client.setCredentials(irm.job.tokens);
+    const client = libAuth.createGapiOAuth2Client(
+      env.GOOGLE_CALLBACK_URL_JOB,
+      irm.job.tokens.jobAccessToken,
+      irm.job.tokens.jobRefreshToken
+    );
+    // client.setCredentials(irm.job.tokens);
     const ft = gapi.fusiontables({
       "version": 'v2',
       "auth": client
     });
+
+    // fusiontablesにinsert
     while(reportMessages.length > 0) {
       // batch単位に分割
       const batchSize = reportMessages.length>=REPORTS_BATCH_COUNT ?

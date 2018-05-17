@@ -11,8 +11,6 @@ const AWS = awsXRay.captureAWS(awsPlain);
 import * as env from './env';
 
 const sns: AWS.SNS = new AWS.SNS();
-//       SNS_NOP: boolean = Boolean(process.env.SNS_NOP) || false;
-// ;
 
 
 const TOPIC_PREFIX = 'arn:aws:sns:' + env.ARN_REGION_ACCOUNT + ':',
@@ -41,7 +39,7 @@ export const createTableAsync = (ctm: CreateTableMessage): Promise<void> => {
 };
 
 
-export function checkTableAsync(ctm: CheckTableMessage): Promise<void> {
+export const checkTableAsync = (ctm: CheckTableMessage): Promise<void> => {
   return publish({
     "Message": JSON.stringify(ctm),
     "Subject": 'CheckTable',
@@ -51,7 +49,7 @@ export function checkTableAsync(ctm: CheckTableMessage): Promise<void> {
 
 
 
-export function putJobAsync(job: Job): Promise<void> {
+export const putJobAsync = (job: Job): Promise<void> => {
   return publish({
     "Message": JSON.stringify(job),
     "Subject": 'PutJob',
@@ -60,7 +58,7 @@ export function putJobAsync(job: Job): Promise<void> {
 };
 
 
-export function finalizeJobAsync(job: Job): Promise<void> {
+export const finalizeJobAsync = (job: Job): Promise<void> => {
   return publish({
     "Message": JSON.stringify(job),
     "Subject": 'FinalizeJob',
@@ -78,7 +76,7 @@ export const queueJobAsync = (job: Job): Promise<void> => {
 };
 
 
-export function createAgentQueueAsync(job: Job): Promise<void> {
+export const createAgentQueueAsync = (job: Job): Promise<void> => {
   return publish({
     "Message": JSON.stringify(job),
     "Subject": 'CreateAgentQueue',
@@ -87,7 +85,7 @@ export function createAgentQueueAsync(job: Job): Promise<void> {
 };
 
 
-export function deleteAgentQueueAsync(job: Job): Promise<void> {
+export const deleteAgentQueueAsync = (job: Job): Promise<void> => {
   return publish({
     "Message": JSON.stringify(job),
     "Subject": 'DeleteAgentQueue',
@@ -96,7 +94,7 @@ export function deleteAgentQueueAsync(job: Job): Promise<void> {
 };
 
 
-export function putAgentAsync(agent: Agent): Promise<void> {
+export const putAgentAsync = (agent: Agent): Promise<void> => {
   return publish({
     "Message": JSON.stringify(agent),
     "Subject": 'PutJob',
@@ -105,7 +103,7 @@ export function putAgentAsync(agent: Agent): Promise<void> {
 };
 
 
-export function queueThreadsAsync(qtm: QueueThreadsMessage): Promise<void> {
+export const queueThreadsAsync = (qtm: QueueThreadsMessage): Promise<void> => {
   return publish({
     "Message": JSON.stringify(qtm),
     "Subject": 'QueueThreads',
@@ -113,7 +111,7 @@ export function queueThreadsAsync(qtm: QueueThreadsMessage): Promise<void> {
   });
 };
 
-export function queueMailsAsync(qmm: QueueMailsMessage): Promise<void> {
+export const queueMailsAsync = (qmm: QueueMailsMessage): Promise<void> => {
   return publish({
     "Message": JSON.stringify(qmm),
     "Subject": 'QueueMails',
@@ -121,7 +119,7 @@ export function queueMailsAsync(qmm: QueueMailsMessage): Promise<void> {
   });
 };
 
-export function parseMailsAsync(pmm: ParseMailsMessage): Promise<void> {
+export const parseMailsAsync = (pmm: ParseMailsMessage): Promise<void> => {
   return publish({
     "Message": JSON.stringify(pmm),
     "Subject": 'ParseMails',
@@ -129,7 +127,7 @@ export function parseMailsAsync(pmm: ParseMailsMessage): Promise<void> {
   });
 };
 
-export function insertReportsAsync(irm: InsertReportsMessage): Promise<void> {
+export const insertReportsAsync = (irm: InsertReportsMessage): Promise<void> => {
   return publish({
     "Message": JSON.stringify(irm),
     "Subject": 'RecordReports',
@@ -139,7 +137,7 @@ export function insertReportsAsync(irm: InsertReportsMessage): Promise<void> {
 
 
 
-export function consumeTicketsAsync(number: number): Promise<void> {
+export const consumeTicketsAsync = (number: number): Promise<void> => {
   return publish({
     "Message": String(number),
     "Subject": 'ConsumeTicket',
@@ -154,11 +152,10 @@ const publish = async (input: PublishInput): Promise<void> => {
     return Promise.resolve();
   }
   console.log('do publish:' + JSON.stringify(input));
-  sns.publish(input).promise()
-  .then(() => {
+  try {
+    await sns.publish(input).promise();
     return Promise.resolve();
-  })
-  .catch((err) => {
+  }catch(err){
     return Promise.reject(err);
-  });
+  }
 };
