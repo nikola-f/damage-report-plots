@@ -1,11 +1,13 @@
 import {GetItemOutput, QueryOutput} from 'aws-sdk/clients/dynamodb';
-import {Job, JobStatus, CreateJobMessage, Session} from './types';
+import {Job, JobStatus, Session} from './types';
 
 import * as util from './util';
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
 const AWS = awsXRay.captureAWS(awsPlain);
 const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
+
+const INGRESS_EPOCH: number = Date.UTC(2012, 10, 15, 0, 0, 0, 0);
 
 
 // jobテーブルから降順で10件取得
@@ -26,8 +28,16 @@ export const getJobList = async (openId: string): Promise<Job[]> => {
     
     if(qo.Items) {
       for(let item of qo.Items) {
-        //TODO マッピング
         console.log('item:', item);
+        jobs.push({
+          "openId": 'me',
+          "createTime": Number(item.createTime),
+          "status": JobStatus[JobStatus[Number(item.status)]],
+          "lastAccessTime": Number(item.lastAccessTime),
+          "rangeFromTime": Number(item.rangeFromTime),
+          "rangeToTime": Number(item.rangeToTime),
+          "tokens": undefined
+        });
       }
     }
 
@@ -40,6 +50,7 @@ export const getJobList = async (openId: string): Promise<Job[]> => {
 };
 
 
+// job作成メッセージの内容チェック
 export const validateCreateMessage = async (message: any, user: Session): Promise<boolean> => {
 
   console.log('validateCreateMessage:', {
@@ -52,18 +63,22 @@ export const validateCreateMessage = async (message: any, user: Session): Promis
 
   try {
 
-    // rangeが未定義ならNG  
+    // rangeが未定義ならNG
     if(!util.isSet(() => message.rangeFromTime) ||
        !util.isSet(() => message.rangeToTime)) {
       throw new Error('create message/:undefined range');
-    }
-    const cjm: CreateJobMessage = {
-      "rangeFromTime": message.rangeFromTime,
-      "rangeToTime": message.rangeToTime
     };
     
+    const rangeFromTime: number = Number(message.rangeFromTime);
+    const rangeToTime  : number = Number(message.rangeToTime);
+
+    // rangeFromTimeがサービス開始前ならNG
+    if(rangeFromTime < INGRESS_EPOCH) {
+      throw new Error(`create message/invalid rangeFromTime:${rangeFromTime}`);
+    }
+
     // rangeが0-90日でないならNG
-    const range: number = cjm.rangeToTime - cjm.rangeFromTime;
+    const range: number = rangeToTime - rangeFromTime;
     if(range < 0 ||
        range > 1000*60*60*24*90) {
       throw new Error(`create message/invalid range:${range}`);
@@ -86,8 +101,7 @@ export const validateCreateMessage = async (message: any, user: Session): Promis
         ":o": user.openId,
         ":s0": JobStatus.Created,
         ":s1": JobStatus.Processing
-      },
-      "Limit": 1
+      }
     }).promise();
     if(jobRes.Items && jobRes.Items.length > 0) {
       throw new Error(`create message/already exists:${JSON.stringify(jobRes.Items)}`);

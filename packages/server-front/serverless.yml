@@ -29,7 +29,7 @@ provider:
   tracing: false
   environment:
     ARN_REGION_ACCOUNT: ${self:custom.arnRegionAccount}
-    SNS_NOP: 'true'
+    SNS_NOP: 'false'
 
   iamRoleStatements:
     - Effect: "Allow"

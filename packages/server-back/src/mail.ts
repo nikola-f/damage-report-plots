@@ -192,9 +192,11 @@ export const queueThreads = async (event: SNSEvent, context, callback): Promise<
 
     console.log('try to queue threads:' + JSON.stringify(qtm.job.openId));
 
-    // 同意済みで既にtokensあり
     const client = libAuth.createGapiOAuth2Client(env.GOOGLE_CALLBACK_URL_JOB);
-    client.setCredentials(qtm.job.tokens);
+    client.setCredentials({
+      "access_token": qtm.job.tokens.jobAccessToken,
+      "refresh_token": qtm.job.tokens.jobRefreshToken
+    });
 
     // yyyy-mm-ddに変換
     const after = dateformat(new Date(qtm.job.rangeFromTime), 'isoDate'),

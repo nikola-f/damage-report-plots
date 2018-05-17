@@ -1,12 +1,14 @@
-import {Job, CreateJobMessage} from '@damage-report-plots/common/types';
+import {Job, JobStatus} from '@damage-report-plots/common/types';
 
 const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const csrf = require('csurf');
 
-
 const libJob = require('@damage-report-plots/common/job');
+const launcher = require('@damage-report-plots/common/launcher');
+const env = require('@damage-report-plots/common/env');
+
 
 const api = express.Router();
 
@@ -52,7 +54,20 @@ api.post('/job',
     isValid ? next(): res.redirect('/400.html');
   },
   (req, res) => {
-    res.json({ message: 'job created' });
+    const job: Job = {
+      "openId": req.user.openId,
+      "createTime": Date.now(),
+      "status": JobStatus.Created,
+      "lastAccessTime": Date.now(),
+      "rangeFromTime": Number(req.body.rangeFromTime),
+      "rangeToTime": Number(req.body.rangeToTime),
+      "tokens": {
+        "jobAccessToken": req.user.tokens.jobAccessToken,
+        "jobRefreshToken": req.user.tokens.jobRefreshToken
+      }
+    };
+    launcher.queueJobAsync(job);
+    res.json({ message: 'job queued.' });
   }
 );
 

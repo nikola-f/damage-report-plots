@@ -57,13 +57,14 @@ export const sendMessageBatch = async (url: string,
       for(let message of inBatch) {
         outBatch.push({
           "Id": message.MessageId,
-          "MessageBody": message.Body
+          "MessageBody": message.Body,
+          "MessageGroupId": "0" //固定値
         })
       }
 
       const req: SendMessageBatchRequest = {
         QueueUrl: url,
-        Entries: outBatch
+        Entries: outBatch,
       };
       try {
         await sqs.sendMessageBatch(req).promise();

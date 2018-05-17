@@ -1,5 +1,6 @@
 // import gapi = require('googleapis');
 // import googleAuth = require('google-auth-library');
+const env = require('@damage-report-plots/common/env');
 const {gapi} = require('googleapis');
 // import * as gapi from 'googleapis';
 // const OAuth2 = gapi.auth.OAuth2;
@@ -8,15 +9,16 @@ const {gapi} = require('googleapis');
 
 
 export const createGapiOAuth2Client = (redirectUrl: string): any => {
-  // if(!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-  //   throw(new Error('google credential ENV not set.'))
-  // }
-  // // const auth = new googleAuth();
-  // return new OAuth2(
-  //   process.env.GOOGLE_CLIENT_ID,
-  //   process.env.GOOGLE_CLIENT_SECRET,
-  //   redirectUrl
-  // );
+  if(!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+    throw(new Error('google credential ENV not set.'))
+  }
+  
+  const oauth2Client = new gapi.auth.OAuth2(
+    env.GOOGLE_CLIENT_ID,
+    env.GOOGLE_CLIENT_SECRET,
+    redirectUrl
+  );
+  return oauth2Client;
 };
 
 

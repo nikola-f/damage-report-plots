@@ -7,12 +7,15 @@ import {Job, CreateJobMessage, QueueThreadsMessage,
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
 const AWS = awsXRay.captureAWS(awsPlain);
-const sns: AWS.SNS = new AWS.SNS(),
-      SNS_NOP: boolean = Boolean(process.env.SNS_NOP) || false;
-;
+
+import * as env from './env';
+
+const sns: AWS.SNS = new AWS.SNS();
+//       SNS_NOP: boolean = Boolean(process.env.SNS_NOP) || false;
+// ;
 
 
-const TOPIC_PREFIX = 'arn:aws:sns:' + process.env.ARN_REGION_ACCOUNT + ':',
+const TOPIC_PREFIX = 'arn:aws:sns:' + env.ARN_REGION_ACCOUNT + ':',
   CONSUME_TOPIC = TOPIC_PREFIX + 'drp-consume-ticket',
   PUT_JOB_TOPIC = TOPIC_PREFIX + 'drp-put-job',
   QUEUE_JOB_TOPIC = TOPIC_PREFIX + 'drp-queue-job',
@@ -66,7 +69,7 @@ export function finalizeJobAsync(job: Job): Promise<void> {
 };
 
 
-export function queueJobAsync(job: Job): Promise<void> {
+export const queueJobAsync = (job: Job): Promise<void> => {
   return publish({
     "Message": JSON.stringify(job),
     "Subject": 'QueueJob',
@@ -146,7 +149,7 @@ export function consumeTicketsAsync(number: number): Promise<void> {
 
 
 const publish = async (input: PublishInput): Promise<void> => {
-  if(SNS_NOP) {
+  if(env.SNS_NOP) {
     console.log('do publish provisionally:' + JSON.stringify(input));
     return Promise.resolve();
   }

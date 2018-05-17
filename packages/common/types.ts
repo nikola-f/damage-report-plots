@@ -13,7 +13,7 @@ export interface Tokens {
   meAccessToken?: string,
   jobAccessToken?: string,
   jobRefreshToken?: string,
-  stateToken?: string
+  // stateToken?: string
 }
 
 
@@ -46,7 +46,7 @@ export interface Job {
   lastAccessTime: number,
   rangeFromTime: number,
   rangeToTime: number,
-  tokens: any,
+  tokens: Tokens,
   thread?: {
     queueUrl: string,
     queuedCount: number

@@ -165,10 +165,6 @@ app.get('/auth/callback/job',
 );
 
 
-// router.get('/auth/callback/job', (req, res) => {
-//   res.json({ message: 'callback' });
-// });
-
 
 passport.serializeUser((user, done) => {
   user.lastAccessTime = Date.now();

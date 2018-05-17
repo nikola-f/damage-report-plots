@@ -22,62 +22,6 @@ const sqs: AWS.SQS = new AWS.SQS(),
 
 
 /**
- * jobの一覧を返す
- * @next -
- */
-// export async function listJob(event: APIGatewayEvent, context, callback): Promise<void> {
-// };
-
-
-/**
- * jobの作成
- * @next createAgentQueue
- */
-export async function createJob(event: APIGatewayEvent, context, callback): Promise<void> {
-  // console.log(JSON.stringify(event));
-
-  // try {
-  //   const cjm: CreateJobMessage = JSON.parse(event.body);
-
-  //   // session読み込み, 検証
-  //   const session: Session = await se.getSession(event.headers.Cookie, cjm.stateToken);
-  //   if(!session || !await jo.checkCreateJobMessage(cjm, session.openId)) {
-  //     throw new Error('check ng');
-  //   }
-    
-  //   // agent読み込み
-  //   const agent: Agent = await ag.getAgent(session.openId);
-
-  //   const job: Job = {
-  //     "agent": agent,
-  //     "createTime": Date.now(),
-  //     "lastAccessTime": Date.now(),
-  //     "rangeFromTime": cjm.rangeFromTime,
-  //     "rangeToTime": cjm.rangeToTime,
-  //     "tokens": session.tokens,
-  //     "status": JobStatus.Created,
-  //   };
-  
-  //   console.log(`try to create job: from ${ut.toString(job.rangeFromTime)} to ${ut.toString(job.rangeToTime)}`);
-  //   lc.createAgentQueueAsync(job);
-
-  //   callback(null, {
-  //     "statusCode": 200,
-  //     "body": {}
-  //   });
-
-  // }catch(err){
-  //   console.log(JSON.stringify(err));
-  //   callback(null, {
-  //     "statusCode": 400,
-  //     "body": 'System running hot!'
-  //   });
-  // }
-
-};
-
-
-/**
  * jobの開始
  * @next queueThreads
  */
@@ -254,7 +198,7 @@ export const createAgentQueue = async (event: SNSEvent, context, callback): Prom
         "QueueName": String(job.createTime) + '_thread_' + job.openId + '.fifo',
         "Attributes": {
           "FifoQueue": 'true',
-          "ContentBasedDeduplication": 'false'
+          "ContentBasedDeduplication": 'true'
         }
       };
       const threadQueueRes = await sqs.createQueue(createQueueParams).promise();
@@ -268,7 +212,7 @@ export const createAgentQueue = async (event: SNSEvent, context, callback): Prom
         "QueueName": String(job.createTime) + '_mail_' + job.openId + '.fifo',
         "Attributes": {
           "FifoQueue": 'true',
-          "ContentBasedDeduplication": 'false'
+          "ContentBasedDeduplication": 'true'
         }
       };
       const mailQueueRes = await sqs.createQueue(createQueueParams).promise();
@@ -282,7 +226,7 @@ export const createAgentQueue = async (event: SNSEvent, context, callback): Prom
         "QueueName": String(job.createTime) + '_report_' + job.openId + '.fifo',
         "Attributes": {
           "FifoQueue": 'true',
-          "ContentBasedDeduplication": 'false'
+          "ContentBasedDeduplication": 'true'
         }
       };
       const reportQueueRes = await sqs.createQueue(createQueueParams).promise();
