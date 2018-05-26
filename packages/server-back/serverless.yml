@@ -152,6 +152,11 @@ functions:
     events:
       - sns: drp-put-job
 
+  putAgent:
+    handler: handler.putAgent
+    events:
+      - sns: drp-put-agent
+
   startJob:
     handler: handler.startJob
     events:

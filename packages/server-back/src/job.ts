@@ -1,12 +1,7 @@
 import {SNSEvent, Handler, ProxyResult,
   APIGatewayEvent} from 'aws-lambda';
-import {GetQueueAttributesRequest, QueueAttributeName,
-  GetQueueAttributesResult, SendMessageBatchRequest,
-  ReceiveMessageRequest, ReceiveMessageResult,
-  DeleteMessageBatchRequest, DeleteMessageBatchResult,
-  CreateQueueRequest, DeleteQueueRequest} from 'aws-sdk/clients/sqs';
 import {QueryOutput} from 'aws-sdk/clients/dynamodb';
-import {Job, JobStatus, CreateJobMessage, Session, Agent} 
+import {Job, JobStatus, CreateJobMessage, Session, Agent, QueueThreadsMessage} 
   from '@damage-report-plots/common/types';
 
 const env = require('@damage-report-plots/common/env');
@@ -18,15 +13,14 @@ import * as libAuth from './lib/auth';
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
 const AWS = awsXRay.captureAWS(awsPlain);
-const sqs: AWS.SQS = new AWS.SQS(),
-      dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient(),
+const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient(),
       JOB_QUEUE_URL = process.env.JOB_QUEUE_URL
 ;
 
 
 /**
  * jobの開始
- * @next queueThreads
+ * @next createAgentQueue
  */
 export const startJob = async (event, context, callback): Promise<void> => {
   console.log(JSON.stringify(event));
@@ -39,9 +33,15 @@ export const startJob = async (event, context, callback): Promise<void> => {
     if(message) {
       // queueThreads起動
       const job: Job = JSON.parse(message.Body);
-      launcher.queueThreadsAsync({
-        "job": job
-      });
+      launcher.createAgentQueueAsync(job);
+      
+      // JobStatusをProcessingに
+      job.status = JobStatus.Processing;
+      job.lastAccessTime = Date.now();
+      launcher.putJobAsync(job);
+
+      // queueからjob削除
+      libQueue.deleteMessage(JOB_QUEUE_URL, message);
 
     }else{
       console.log('JobQueue is empty.');
@@ -83,7 +83,6 @@ export const finalizeJob = async (event: SNSEvent, context, callback): Promise<v
     job.tokens = null;
 
     // DB保存
-    job.lastAccessTime = Date.now();
     job.status = JobStatus.Done;
     launcher.putJobAsync(job);
 
@@ -113,7 +112,6 @@ export const queueJob = async (event: SNSEvent, context, callback): Promise<void
     });
 
     launcher.putJobAsync(job);
-    //jobのpopからのqueueThreadsの起動はstartJobで
   }
 
   callback(null, {
@@ -135,7 +133,6 @@ export const putJob = async (event: SNSEvent, context, callback): Promise<void> 
 
     job.lastAccessTime = Date.now();
 
-    //FIXME データ構造違い
     dynamo.put({
       "TableName": "job",
       "Item": job
@@ -157,108 +154,4 @@ export const putJob = async (event: SNSEvent, context, callback): Promise<void> 
 };
 
 
-/**
- * agent queueの削除
- * @next -
- */
-export const deleteAgentQueue = async (event: SNSEvent, context, callback): Promise<void> => {
-  console.log('event:' + JSON.stringify(event));
 
-  for(let rec of event.Records) {
-    const job: Job = JSON.parse(rec.Sns.Message);
-
-    try {
-      sqs.deleteQueue({
-        QueueUrl: job.thread.queueUrl
-      }).promise();
-      sqs.deleteQueue({
-        QueueUrl: job.mail.queueUrl
-      }).promise();
-      sqs.deleteQueue({
-        QueueUrl: job.report.queueUrl
-      }).promise();
-      console.log('queues deleted:' + JSON.stringify(job));
-    }catch(err){
-      console.error(err);
-      callback(err, null);
-      return Promise.reject(err);
-    }
-  }
-
-  callback(null, {
-    "statusCode": 200,
-    "body": {}
-  });
-};
-
-
-/**
- * agent queueの作成
- * @next queueJob
- */
-export const createAgentQueue = async (event: SNSEvent, context, callback): Promise<void> => {
-  console.log('event:' + JSON.stringify(event));
-
-  for(let rec of event.Records) {
-    const job: Job = JSON.parse(rec.Sns.Message);
-
-    try {
-      let createQueueParams: CreateQueueRequest = {
-        "QueueName": String(job.createTime) + '_thread_' + job.openId + '.fifo',
-        "Attributes": {
-          "FifoQueue": 'true',
-          "ContentBasedDeduplication": 'true'
-        }
-      };
-      const threadQueueRes = await sqs.createQueue(createQueueParams).promise();
-      job.thread = {
-        queueUrl: threadQueueRes.QueueUrl,
-        queuedCount: 0,
-        dequeuedCount: 0
-      };
-
-      createQueueParams = {
-        "QueueName": String(job.createTime) + '_mail_' + job.openId + '.fifo',
-        "Attributes": {
-          "FifoQueue": 'true',
-          "ContentBasedDeduplication": 'true'
-        }
-      };
-      const mailQueueRes = await sqs.createQueue(createQueueParams).promise();
-      job.mail = {
-        queueUrl: mailQueueRes.QueueUrl,
-        queuedCount: 0,
-        dequeuedCount: 0
-      };
-
-      createQueueParams = {
-        "QueueName": String(job.createTime) + '_report_' + job.openId + '.fifo',
-        "Attributes": {
-          "FifoQueue": 'true',
-          "ContentBasedDeduplication": 'true'
-        }
-      };
-      const reportQueueRes = await sqs.createQueue(createQueueParams).promise();
-      job.report = {
-        queueUrl: reportQueueRes.QueueUrl,
-        queuedCount: 0,
-        dequeuedCount: 0
-      };
-
-      job.lastAccessTime = Date.now();
-      console.log('queues created:' + JSON.stringify(job));
-
-      launcher.queueJobAsync(job);
-
-    }catch(err){
-      console.error(err);
-      callback(err, null);
-      return Promise.reject(err);
-    }
-  }
-
-  callback(null, {
-    "statusCode": 200,
-    "body": {}
-  });
-};

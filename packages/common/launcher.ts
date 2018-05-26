@@ -1,8 +1,7 @@
 import {PublishInput} from 'aws-sdk/clients/sns';
 import {Job, CreateJobMessage, QueueThreadsMessage,
   QueueMailsMessage, ParseMailsMessage,
-  InsertReportsMessage, Agent, CreateTableMessage,
-  CheckTableMessage} from './types';
+  InsertReportsMessage, Agent} from './types';
 
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
@@ -30,18 +29,18 @@ const TOPIC_PREFIX = 'arn:aws:sns:' + env.ARN_REGION_ACCOUNT + ':',
 ;
 
 
-export const createTableAsync = (ctm: CreateTableMessage): Promise<void> => {
+export const createTableAsync = (job: Job): Promise<void> => {
   return publish({
-    "Message": JSON.stringify(ctm),
+    "Message": JSON.stringify(job),
     "Subject": 'CreateTable',
     "TopicArn": CREATE_TABLE_TOPIC
   });
 };
 
 
-export const checkTableAsync = (ctm: CheckTableMessage): Promise<void> => {
+export const checkTableAsync = (job: Job): Promise<void> => {
   return publish({
-    "Message": JSON.stringify(ctm),
+    "Message": JSON.stringify(job),
     "Subject": 'CheckTable',
     "TopicArn": CHECK_TABLE_TOPIC
   });
@@ -97,8 +96,8 @@ export const deleteAgentQueueAsync = (job: Job): Promise<void> => {
 export const putAgentAsync = (agent: Agent): Promise<void> => {
   return publish({
     "Message": JSON.stringify(agent),
-    "Subject": 'PutJob',
-    "TopicArn": PUT_JOB_TOPIC
+    "Subject": 'PutAgent',
+    "TopicArn": PUT_AGENT_TOPIC
   });
 };
 

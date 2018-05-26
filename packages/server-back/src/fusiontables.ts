@@ -1,7 +1,6 @@
 import {SNSEvent, Handler, ProxyResult} from 'aws-lambda';
 import {MessageList, Message} from 'aws-sdk/clients/sqs';
-import {CreateTableMessage, CheckTableMessage,
-  InsertReportsMessage, Agent, OneReportMessage} from '@damage-report-plots/common/types';
+import {InsertReportsMessage, Agent, OneReportMessage, Job} from '@damage-report-plots/common/types';
 
 import * as crypto from 'crypto';
 import * as escape from 'escape-quotes';
@@ -19,38 +18,58 @@ const FTDEFS = require('./ftdef.json'),
 
 /**
  * fusionTableの作成
- * @next putAgent
+ * @next putAgent, queueThreads
  */
 export const createTable = async (event: SNSEvent, context, callback): Promise<void> => {
   console.log(JSON.stringify(event));
 
   for(let rec of event.Records) {
-    const ctm: CreateTableMessage = JSON.parse(rec.Sns.Message);
-    const client = libAuth.createGapiOAuth2Client(env.GOOGLE_CALLBACK_URL_JOB);
-    client.setCredentials(ctm.tokens);
-
-    // table作成
+    const job: Job = JSON.parse(rec.Sns.Message);
+    const client = libAuth.createGapiOAuth2Client(
+      env.GOOGLE_CALLBACK_URL_ME,
+      job.tokens.jobAccessToken,
+      job.tokens.jobRefreshToken
+    );
     const ft = gapi.fusiontables({
       "version": 'v2',
       "auth": client
     });
-    const res: any = await new Promise((resolve, reject) => {
-      ft.table.insert(FTDEFS.defs.report, (err, res) => {
-        err ? reject(err) : resolve(res);
-      });
-    });
+
+    // 並行
+    let insertRes: any; 
+    let agent: Agent;
+    Promise.all([
+
+      // table作成
+      (async () => {
+        insertRes = await new Promise((resolve, reject) => {
+          ft.table.insert(FTDEFS.defs.report, (err, res) => {
+            err ? reject(err) : resolve(res);
+          });
+        });
+      })(),
+      
+      // agentデータ取得
+      (async () => {
+        agent = await libAgent.getAgent(job.openId);
+      })()
+    ]);
 
     // agentデータ保存
-    console.log('created:' + JSON.stringify(res));
-    ctm.agent.reportTableId = res.tableId;
-    launcher.putAgentAsync(ctm.agent);
+    console.log('created:' + JSON.stringify(insertRes));
+    agent.reportTableId = insertRes.tableId;
+    launcher.putAgentAsync(agent);
+    
+    launcher.queueThreadsAsync({
+      "job": job
+    });
   }
 };
 
 
 /**
- * fusiontableの存在チェック
- * @next createTable
+ * fusiontableの存在チェック・不存在ならcreateTable
+ * @next createTable, queueThreads
  */
 export const checkTable = async (event: SNSEvent, context, callback): Promise<void> => {
   console.log(JSON.stringify(event));
@@ -58,20 +77,26 @@ export const checkTable = async (event: SNSEvent, context, callback): Promise<vo
   for(let rec of event.Records) {
 
     let notFound: boolean;
-    const ctm: CheckTableMessage = JSON.parse(rec.Sns.Message);
+    const job: Job = JSON.parse(rec.Sns.Message);
+    
+    // agent情報取得
+    const agent = await libAgent.getAgent(job.openId);
 
-    if(util.isSet(() => ctm.agent.reportTableId)) {
-      const client = libAuth.createGapiOAuth2Client(env.GOOGLE_CALLBACK_URL_ME);
-      client.setCredentials(ctm.tokens);
+    // reportTableIdがあれば現物の存在チェック
+    if(agent.reportTableId) {
+      const client = libAuth.createGapiOAuth2Client(
+        env.GOOGLE_CALLBACK_URL_ME,
+        job.tokens.jobAccessToken,
+        job.tokens.jobRefreshToken
+      );
 
-      // fusiontablesの存在チェック(項目はチェックしない)
       const ft = gapi.fusiontables({
         "version": 'v2',
         "auth": client
       });
       const res: any = await new Promise((resolve, reject) => {
         ft.table.get(
-          {"tableId": ctm.agent.reportTableId},
+          {"tableId": agent.reportTableId},
           (err, res) => {
             err ? reject(err) : resolve(res);
           });
@@ -89,9 +114,12 @@ export const checkTable = async (event: SNSEvent, context, callback): Promise<vo
     // 存在しなければcreateTable
     if(notFound) {
       console.log('tableId not found, try to create');
-      launcher.createTableAsync({
-        "agent": ctm.agent,
-        "tokens": ctm.tokens
+      launcher.createTableAsync(job);
+
+    // 存在すればqueueThreads
+    }else{
+      launcher.queueThreadsAsync({
+        "job": job
       });
     }
   }

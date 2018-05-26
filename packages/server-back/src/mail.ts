@@ -10,7 +10,8 @@ import {Job, JobStatus, QueueThreadsMessage,
   ParseMailsMessage, OneMailMessage, Portal,
   OneReportMessage} from '@damage-report-plots/common/types';
 
-import {dateformat} from 'dateformat';
+const dateFormat = require('dateformat');
+import * as util from '@damage-report-plots/common/util';
 import * as env from '@damage-report-plots/common/env';
 import * as launcher from '@damage-report-plots/common/launcher';
 import * as libAuth from './lib/auth';
@@ -122,18 +123,19 @@ export const queueMails = async (event: SNSEvent, context, callback): Promise<vo
       continue;
     }
 
-    // access_token 再作成 //TODEL
-    let client = libAuth.createGapiOAuth2Client(
-      env.GOOGLE_CALLBACK_URL_JOB,
-      qmm.job.tokens.jobAccessToken,
-      qmm.job.tokens.jobRefreshToken
-    );
+    // let client = libAuth.createGapiOAuth2Client(
+    //   env.GOOGLE_CALLBACK_URL_JOB,
+    //   qmm.job.tokens.jobAccessToken,
+    //   qmm.job.tokens.jobRefreshToken
+    // );
     // client.setCredentials(qmm.job.tokens);
-    // qmm.job.tokens = await libAuth.refreshAccessTokenManually(client);
 
+    // access_token 再作成
+    const accessToken = 
+      await libAuth.refreshAccessTokenManually(env.GOOGLE_CALLBACK_URL_JOB, qmm.job.tokens.jobRefreshToken);
     // gapiでthreadの詳細(mail付き)取得
-    const mails: OneThreadMessage[] =
-      await libMail.getMails(qmm.job.tokens, threadMessages,
+    const mails: OneMailMessage[] =
+      await libMail.getMails(accessToken, threadMessages,
         qmm.job.rangeFromTime, qmm.job.rangeToTime);
     if(mails && mails.length > 0) {
       console.log(`${mails.length} mails found.`);
@@ -162,6 +164,7 @@ export const queueMails = async (event: SNSEvent, context, callback): Promise<vo
     console.log(`${deleted} threads deleted.`);
 
     // jobをdb保存
+    qmm.job.lastAccessTime = Date.now();
     launcher.putJobAsync(qmm.job);
 
     // threadキューに残があれば再帰
@@ -201,20 +204,17 @@ export const queueThreads = async (event: SNSEvent, context, callback): Promise<
       qtm.job.tokens.jobAccessToken,
       qtm.job.tokens.jobRefreshToken
     );
-    // client.setCredentials({
-    //   "access_token": qtm.job.tokens.jobAccessToken,
-    //   "refresh_token": qtm.job.tokens.jobRefreshToken
-    // });
 
     // yyyy-mm-ddに変換
-    const after = dateformat(new Date(qtm.job.rangeFromTime), 'isoDate'),
-          before = dateformat(new Date(qtm.job.rangeToTime), 'isoDate');
+    const after = dateFormat(new Date(qtm.job.rangeFromTime), 'isoDate'),
+          before = dateFormat(new Date(qtm.job.rangeToTime), 'isoDate');
 
     // gapiでthread一覧の取得
     let req = {
       "auth": client,
       "userId": 'me',
-      "maxResults": String(THREAD_COUNT),
+      // "maxResults": String(THREAD_COUNT),
+      "maxResults": THREAD_COUNT,
       "fields": 'threads/id,nextPageToken',
       "q": '{from:ingress-support@google.com from:ingress-support@nianticlabs.com}' +
           ' subject:"Ingress Damage Report: Entities attacked by"' +
@@ -225,29 +225,34 @@ export const queueThreads = async (event: SNSEvent, context, callback): Promise<
     if(qtm.nextPageToken) {
       req['pageToken'] = qtm.nextPageToken;
     }
-    let res;
+    let res, threads;
     try {
+      console.log('try to list threads:', req);
       res = await new Promise((resolve, reject) => {
-        // gmail.users.threads.list(req, (err, res) => {
         gmail.users.threads.list(req, (err, res) => {
           err ? reject(err) : resolve(res);
         });
       });
+      
+      threads = 
+        util.isSet(() => res.data.threads) ? res.data.threads : undefined;
 
     }catch(err){
       console.error(err);
       continue;
     }
-    if(!res.threads) {
+    
+    if(!threads || threads.length === 0) {
       console.log('no threads found.');
+      console.log('res:', res);
       continue;
     }else{
-      console.log(`${res.threads.length} threads found.`);
+      console.log(`${threads.length} threads found.`);
     }
 
     //job.thread.queueUrlにキューイング
     const messages: MessageList = [];
-    for(let aThread of res.threads) {
+    for(let aThread of threads) {
       const message: OneThreadMessage = {
         id: aThread.id
       };

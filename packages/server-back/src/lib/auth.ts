@@ -1,11 +1,10 @@
 // import gapi = require('googleapis');
 // import googleAuth = require('google-auth-library');
 const env = require('@damage-report-plots/common/env');
-const {gapi} = require('googleapis');
+const {google} = require('googleapis');
 // import * as gapi from 'googleapis';
 // const OAuth2 = gapi.auth.OAuth2;
 
-// const oauth2 = gapi.auth.OAuth2;
 
 
 export const createGapiOAuth2Client = 
@@ -15,7 +14,7 @@ export const createGapiOAuth2Client =
     throw(new Error('google credential ENV not set.'))
   }
   
-  const oauth2Client = new gapi.auth.OAuth2(
+  const oauth2Client = new google.auth.OAuth2(
     env.GOOGLE_CLIENT_ID,
     env.GOOGLE_CLIENT_SECRET,
     redirectUrl
@@ -36,12 +35,14 @@ export const createGapiOAuth2Client =
  * @param  {any}    auth [tokensセット済みのclient]
  * @return {[type]}      [description]
  */
-export const refreshAccessTokenManually = async (oauth2Client: any): Promise<any> => {
-  console.log('try to refresh tokens.');
+export const refreshAccessTokenManually = 
+  async (redirectUrl: string, refreshToken: string): Promise<string> => {
+  console.log('try to refresh token.');
 
-  return new Promise((resolve, reject) => {
-    oauth2Client.refreshAccessToken((err, tokens) => {
-      err ? reject(err) : resolve(tokens);
+  return new Promise<string>((resolve, reject) => {
+    const client = createGapiOAuth2Client(redirectUrl, null, refreshToken);
+    client.refreshAccessToken((err, tokens) => {
+      err ? reject(err) : resolve(tokens.access_token);
     });
   });
 }

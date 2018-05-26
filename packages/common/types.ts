@@ -91,15 +91,15 @@ export interface InsertReportsMessage {
   job: Job,
 }
 
-export interface CreateTableMessage {
-  agent: Agent,
-  tokens: any
-}
+// export interface CreateTableMessage {
+//   agent: Agent,
+//   tokens: any
+// }
 
-export interface CheckTableMessage {
-  agent: Agent,
-  tokens: any
-}
+// export interface CheckTableMessage {
+//   agent: Agent,
+//   tokens: any
+// }
 
 
 export interface OneThreadMessage {

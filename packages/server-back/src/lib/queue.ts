@@ -126,6 +126,11 @@ export const receiveMessageBatch = async (url: string, maxCount: number): Promis
 };
 
 
+export const deleteMessage = async (url: string, message: Message): Promise<number> => {
+  return deleteMessageBatch(url, [message]);
+};
+
+
 export const deleteMessageBatch = async (url: string, messages: MessageList): Promise<number> => {
 
   console.log('try to delete messages:' + url);

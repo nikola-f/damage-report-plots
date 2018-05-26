@@ -82,7 +82,7 @@ export const parseHtml = (html: string): Portal[] => {
 
 
 
-export const getMails = async (tokens: any, threads: MessageList,
+export const getMails = async (accessToken: string, threads: MessageList,
   rangeFromTime: number, rangeToTime: number): Promise<OneMailMessage[]> => {
   console.log('try to get mails.');
 
@@ -90,7 +90,7 @@ export const getMails = async (tokens: any, threads: MessageList,
     "uri": 'https://www.googleapis.com/batch',
     "method": 'POST',
     "auth": {
-      "bearer": tokens.access_token
+      "bearer": accessToken
     },
    	"headers": {
       "Content-Type": 'multipart/mixed'
@@ -128,7 +128,7 @@ export const getMails = async (tokens: any, threads: MessageList,
     // gapiのレスポンスをOneMailMessage[]に成形
     const mailMessages = parseBatchResponse(threadGetRes);
     for(let aMessage of mailMessages) {
-      // 日時チェック
+      // 日時チェック/gmailAPIでフィルタできるのは日付まで
       if(aMessage.internalDate < rangeFromTime ||
           aMessage.internalDate >= rangeToTime) {
         continue;
