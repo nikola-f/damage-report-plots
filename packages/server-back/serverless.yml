@@ -162,7 +162,7 @@ functions:
     events:
       - schedule:
           rate: rate(2 minutes)
-          enabled: false
+          enabled: true
     environment:
       JOB_QUEUE_URL:
         Ref: JobQueue

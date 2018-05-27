@@ -15,6 +15,7 @@ const sqs: AWS.SQS = new AWS.SQS();
 
 /**
  * agentの保存
+ * 全カラム
  * @next -
  */
 export const putAgent = async (event: SNSEvent, context, callback): Promise<void> => {
@@ -44,6 +45,46 @@ export const putAgent = async (event: SNSEvent, context, callback): Promise<void
     "body": {}
   });
 };
+
+
+// /**
+// * agentの保存
+// * keyのみ
+// * @next -
+// */
+// export const putAgentId = async (event: SNSEvent, context, callback): Promise<void> => {
+//   console.log(JSON.stringify(event));
+
+//   for(let rec of event.Records) {
+//     const openId: string = String(rec.Sns.Message);
+
+//     dynamo.update({
+//       "TableName": "agent",
+//       "Key": {
+//         "openId": openId
+//       },
+//       "UpdateExpression": "set lastAccessTime = :val",
+//       "ExpressionAttributeValues": {
+//           ":val": Date.now()
+//       },
+//     // "ReturnValues":"UPDATED_NEW"
+//     // "Item": agent
+//     }).promise()
+//     .then(() => {
+//       console.log('update agent key:' + JSON.stringify(openId));
+//     })
+//     .catch(err => {
+//       console.error(err);
+//       callback(err, null);
+//       return;
+//     });
+//   }
+
+//   callback(null, {
+//     "statusCode": 200,
+//     "body": {}
+//   });
+// };
 
 
 /**

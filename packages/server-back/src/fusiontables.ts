@@ -7,9 +7,9 @@ import * as escape from 'escape-quotes';
 import * as launcher from '@damage-report-plots/common/launcher';
 import * as util from '@damage-report-plots/common/util';
 import * as env from '@damage-report-plots/common/env';
+import * as libAgent from '@damage-report-plots/common/agent';
 import * as libAuth from './lib/auth';
 import * as libQueue from './lib/queue';
-import * as libAgent from './lib/agent';
 const gapi = require('googleapis');
 const FTDEFS = require('./ftdef.json'),
       REPORTS_COUNT: number = Number(process.env.REPORTS_COUNT),

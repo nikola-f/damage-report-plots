@@ -7,15 +7,11 @@ custom:
         - - ${self:provider.region}
           - Ref: 'AWS::AccountId'
   webpack:
-    # webpackConfig: '../webpack.config.js'
     includeModules: true
-    # packagePath: '../package.json'
-  # webpackIncludeModules: true
   googleClientId:     ${file(.cred.yml):googleClientId}
   googleClientSecret: ${file(.cred.yml):googleClientSecret}
   sessionSecret:      ${file(.cred.yml):sessionSecret}
   googleCallbackUrlMe:  'https://plots.run/auth/callback/me'
-  # googleCallbackUrlMe:  'https://08ztxeepyf.execute-api.us-west-2.amazonaws.com/dev/auth/callback/me'
   googleCallbackUrlJob:  'https://plots.run/auth/callback/job'
 
 provider:

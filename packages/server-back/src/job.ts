@@ -20,7 +20,7 @@ const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient(),
 
 /**
  * jobの開始
- * @next createAgentQueue
+ * @next createAgentQueue, putJob
  */
 export const startJob = async (event, context, callback): Promise<void> => {
   console.log(JSON.stringify(event));
@@ -31,15 +31,16 @@ export const startJob = async (event, context, callback): Promise<void> => {
     // queueからjob取得
     const message = await libQueue.receiveMessage(JOB_QUEUE_URL);
     if(message) {
-      // queueThreads起動
       const job: Job = JSON.parse(message.Body);
-      launcher.createAgentQueueAsync(job);
-      
+
       // JobStatusをProcessingに
       job.status = JobStatus.Processing;
       job.lastAccessTime = Date.now();
       launcher.putJobAsync(job);
 
+      // createAgentQueueから起動
+      launcher.createAgentQueueAsync(job);
+      
       // queueからjob削除
       libQueue.deleteMessage(JOB_QUEUE_URL, message);
 
@@ -132,6 +133,8 @@ export const putJob = async (event: SNSEvent, context, callback): Promise<void> 
     const job: Job = JSON.parse(rec.Sns.Message);
 
     job.lastAccessTime = Date.now();
+    // tokenは保存しない
+    job.tokens = null;
 
     dynamo.put({
       "TableName": "job",

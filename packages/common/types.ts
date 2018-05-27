@@ -36,7 +36,6 @@ export enum JobStatus {
 }
 
 export interface Job {
-  // agent: Agent,
   openId: string,
   createTime: number,
 
@@ -64,11 +63,8 @@ export interface Job {
 
 
 export interface CreateJobMessage {
-  // agent: Agent,
   rangeFromTime: number,
   rangeToTime: number,
-  // stateToken: string
-  // tokens: any
 }
 
 

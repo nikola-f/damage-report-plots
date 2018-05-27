@@ -1,4 +1,4 @@
-import {Session, Tokens} from '@damage-report-plots/common/types';
+import {Session, Tokens, Agent} from '@damage-report-plots/common/types';
 
 const express = require('express');
 const session = require('express-session');
@@ -10,6 +10,8 @@ const OAuth2Strategy = require('passport-google-oauth').OAuth2Strategy;
 const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware');
 const util = require('@damage-report-plots/common/util');
 const env = require('@damage-report-plots/common/env');
+const libAgent = require('@damage-report-plots/common/agent');
+const launcher = require('@damage-report-plots/common/launcher');
 const api = require('./api');
 // import {me} from './me';
 
@@ -32,8 +34,10 @@ app.use(session({
   secret: env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
+  name: 'sessionId',
   cookie: {
-    secure: false, // trueだとlambda proxy環境下で動作しない
+    secure: false,
+    httpOnly: true,
     maxAge: SESSION_MAXAGE
   }
 }));
@@ -91,8 +95,19 @@ app.get('/auth/callback/me',
   passport.authenticate('google-me', {
     failureRedirect: '/401.html'
   }),
-  (req, res) => {
-    console.log('session:', req.session);
+
+  async (req, res) => {
+    console.log('user:', req.user);
+    let agent: Agent = await libAgent.getAgent(req.user.openId);
+    if(!agent) {
+      agent = {
+        "openId": req.user.openId,
+        "createTime": Date.now(),
+        "lastAccessTime": Date.now()
+      }
+    }
+    launcher.putAgentAsync(agent);
+
     res.redirect('/me');
   }
 );

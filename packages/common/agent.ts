@@ -1,7 +1,5 @@
-import {SNSEvent, Handler, ProxyHandler,
-  APIGatewayEvent} from 'aws-lambda';
 import {GetItemOutput} from 'aws-sdk/clients/dynamodb';
-import {Agent} from '@damage-report-plots/common/types';
+import {Agent} from './types';
 
 
 import * as awsXRay from 'aws-xray-sdk';
@@ -12,7 +10,7 @@ const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
 
 
 export const getAgent = async (openId: string): Promise<Agent> => {
-  console.log(JSON.stringify(event));
+  console.log('getAgent:', openId);
 
   let agent: Agent = undefined;
 
@@ -25,11 +23,15 @@ export const getAgent = async (openId: string): Promise<Agent> => {
       "ConsistentRead": false
     }).promise();
 
-    if(res.Item) {
-      agent.openId = openId;
-      agent.createTime = <number>res.Item.createTime;
-      agent.lastAccessTime = Date.now();
-      agent.reportTableId = <string>res.Item.reportTableId;
+    if(res.Item && res.Item.length > 0) {
+      agent = {
+        "openId": openId,
+        "createTime": <number>res.Item.createTime,
+        "lastAccessTime": Date.now(),
+        "reportTableId": <string>res.Item.reportTableId,
+        "mUpv": <number>res.Item.mUpv,
+        "mUpc": <number>res.Item.mUpc,
+      };
     }
 
   }catch(err){

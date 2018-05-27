@@ -128,7 +128,7 @@ export const parseMailsAsync = (job: Job): Promise<void> => {
 export const insertReportsAsync = (job: Job): Promise<void> => {
   return publish({
     "Message": JSON.stringify(job),
-    "Subject": 'RecordReports',
+    "Subject": 'InsertReports',
     "TopicArn": INSERT_REPORTS_TOPIC
   });
 };

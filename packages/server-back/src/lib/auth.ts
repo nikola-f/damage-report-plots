@@ -1,12 +1,10 @@
-// import gapi = require('googleapis');
-// import googleAuth = require('google-auth-library');
 const env = require('@damage-report-plots/common/env');
 const {google} = require('googleapis');
-// import * as gapi from 'googleapis';
-// const OAuth2 = gapi.auth.OAuth2;
 
 
-
+/**
+ * gapiClientの作成
+ */
 export const createGapiOAuth2Client = 
     (redirectUrl: string, accessToken?: string, refreshToken?: string): any => {
 
@@ -31,9 +29,8 @@ export const createGapiOAuth2Client =
 
 
 /**
- * [refreshAccessTokenManually]
- * @param  {any}    auth [tokensセット済みのclient]
- * @return {[type]}      [description]
+ * accessTokenを明示的にrefresh
+ * batchelor向け
  */
 export const refreshAccessTokenManually = 
   async (redirectUrl: string, refreshToken: string): Promise<string> => {
@@ -47,7 +44,9 @@ export const refreshAccessTokenManually =
   });
 }
 
-
+/**
+ * tokenの無効化
+ */
 export const revokeTokens = 
         async (redirectUrl: string, accessToken: string, refreshToken: string): Promise<any> => {
   console.log('try to revoke tokens.');
@@ -61,28 +60,3 @@ export const revokeTokens =
 }
 
 
-
-
-// export const generateRedirectURI2Refer = (oauth2Client: any): string => {
-//   return oauth2Client.generateAuthUrl({
-//     "access_type": "online",
-//     "scope": [
-//       'email',
-//       'https://www.googleapis.com/auth/fusiontables.readonly'
-//     ]
-//   })
-//   // profile, fusiontablesを読むだけのscope
-// };
-
-
-
-// export const generateRedirectURI2Update = (oauth2Client: any): string => {
-//   return oauth2Client.generateAuthUrl({
-//     "access_type": "offline",
-//     "approval_prompt": "force",
-//     "scope": [
-//       'https://www.googleapis.com/auth/fusiontables',
-//       'https://www.googleapis.com/auth/gmail.readonly'
-//     ]
-//   });
-// };
