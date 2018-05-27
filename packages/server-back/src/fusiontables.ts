@@ -1,6 +1,6 @@
 import {SNSEvent, Handler, ProxyResult} from 'aws-lambda';
 import {MessageList, Message} from 'aws-sdk/clients/sqs';
-import {InsertReportsMessage, Agent, OneReportMessage, Job} from '@damage-report-plots/common/types';
+import {Agent, OneReportMessage, Job} from '@damage-report-plots/common/types';
 
 import * as crypto from 'crypto';
 import * as escape from 'escape-quotes';
@@ -38,7 +38,7 @@ export const createTable = async (event: SNSEvent, context, callback): Promise<v
     // 並行
     let insertRes: any; 
     let agent: Agent;
-    Promise.all([
+    await Promise.all([
 
       // table作成
       (async () => {
@@ -134,16 +134,16 @@ export const insertReports = async (event: SNSEvent, context, callback): Promise
   console.log(JSON.stringify(event));
 
   for(let rec of event.Records) {
-    let irm: InsertReportsMessage = JSON.parse(rec.Sns.Message);
-    console.log('try to insert reports:' + JSON.stringify(irm.job.openId));
+    const job: Job = JSON.parse(rec.Sns.Message);
+    console.log('try to insert reports:' + JSON.stringify(job.openId));
     
     //agentテーブルからreportTableIdを取得
-    const agent: Agent = await libAgent.getAgent(irm.job.openId);
+    const agent: Agent = await libAgent.getAgent(job.openId);
     const reportTableId = agent.reportTableId;
 
     // reportキューからreportを取得
     const queuedMessages: MessageList =
-      await libQueue.receiveMessageBatch(irm.job.report.queueUrl, REPORTS_COUNT);
+      await libQueue.receiveMessageBatch(job.report.queueUrl, REPORTS_COUNT);
     if(queuedMessages.length <= 0) {
       console.log('no reports queued.');
       continue;
@@ -156,8 +156,8 @@ export const insertReports = async (event: SNSEvent, context, callback): Promise
 
     const client = libAuth.createGapiOAuth2Client(
       env.GOOGLE_CALLBACK_URL_JOB,
-      irm.job.tokens.jobAccessToken,
-      irm.job.tokens.jobRefreshToken
+      job.tokens.jobAccessToken,
+      job.tokens.jobRefreshToken
     );
     // client.setCredentials(irm.job.tokens);
     const ft = gapi.fusiontables({
@@ -203,20 +203,20 @@ export const insertReports = async (event: SNSEvent, context, callback): Promise
 
     // reportキューから削除
     const deleted =
-      await libQueue.deleteMessageBatch(irm.job.report.queueUrl, queuedMessages);
-    irm.job.report.queuedCount -= queuedMessages.length;
-    irm.job.report.dequeuedCount += queuedMessages.length;
+      await libQueue.deleteMessageBatch(job.report.queueUrl, queuedMessages);
+    job.report.queuedCount -= queuedMessages.length;
+    job.report.dequeuedCount += queuedMessages.length;
     console.log(`${deleted} reports deleted.`);
 
     // reportキューに残があれば再帰
     // 残がなければ finalizeJobへ
     const reportRemain: number =
-      await libQueue.getNumberOfMessages(irm.job.report.queueUrl);
+      await libQueue.getNumberOfMessages(job.report.queueUrl);
     if(reportRemain > 0) {
       console.log(`${reportRemain} reports remaining, recurse.`);
-      launcher.insertReportsAsync(irm);
+      launcher.insertReportsAsync(job);
     }else{
-      launcher.finalizeJobAsync(irm.job);
+      launcher.finalizeJobAsync(job);
     }
 
   }

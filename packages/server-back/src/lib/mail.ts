@@ -1,6 +1,6 @@
 import {MessageList, Message} from 'aws-sdk/clients/sqs';
 import {Job, JobStatus, QueueThreadsMessage,
-  OneThreadMessage, QueueMailsMessage,
+  OneThreadMessage,
   OneMailMessage, Portal} from '@damage-report-plots/common/types';
 
 import * as util from '@damage-report-plots/common/util';

@@ -1,7 +1,6 @@
 import {PublishInput} from 'aws-sdk/clients/sns';
 import {Job, CreateJobMessage, QueueThreadsMessage,
-  QueueMailsMessage, ParseMailsMessage,
-  InsertReportsMessage, Agent} from './types';
+  Agent} from './types';
 
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
@@ -110,25 +109,25 @@ export const queueThreadsAsync = (qtm: QueueThreadsMessage): Promise<void> => {
   });
 };
 
-export const queueMailsAsync = (qmm: QueueMailsMessage): Promise<void> => {
+export const queueMailsAsync = (job: Job): Promise<void> => {
   return publish({
-    "Message": JSON.stringify(qmm),
+    "Message": JSON.stringify(job),
     "Subject": 'QueueMails',
     "TopicArn": QUEUE_MAILS_TOPIC
   });
 };
 
-export const parseMailsAsync = (pmm: ParseMailsMessage): Promise<void> => {
+export const parseMailsAsync = (job: Job): Promise<void> => {
   return publish({
-    "Message": JSON.stringify(pmm),
+    "Message": JSON.stringify(job),
     "Subject": 'ParseMails',
     "TopicArn": PARSE_MAILS_TOPIC
   });
 };
 
-export const insertReportsAsync = (irm: InsertReportsMessage): Promise<void> => {
+export const insertReportsAsync = (job: Job): Promise<void> => {
   return publish({
-    "Message": JSON.stringify(irm),
+    "Message": JSON.stringify(job),
     "Subject": 'RecordReports',
     "TopicArn": INSERT_REPORTS_TOPIC
   });

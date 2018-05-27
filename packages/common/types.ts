@@ -26,8 +26,6 @@ export interface Agent {
   // plotTableId?: string,
   // statTableId?: string
 
-  // threadQueueUrl: string,
-  // mailQueueUrl: string,
   mUpv?: number,
   mUpc?: number
 
@@ -78,28 +76,6 @@ export interface QueueThreadsMessage {
   job: Job,
   nextPageToken?: string
 }
-
-export interface QueueMailsMessage {
-  job: Job,
-}
-
-export interface ParseMailsMessage {
-  job: Job,
-}
-
-export interface InsertReportsMessage {
-  job: Job,
-}
-
-// export interface CreateTableMessage {
-//   agent: Agent,
-//   tokens: any
-// }
-
-// export interface CheckTableMessage {
-//   agent: Agent,
-//   tokens: any
-// }
 
 
 export interface OneThreadMessage {
