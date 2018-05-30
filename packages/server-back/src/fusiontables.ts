@@ -10,7 +10,8 @@ import * as env from '@damage-report-plots/common/env';
 import * as libAgent from '@damage-report-plots/common/agent';
 import * as libAuth from './lib/auth';
 import * as libQueue from './lib/queue';
-const gapi = require('googleapis');
+import {google} from 'googleapis';
+const fusiontables = google.fusiontables('v2');
 const FTDEFS = require('./ftdef.json'),
       REPORTS_COUNT: number = Number(process.env.REPORTS_COUNT),
       REPORTS_BATCH_COUNT: number = Number(process.env.REPORTS_BATCH_COUNT);
@@ -30,10 +31,6 @@ export const createTable = async (event: SNSEvent, context, callback): Promise<v
       job.tokens.jobAccessToken,
       job.tokens.jobRefreshToken
     );
-    const ft = gapi.fusiontables({
-      "version": 'v2',
-      "auth": client
-    });
 
     // 並行
     let insertRes: any; 
@@ -42,22 +39,22 @@ export const createTable = async (event: SNSEvent, context, callback): Promise<v
 
       // table作成
       (async () => {
-        insertRes = await new Promise((resolve, reject) => {
-          ft.table.insert(FTDEFS.defs.report, (err, res) => {
-            err ? reject(err) : resolve(res);
-          });
+        insertRes = await fusiontables.table.insert({
+          "resource": FTDEFS.defs.report.resource,
+          "auth": client
         });
+        console.log('created:', insertRes);
       })(),
       
       // agentデータ取得
       (async () => {
         agent = await libAgent.getAgent(job.openId);
+        console.log('agent:', agent);
       })()
     ]);
 
     // agentデータ保存
-    console.log('created:' + JSON.stringify(insertRes));
-    agent.reportTableId = insertRes.tableId;
+    agent.reportTableId = insertRes.data.tableId;
     launcher.putAgentAsync(agent);
     
     launcher.queueThreadsAsync({
@@ -83,26 +80,23 @@ export const checkTable = async (event: SNSEvent, context, callback): Promise<vo
     const agent = await libAgent.getAgent(job.openId);
 
     // reportTableIdがあれば現物の存在チェック
-    if(agent.reportTableId) {
+    if(agent && agent.reportTableId) {
       const client = libAuth.createGapiOAuth2Client(
         env.GOOGLE_CALLBACK_URL_ME,
         job.tokens.jobAccessToken,
         job.tokens.jobRefreshToken
       );
 
-      const ft = gapi.fusiontables({
-        "version": 'v2',
+      // const ft = google.fusiontables({
+      //   "version": 'v2',
+      //   "auth": client
+      // });
+      const res: any = await fusiontables.table.get({
+        "tableId": agent.reportTableId,
         "auth": client
       });
-      const res: any = await new Promise((resolve, reject) => {
-        ft.table.get(
-          {"tableId": agent.reportTableId},
-          (err, res) => {
-            err ? reject(err) : resolve(res);
-          });
-      })
-      console.log('checked:' + JSON.stringify(res));
-      if(res.tableId) {
+      console.log('checked:', res);
+      if(util.isSet(() => res.data.tableId)) {
         notFound = false;
       }else{
         notFound = true;
@@ -135,7 +129,7 @@ export const insertReports = async (event: SNSEvent, context, callback): Promise
 
   for(let rec of event.Records) {
     const job: Job = JSON.parse(rec.Sns.Message);
-    console.log('try to insert reports:' + JSON.stringify(job.openId));
+    console.log('try to insert reports:', job.openId);
     
     //agentテーブルからreportTableIdを取得
     const agent: Agent = await libAgent.getAgent(job.openId);
@@ -160,10 +154,10 @@ export const insertReports = async (event: SNSEvent, context, callback): Promise
       job.tokens.jobRefreshToken
     );
     // client.setCredentials(irm.job.tokens);
-    const ft = gapi.fusiontables({
-      "version": 'v2',
-      "auth": client
-    });
+    // const ft = google.fusiontables({
+    //   "version": 'v2',
+    //   "auth": client
+    // });
 
     // fusiontablesにinsert
     while(reportMessages.length > 0) {
@@ -191,14 +185,18 @@ export const insertReports = async (event: SNSEvent, context, callback): Promise
 
       // insert実行
       console.log('try to insert:' + sql);
-      const res: any = await new Promise((resolve, reject) => {
-        ft.query.sql(
-          {"sql": sql},
-          (err, res) => {
-            err ? reject(err) : resolve(res);
-          });
+      // const res: any = await new Promise((resolve, reject) => {
+      //   fusiontables.query.sql(
+      //     {"sql": sql},
+      //     (err, res) => {
+      //       err ? reject(err) : resolve(res);
+      //     });
+      // })
+      const res: any = await fusiontables.query.sql({
+        "sql": sql,
+        "auth": client
       })
-      console.log('inserted:' + JSON.stringify(res));
+      console.log('inserted:', res);
     }
 
     // reportキューから削除

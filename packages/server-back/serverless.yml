@@ -152,6 +152,14 @@ functions:
     events:
       - sns: drp-put-job
 
+  finalizeJob:
+    handler: handler.finalizeJob
+    events:
+      - sns: drp-finalize-job
+    environment:
+      GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
+      GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
+
   putAgent:
     handler: handler.putAgent
     events:
@@ -162,7 +170,7 @@ functions:
     events:
       - schedule:
           rate: rate(2 minutes)
-          enabled: true
+          enabled: false
     environment:
       JOB_QUEUE_URL:
         Ref: JobQueue

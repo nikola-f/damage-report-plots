@@ -54,7 +54,13 @@ export const revokeTokens =
   return new Promise((resolve, reject) => {
     const client = createGapiOAuth2Client(redirectUrl, accessToken, refreshToken);
     client.revokeCredentials((err, res) => {
-      err ? reject(err) : resolve(res);
+      if(err) {
+        console.log(err);
+        reject(err);
+      }else{
+        console.log('revoked:', res);
+        resolve(res);
+      }
     });
   });
 }
