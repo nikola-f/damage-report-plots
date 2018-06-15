@@ -87,10 +87,6 @@ export const checkTable = async (event: SNSEvent, context, callback): Promise<vo
         job.tokens.jobRefreshToken
       );
 
-      // const ft = google.fusiontables({
-      //   "version": 'v2',
-      //   "auth": client
-      // });
       const res: any = await fusiontables.table.get({
         "tableId": agent.reportTableId,
         "auth": client
@@ -153,11 +149,6 @@ export const insertReports = async (event: SNSEvent, context, callback): Promise
       job.tokens.jobAccessToken,
       job.tokens.jobRefreshToken
     );
-    // client.setCredentials(irm.job.tokens);
-    // const ft = google.fusiontables({
-    //   "version": 'v2',
-    //   "auth": client
-    // });
 
     // fusiontablesにinsert
     while(reportMessages.length > 0) {
@@ -185,13 +176,6 @@ export const insertReports = async (event: SNSEvent, context, callback): Promise
 
       // insert実行
       console.log('try to insert:' + sql);
-      // const res: any = await new Promise((resolve, reject) => {
-      //   fusiontables.query.sql(
-      //     {"sql": sql},
-      //     (err, res) => {
-      //       err ? reject(err) : resolve(res);
-      //     });
-      // })
       const res: any = await fusiontables.query.sql({
         "sql": sql,
         "auth": client

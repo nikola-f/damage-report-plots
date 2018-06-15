@@ -31,13 +31,13 @@ const isAuthenticated = (req, res, next) => {
 // job一覧
 api.get('/jobs',
   isAuthenticated,
-  async (req, res, next) => {
+  async (req, res) => {
     const jobs: Job[] = await libJob.getJobList(req.user.openId);
-    req.jobs = jobs;
-    next();
-  },
-  (req, res) => {
-    req.jobs ? res.json(req.jobs) : res.json([]);
+    if(jobs) {
+      res.json(jobs);
+    }else{
+      res.json([]);
+    }
   }
 );
 
@@ -46,28 +46,36 @@ api.get('/jobs',
 api.post('/job',
   // csrfProtection,
   isAuthenticated,
-  async (req, res, next) => {
+  async (req, res) => {
     let isValid: boolean = false;
     if(req.body && req.user) {
       isValid = await libJob.validateCreateMessage(req.body, req.user);
     }
-    isValid ? next(): res.redirect('/400.html');
-  },
-  (req, res) => {
-    const job: Job = {
-      "openId": req.user.openId,
-      "createTime": Date.now(),
-      "status": JobStatus.Created,
-      "lastAccessTime": Date.now(),
-      "rangeFromTime": Number(req.body.rangeFromTime),
-      "rangeToTime": Number(req.body.rangeToTime),
-      "tokens": {
-        "jobAccessToken": req.user.tokens.jobAccessToken,
-        "jobRefreshToken": req.user.tokens.jobRefreshToken
-      }
-    };
-    launcher.queueJobAsync(job);
-    res.json({ message: 'job queued.' });
+    if(isValid) {
+      const job: Job = {
+        "openId": req.user.openId,
+        "createTime": Date.now(),
+        "status": JobStatus.Created,
+        "lastAccessTime": Date.now(),
+        "rangeFromTime": Number(req.body.rangeFromTime),
+        "rangeToTime": Number(req.body.rangeToTime),
+        "tokens": {
+          "jobAccessToken": req.user.tokens.jobAccessToken,
+          "jobRefreshToken": req.user.tokens.jobRefreshToken
+        }
+      };
+      launcher.queueJobAsync(job);
+      console.log('job queued:', job);
+      res.json({
+        "message": 'job queued.',
+        "openId": job.openId,
+        "createTime": job.createTime
+      });
+    }else{
+      res.status(400).json({ message: 'bad request.' });
+    }
+    
+      // next(): res.redirect('/400.html');
   }
 );
 

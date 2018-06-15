@@ -38,6 +38,7 @@ export const getJobList = async (openId: string): Promise<Job[]> => {
           "rangeToTime": Number(item.rangeToTime),
           "tokens": undefined
         });
+        // TODO count類も返す
       }
     }
 

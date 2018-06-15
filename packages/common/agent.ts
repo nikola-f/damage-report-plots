@@ -10,7 +10,7 @@ const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
 
 
 export const getAgent = async (openId: string): Promise<Agent> => {
-  console.log('getAgent:', openId);
+  console.log('try to get agent:', openId);
 
   let agent: Agent = undefined;
 
@@ -22,8 +22,10 @@ export const getAgent = async (openId: string): Promise<Agent> => {
       },
       "ConsistentRead": false
     }).promise();
+    
+    // console.log('result:', res);
 
-    if(res.Item && res.Item.length > 0) {
+    if(res.Item) {
       agent = {
         "openId": openId,
         "createTime": <number>res.Item.createTime,

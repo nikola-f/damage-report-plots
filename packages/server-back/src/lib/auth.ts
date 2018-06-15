@@ -8,6 +8,8 @@ const {google} = require('googleapis');
 export const createGapiOAuth2Client = 
     (redirectUrl: string, accessToken?: string, refreshToken?: string): any => {
 
+  console.log('try to create client:', accessToken);
+
   if(!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
     throw(new Error('google credential ENV not set.'))
   }
@@ -49,7 +51,7 @@ export const refreshAccessTokenManually =
  */
 export const revokeTokens = 
         async (redirectUrl: string, accessToken: string, refreshToken: string): Promise<any> => {
-  console.log('try to revoke tokens.');
+  console.log('try to revoke tokens:', accessToken);
 
   return new Promise((resolve, reject) => {
     const client = createGapiOAuth2Client(redirectUrl, accessToken, refreshToken);
