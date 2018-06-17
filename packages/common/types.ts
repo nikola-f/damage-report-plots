@@ -47,17 +47,17 @@ export interface Job {
   thread?: {
     queueUrl: string,
     queuedCount: number
-    dequeuedCount: number,
+    // dequeuedCount: number,
   },
   mail?: {
     queueUrl: string,
     queuedCount: number
-    dequeuedCount: number,
+    // dequeuedCount: number,
   },
   report?: {
     queueUrl: string,
     queuedCount: number
-    dequeuedCount: number,
+    // dequeuedCount: number,
   }
 }
 

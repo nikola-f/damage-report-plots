@@ -74,7 +74,7 @@ export const sendMessageBatch = async (url: string,
         continue;
       }
     }
-    return queuedCount;
+    return Promise.resolve(queuedCount);
 };
 
 
@@ -84,9 +84,9 @@ export const receiveMessage = async (url: string): Promise<Message> => {
 
   const messages: MessageList = await receiveMessageBatch(url, 1);
   if(messages.length > 0) {
-    return messages[0];
+    return Promise.resolve(messages[0]);
   }else{
-    return null;
+    return Promise.resolve(null);
   }
 };
 
@@ -122,7 +122,7 @@ export const receiveMessageBatch = async (url: string, maxCount: number): Promis
   }
 
   console.log(`${result.length} messages received from ${url}`);
-  return result;
+  return Promise.resolve(result);
 };
 
 
@@ -164,5 +164,5 @@ export const deleteMessageBatch = async (url: string, messages: MessageList): Pr
     }
   }
 
-  return deletedCount;
+  return Promise.resolve(deletedCount);
 };

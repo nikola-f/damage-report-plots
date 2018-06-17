@@ -186,8 +186,8 @@ export const insertReports = async (event: SNSEvent, context, callback): Promise
     // reportキューから削除
     const deleted =
       await libQueue.deleteMessageBatch(job.report.queueUrl, queuedMessages);
-    job.report.queuedCount -= queuedMessages.length;
-    job.report.dequeuedCount += queuedMessages.length;
+    // job.report.queuedCount -= queuedMessages.length;
+    // job.report.dequeuedCount += queuedMessages.length;
     console.log(`${deleted} reports deleted.`);
 
     // reportキューに残があれば再帰

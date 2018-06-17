@@ -27,7 +27,7 @@ export const getJobList = async (openId: string): Promise<Job[]> => {
     }).promise();
     
     if(qo.Items) {
-      for(let item of qo.Items) {
+      for(let item of qo.Items as any) {
         console.log('item:', item);
         jobs.push({
           "openId": 'me',
@@ -36,9 +36,23 @@ export const getJobList = async (openId: string): Promise<Job[]> => {
           "lastAccessTime": Number(item.lastAccessTime),
           "rangeFromTime": Number(item.rangeFromTime),
           "rangeToTime": Number(item.rangeToTime),
+          "thread": {
+            "queueUrl": '',
+            "queuedCount": util.isSet(() => item.thread.queuedCount) ?
+              Number(item.thread.queuedCount) : 0
+          },
+          "mail": {
+            "queueUrl": '',
+            "queuedCount": util.isSet(() => item.mail.queuedCount) ?
+              Number(item.mail.queuedCount) : 0
+          },
+          "report": {
+            "queueUrl": '',
+            "queuedCount": util.isSet(() => item.report.queuedCount) ?
+              Number(item.report.queuedCount) : 0
+          },
           "tokens": undefined
         });
-        // TODO count類も返す
       }
     }
 

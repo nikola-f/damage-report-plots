@@ -47,45 +47,6 @@ export const putAgent = async (event: SNSEvent, context, callback): Promise<void
 };
 
 
-// /**
-// * agentの保存
-// * keyのみ
-// * @next -
-// */
-// export const putAgentId = async (event: SNSEvent, context, callback): Promise<void> => {
-//   console.log(JSON.stringify(event));
-
-//   for(let rec of event.Records) {
-//     const openId: string = String(rec.Sns.Message);
-
-//     dynamo.update({
-//       "TableName": "agent",
-//       "Key": {
-//         "openId": openId
-//       },
-//       "UpdateExpression": "set lastAccessTime = :val",
-//       "ExpressionAttributeValues": {
-//           ":val": Date.now()
-//       },
-//     // "ReturnValues":"UPDATED_NEW"
-//     // "Item": agent
-//     }).promise()
-//     .then(() => {
-//       console.log('update agent key:' + JSON.stringify(openId));
-//     })
-//     .catch(err => {
-//       console.error(err);
-//       callback(err, null);
-//       return;
-//     });
-//   }
-
-//   callback(null, {
-//     "statusCode": 200,
-//     "body": {}
-//   });
-// };
-
 
 /**
  * agent queueの作成
@@ -108,8 +69,8 @@ export const createAgentQueue = async (event: SNSEvent, context, callback): Prom
       const threadQueueRes = await sqs.createQueue(createQueueParams).promise();
       job.thread = {
         queueUrl: threadQueueRes.QueueUrl,
-        queuedCount: 0,
-        dequeuedCount: 0
+        queuedCount: 0
+        // dequeuedCount: 0
       };
 
       createQueueParams = {
@@ -122,8 +83,8 @@ export const createAgentQueue = async (event: SNSEvent, context, callback): Prom
       const mailQueueRes = await sqs.createQueue(createQueueParams).promise();
       job.mail = {
         queueUrl: mailQueueRes.QueueUrl,
-        queuedCount: 0,
-        dequeuedCount: 0
+        queuedCount: 0
+        // dequeuedCount: 0
       };
 
       createQueueParams = {
@@ -136,17 +97,13 @@ export const createAgentQueue = async (event: SNSEvent, context, callback): Prom
       const reportQueueRes = await sqs.createQueue(createQueueParams).promise();
       job.report = {
         queueUrl: reportQueueRes.QueueUrl,
-        queuedCount: 0,
-        dequeuedCount: 0
+        queuedCount: 0
+        // dequeuedCount: 0
       };
 
       job.lastAccessTime = Date.now();
       console.log('queues created:' + JSON.stringify(job));
 
-      // launcher.queueJobAsync(job);
-      // launcher.queueThreadsAsync({
-      //   "job": job
-      // });
       launcher.checkTableAsync(job);
 
     }catch(err){

@@ -67,8 +67,8 @@ export const parseMails = async (event: SNSEvent, context, callback): Promise<vo
     // mailキューから削除
     const deleted =
       await libQueue.deleteMessageBatch(job.mail.queueUrl, mailMessages);
-    job.mail.queuedCount -= mailMessages.length;
-    job.mail.dequeuedCount += mailMessages.length;
+    // job.mail.queuedCount -= mailMessages.length;
+    // job.mail.dequeuedCount += mailMessages.length;
     console.log(`${deleted} mails deleted.`);
 
     // job保存
@@ -141,8 +141,8 @@ export const queueMails = async (event: SNSEvent, context, callback): Promise<vo
     // threadキューから削除
     const deleted =
       await libQueue.deleteMessageBatch(job.thread.queueUrl, threadMessages);
-    job.thread.queuedCount -= threadMessages.length;
-    job.thread.dequeuedCount += threadMessages.length;
+    // job.thread.queuedCount -= threadMessages.length;
+    // job.thread.dequeuedCount += threadMessages.length;
     console.log(`${deleted} threads deleted.`);
 
     // jobをdb保存
