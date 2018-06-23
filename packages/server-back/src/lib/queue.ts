@@ -99,6 +99,8 @@ export const receiveMessageBatch = async (url: string, maxCount: number): Promis
   let remain = maxCount;
   let result: MessageList = [];
   while(remain > 0) {
+    // console.log('remain:', remain);
+    
     const req: ReceiveMessageRequest = {
       "MaxNumberOfMessages": 10,
       "QueueUrl": url
@@ -106,6 +108,8 @@ export const receiveMessageBatch = async (url: string, maxCount: number): Promis
     let res: ReceiveMessageResult;
     try {
       res = await sqs.receiveMessage(req).promise();
+      
+      // console.log('dump:', res);
     }catch(err){
       console.error(err);
       continue;
@@ -115,6 +119,9 @@ export const receiveMessageBatch = async (url: string, maxCount: number): Promis
     }
     remain -= res.Messages.length;
     Array.prototype.push.apply(result, res.Messages);
+    
+    const deletedCount = await deleteMessageBatch(url, res.Messages);
+    // console.info(`${deletedCount} messages deleted.`);
 
     if(res.Messages.length < 10) {
       break;
@@ -136,12 +143,13 @@ export const deleteMessageBatch = async (url: string, messages: MessageList): Pr
   console.log('try to delete messages:' + url);
 
   let deletedCount: number = 0;
-  while(messages.length > 0) {
+  let toDeleteList = messages.slice();
+  while(toDeleteList.length > 0) {
     // 10件ずつ
     let inBatch: MessageList = [];
-    const batchSize = messages.length>=10 ? 10 : messages.length
-    inBatch = messages.slice(0, batchSize);
-    messages.splice(0, batchSize);
+    const batchSize = toDeleteList.length>=10 ? 10 : toDeleteList.length
+    inBatch = toDeleteList.slice(0, batchSize);
+    toDeleteList.splice(0, batchSize);
 
     let outBatch: DeleteMessageBatchRequestEntryList = [];
     for(let message of inBatch) {

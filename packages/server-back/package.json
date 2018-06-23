@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "webpack": "sls webpack",
-    "deploy" : "sls deploy"
+    "deploy": "sls deploy"
   },
   "keywords": [],
   "author": "nikola-f",

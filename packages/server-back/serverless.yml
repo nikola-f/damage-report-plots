@@ -95,6 +95,7 @@ functions:
       THREAD_COUNT: 50  # gmailから読む最大スレッド数
       GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
       GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
+    memorySize: 256
 
   queueMails:
     handler: handler.queueMails
@@ -105,6 +106,7 @@ functions:
       THREAD_BATCH_COUNT: 50 # 1度のバッチ実行でgmailから読む最大スレッド数
       GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
       GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
+    memorySize: 256
 
   parseMails:
     handler: handler.parseMails
@@ -112,6 +114,7 @@ functions:
       - sns: drp-parse-mails
     environment:
       MAIL_COUNT: 100 # sqsから読む最大メール数
+    memorySize: 256
 
   insertReports:
     handler: handler.insertReports
@@ -119,9 +122,10 @@ functions:
       - sns: drp-insert-reports
     environment:
       REPORTS_COUNT: 100 # sqsから読む最大レコード数
-      REPORTS_BATCH_COUNT: 20 # 1度のバッチ実行でfusiontablesへ書く最大レコード数
+      REPORTS_BATCH_COUNT: 30 # 1度のバッチ実行でfusiontablesへ書く最大レコード数
       GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
       GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
+    memorySize: 256
 
   createTable:
     handler: handler.createTable

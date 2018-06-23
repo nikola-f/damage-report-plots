@@ -68,7 +68,7 @@ functions:
     events:
       - http: ANY /
       - http: 'ANY {proxy+}'
-    memorySize: 320
+    memorySize: 256
     environment:
       GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
       GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}

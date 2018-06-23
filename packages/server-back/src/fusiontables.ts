@@ -43,7 +43,7 @@ export const createTable = async (event: SNSEvent, context, callback): Promise<v
           "resource": FTDEFS.defs.report.resource,
           "auth": client
         });
-        console.log('created:', insertRes);
+        console.info('created:', insertRes);
       })(),
       
       // agentデータ取得
@@ -136,7 +136,6 @@ export const insertReports = async (event: SNSEvent, context, callback): Promise
       await libQueue.receiveMessageBatch(job.report.queueUrl, REPORTS_COUNT);
     if(queuedMessages.length <= 0) {
       console.log('no reports queued.');
-      continue;
     }
     const reportMessages: OneReportMessage[] = [];
     for(const aMessage of queuedMessages) {
@@ -166,9 +165,9 @@ export const insertReports = async (event: SNSEvent, context, callback): Promise
         const location: string = `${String(aReport.portal.latitude)},${String(aReport.portal.longitude)}`;
         const ownedNumber: number = aReport.portal.owned ? 1 : 0;
         const anInsert: string =
-          `INSERT INTO ${reportTableId} (hash, mailId, mailDate, portalLocation, portalName, portalOwned) ` +
+          `INSERT INTO ${reportTableId} (hash, mailDate, portalLocation, portalName, portalOwned) ` +
           'VALUES (' +
-            `'${hash}', '${escape(aReport.mailId)}', ${String(aReport.mailDate)}, ` +
+            `'${hash}', ${String(aReport.mailDate)}, ` +
             `'${location}', '${escape(aReport.portal.name)}', ${ownedNumber}` +
           ');';
         sql += anInsert;
@@ -176,22 +175,25 @@ export const insertReports = async (event: SNSEvent, context, callback): Promise
 
       // insert実行
       console.log('try to insert:' + sql);
-      const res: any = await fusiontables.query.sql({
-        "sql": sql,
-        "auth": client
-      })
-      console.log('inserted:', res);
+      try {
+        const res: any = await fusiontables.query.sql({
+          "sql": sql,
+          "auth": client
+        });
+        console.log('inserted:', res);
+      }catch(err){
+        console.error(err);
+      }
     }
 
     // reportキューから削除
-    const deleted =
-      await libQueue.deleteMessageBatch(job.report.queueUrl, queuedMessages);
-    // job.report.queuedCount -= queuedMessages.length;
-    // job.report.dequeuedCount += queuedMessages.length;
-    console.log(`${deleted} reports deleted.`);
+    // const deleted =
+    //   await libQueue.deleteMessageBatch(job.report.queueUrl, queuedMessages);
+    // console.log(`${deleted} reports deleted.`);
 
     // reportキューに残があれば再帰
     // 残がなければ finalizeJobへ
+    // TODO finalizeJobの前にmUpx集計
     const reportRemain: number =
       await libQueue.getNumberOfMessages(job.report.queueUrl);
     if(reportRemain > 0) {
@@ -214,11 +216,9 @@ const getHash = (report: OneReportMessage): string => {
 
   const shasum = crypto.createHash('md5');
   return shasum
-    .update(report.mailId)
     .update(String(report.mailDate))
     .update(String(report.portal.latitude))
     .update(String(report.portal.longitude))
-    // .update(report.portal.name)
     .update(String(report.portal.owned))
-    .digest('hex');
+    .digest('base64').substr(0, 22);
 };

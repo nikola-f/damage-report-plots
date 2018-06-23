@@ -19,6 +19,7 @@
     "webpack-node-externals": "^1.7.2"
   },
   "dependencies": {
-    "aws-xray-sdk": "^1.2.0"
+    "aws-xray-sdk": "^1.2.0",
+    "make-unique": "^1.0.4"
   }
 }

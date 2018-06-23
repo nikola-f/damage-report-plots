@@ -1,3 +1,5 @@
+const unique = require('make-unique');
+
 
 /**
  * 階層オブジェクトの存在チェック
@@ -23,3 +25,21 @@ export const toString = (ms: number): string => {
   return (new Date(ms)).toISOString();
 };
 
+
+/**
+ * 配列から重複削除
+ */
+export const dedupe = (list: Array<any>): Array<any> => {
+  const result: Array<any> = unique(
+    list,
+    (a, b) => {
+      return JSON.stringify(a) === JSON.stringify(b);
+    }
+  );
+  
+  if(list.length > result.length) {
+    console.log(`Array deduped ${list.length} to ${result.length}.`);
+  }
+  
+  return result;
+}

@@ -12,11 +12,6 @@
             "kind": "fusiontables#column"
           },
           {
-            "name": "mailId",
-            "type": "STRING",
-            "kind": "fusiontables#column"
-          },
-          {
             "name": "mailDate",
             "type": "NUMBER",
             "kind": "fusiontables#column"

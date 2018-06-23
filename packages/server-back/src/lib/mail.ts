@@ -147,7 +147,7 @@ export const getMails = async (accessToken: string, threads: MessageList,
   }
 
   console.log(`${mails.length} mails received.`);
-  return mails;
+  return Promise.resolve(mails);
 };
 
 

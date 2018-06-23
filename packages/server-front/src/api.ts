@@ -23,7 +23,9 @@ const isAuthenticated = (req, res, next) => {
   if(req.isAuthenticated()) {
     next();
   }else{
-    res.redirect('/401.html');
+    res.status(401).json({
+      "message": 'Unauthorized'
+    });
   }
 };
 
@@ -72,10 +74,10 @@ api.post('/job',
         "createTime": job.createTime
       });
     }else{
-      res.status(400).json({ message: 'bad request.' });
+      res.status(400).json({
+        "message": 'Bad Request'
+      });
     }
-    
-      // next(): res.redirect('/400.html');
   }
 );
 

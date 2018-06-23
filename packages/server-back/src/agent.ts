@@ -77,7 +77,8 @@ export const createAgentQueue = async (event: SNSEvent, context, callback): Prom
         "QueueName": String(job.createTime) + '_mail_' + job.openId + '.fifo',
         "Attributes": {
           "FifoQueue": 'true',
-          "ContentBasedDeduplication": 'true'
+          "ContentBasedDeduplication": 'true',
+          // "ReceiveMessageWaitTimeSeconds": '3'
         }
       };
       const mailQueueRes = await sqs.createQueue(createQueueParams).promise();

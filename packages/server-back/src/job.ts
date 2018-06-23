@@ -45,10 +45,10 @@ export const startJob = async (event, context, callback): Promise<void> => {
       libQueue.deleteMessage(JOB_QUEUE_URL, message);
 
     }else{
-      console.log('JobQueue is empty.');
+      console.info('JobQueue is empty.');
     }
   }else{
-    console.log('No tickets available.');
+    console.info('No tickets available.');
   }
 
   callback(null, {
@@ -141,7 +141,7 @@ export const putJob = async (event: SNSEvent, context, callback): Promise<void> 
       "Item": job
     }).promise()
     .then(() => {
-      console.log('put job:' + JSON.stringify(job));
+      console.info('put job:', job);
     })
     .catch(err => {
       console.error(err);

@@ -86,7 +86,7 @@ export interface OneMailMessage {
 
 
 export interface OneReportMessage {
-  mailId: string,
+  // mailId: string,
   mailDate: number;
   portal: Portal
 }

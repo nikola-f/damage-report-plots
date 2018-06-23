@@ -28,18 +28,18 @@ export const parseMails = async (event: SNSEvent, context, callback): Promise<vo
 
   for(let rec of event.Records) {
     let job: Job = JSON.parse(rec.Sns.Message);
-    console.log('try to parse mails:' + JSON.stringify(job.openId));
+    console.info('try to parse mails:', job.openId);
 
     // mailキューからmailを取得
     const mailMessages: MessageList =
       await libQueue.receiveMessageBatch(job.mail.queueUrl, MAIL_COUNT);
     if(mailMessages.length <= 0) {
-      console.log('no mails queued.');
-      continue;
+      console.info('no mails queued.');
     }
 
     // ポータル情報抽出
-    const reportMessages: MessageList = [];
+    let rawReportMessages: Array<OneReportMessage> = [];
+    const dedupedReportMessages: MessageList = [];
     for(let message of mailMessages) {
       const mail: OneMailMessage = JSON.parse(message.Body);
       const html: string = libMail.decodeBase64(mail.body);
@@ -47,29 +47,38 @@ export const parseMails = async (event: SNSEvent, context, callback): Promise<vo
 
       for(let aPortal of portals) {
         const oneReportMessage: OneReportMessage = {
-          "mailId": mail.id,
-          "mailDate": mail.internalDate,
+          // "mailId": mail.id,
+          // 300秒単位に丸める
+          "mailDate": Math.floor(mail.internalDate / 300000) * 300,
           "portal": aPortal
         };
-        reportMessages.push({
-          "MessageId": String(reportMessages.length),
-          "Body": JSON.stringify(oneReportMessage)
-        });
+        rawReportMessages.push(oneReportMessage);
+          // "MessageId": String(reportMessages.length),
+          // "Body": JSON.stringify(oneReportMessage)
+        // });
       }
     }
-    console.log(JSON.stringify(reportMessages));
+    
+    // 重複削除
+    rawReportMessages = util.dedupe(rawReportMessages);
+    for(let oneReportMessage of rawReportMessages) {
+      dedupedReportMessages.push({
+        "MessageId": String(dedupedReportMessages.length),
+        "Body": JSON.stringify(oneReportMessage)
+      });
+    }
 
     // reportキューにキューイング
-    const queued = await libQueue.sendMessageBatch(job.report.queueUrl, reportMessages);
-    job.report.queuedCount += queued;
-    console.log(`${queued} reports queued.`);
+    if(dedupedReportMessages.length > 0) {
+      const queued = await libQueue.sendMessageBatch(job.report.queueUrl, dedupedReportMessages);
+      job.report.queuedCount += queued;
+      console.info(`${queued} reports queued.`);
+    }
 
     // mailキューから削除
-    const deleted =
-      await libQueue.deleteMessageBatch(job.mail.queueUrl, mailMessages);
-    // job.mail.queuedCount -= mailMessages.length;
-    // job.mail.dequeuedCount += mailMessages.length;
-    console.log(`${deleted} mails deleted.`);
+    // const deleted =
+    //   await libQueue.deleteMessageBatch(job.mail.queueUrl, mailMessages);
+    // console.info(`${deleted} mails deleted.`);
 
     // job保存
     launcher.putJobAsync(job);
@@ -79,7 +88,7 @@ export const parseMails = async (event: SNSEvent, context, callback): Promise<vo
     const mailRemain: number =
       await libQueue.getNumberOfMessages(job.mail.queueUrl);
     if(mailRemain > 0) {
-      console.log(`${mailRemain} mails remaining, recurse.`);
+      console.info(`${mailRemain} mails remaining, recurse.`);
       launcher.parseMailsAsync(job);
     }else{
       launcher.insertReportsAsync(job);
@@ -102,48 +111,49 @@ export const queueMails = async (event: SNSEvent, context, callback): Promise<vo
 
   for(let rec of event.Records) {
     let job: Job = JSON.parse(rec.Sns.Message);
-    console.log('try to queue mails:' + JSON.stringify(job.openId));
+    console.info('try to queue mails:', job.openId);
 
     // threadキューからthreadを取得
     const threadMessages: MessageList =
       await libQueue.receiveMessageBatch(job.thread.queueUrl, THREAD_COUNT);
-    if(threadMessages.length <= 0) {
-      console.log('no threads queued.');
-      continue;
-    }
+    if(threadMessages.length > 0) {
+      // access_token 再作成
+      const accessToken = 
+        await libAuth.refreshAccessTokenManually(env.GOOGLE_CALLBACK_URL_JOB, job.tokens.jobRefreshToken);
+      // gapiでthreadの詳細(mail付き)取得
+      const mails: OneMailMessage[] =
+        await libMail.getMails(accessToken, threadMessages,
+          job.rangeFromTime, job.rangeToTime);
+      if(mails && mails.length > 0) {
+        console.info(`${mails.length} mails found.`);
+      }else{
+        console.info('no mails found.');
+      }
+      
+      // mailキューにキューイング
+      const mailMessages: MessageList = [];
+      for(let aMail of mails) {
+        mailMessages.push({
+          MessageId: aMail.id,
+          Body: JSON.stringify(aMail)
+        });
+      }
+      if(mailMessages.length > 0) {
+        job.mail.queuedCount +=
+          await libQueue.sendMessageBatch(job.mail.queueUrl, mailMessages);
+        console.info(`${mailMessages.length} mails queued.`);
+      }
 
-    // access_token 再作成
-    const accessToken = 
-      await libAuth.refreshAccessTokenManually(env.GOOGLE_CALLBACK_URL_JOB, job.tokens.jobRefreshToken);
-    // gapiでthreadの詳細(mail付き)取得
-    const mails: OneMailMessage[] =
-      await libMail.getMails(accessToken, threadMessages,
-        job.rangeFromTime, job.rangeToTime);
-    if(mails && mails.length > 0) {
-      console.log(`${mails.length} mails found.`);
     }else{
-      console.log('no mails found.');
-      continue;
+      console.info('no threads queued.');
     }
 
-    // mailキューにキューイング
-    const mailMessages: MessageList = [];
-    for(let aMail of mails) {
-      mailMessages.push({
-        MessageId: aMail.id,
-        Body: JSON.stringify(aMail)
-      });
-    }
-    job.mail.queuedCount +=
-      await libQueue.sendMessageBatch(job.mail.queueUrl, mailMessages);
-    console.log('queued.' + JSON.stringify(job.mail));
+
 
     // threadキューから削除
-    const deleted =
-      await libQueue.deleteMessageBatch(job.thread.queueUrl, threadMessages);
-    // job.thread.queuedCount -= threadMessages.length;
-    // job.thread.dequeuedCount += threadMessages.length;
-    console.log(`${deleted} threads deleted.`);
+    // const deleted =
+    //   await libQueue.deleteMessageBatch(job.thread.queueUrl, threadMessages);
+    // console.info(`${deleted} threads deleted.`);
 
     // jobをdb保存
     job.lastAccessTime = Date.now();
@@ -153,6 +163,7 @@ export const queueMails = async (event: SNSEvent, context, callback): Promise<vo
     // なければparseMailsを起動
     const threadRemain: number =
       await libQueue.getNumberOfMessages(job.thread.queueUrl);
+    console.info(`${threadRemain} threads remain.`);
     if(threadRemain > 0) {
       launcher.queueMailsAsync(job);
     }else{
@@ -177,7 +188,7 @@ export const queueThreads = async (event: SNSEvent, context, callback): Promise<
   for(let rec of event.Records) {
     let qtm: QueueThreadsMessage = JSON.parse(rec.Sns.Message);
 
-    console.log('try to queue threads:' + JSON.stringify(qtm.job.openId));
+    console.info('try to queue threads:', qtm.job.openId);
 
     const client = libAuth.createGapiOAuth2Client(
       env.GOOGLE_CALLBACK_URL_JOB,
@@ -223,11 +234,11 @@ export const queueThreads = async (event: SNSEvent, context, callback): Promise<
     }
     
     if(!threads || threads.length === 0) {
-      console.log('no threads found.');
+      console.info('no threads found.');
       console.log('res:', res);
       continue;
     }else{
-      console.log(`${threads.length} threads found.`);
+      console.info(`${threads.length} threads found.`);
     }
 
     //job.thread.queueUrlにキューイング
@@ -249,11 +260,11 @@ export const queueThreads = async (event: SNSEvent, context, callback): Promise<
 
     //残りがあればnextPageTokenが返るのでそれをsetして再帰
     //残りがなければqueueMailsを起動
-    if(res.nextPageToken) {
-      console.log('go recurrsive:' + res.nextPageToken);
+    if(util.isSet(() => res.data.nextPageToken)) {
+      console.info('go recurrsive:', res.data.nextPageToken);
       launcher.queueThreadsAsync({
         "job": qtm.job,
-        "nextPageToken": res.nextPageToken
+        "nextPageToken": res.data.nextPageToken
       });
     }else{
       launcher.queueMailsAsync(qtm.job);
