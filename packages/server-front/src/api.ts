@@ -51,7 +51,8 @@ api.post('/job',
   async (req, res) => {
     let isValid: boolean = false;
     if(req.body && req.user) {
-      isValid = await libJob.validateCreateMessage(req.body, req.user);
+      // isValid = await libJob.validateCreateMessage(req.body, req.user);
+      isValid = true;
     }
     if(isValid) {
       const job: Job = {

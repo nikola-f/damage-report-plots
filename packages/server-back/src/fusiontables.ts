@@ -3,7 +3,6 @@ import {MessageList, Message} from 'aws-sdk/clients/sqs';
 import {Agent, OneReportMessage, Job} from '@damage-report-plots/common/types';
 
 import * as crypto from 'crypto';
-import * as escape from 'escape-quotes';
 import * as launcher from '@damage-report-plots/common/launcher';
 import * as util from '@damage-report-plots/common/util';
 import * as env from '@damage-report-plots/common/env';
@@ -157,39 +156,35 @@ export const insertReports = async (event: SNSEvent, context, callback): Promise
       const batch = reportMessages.slice(0, batchSize);
       reportMessages.splice(0, batchSize);
 
-      // insert文の組み立て
-      // const tableId: string = agent.reportTableId;
-      let sql: string = '';
+      // csvの組み立て
+      let csv: string = '';
       for(const aReport of batch) {
         const hash: string = getHash(aReport);
         const location: string = `${String(aReport.portal.latitude)},${String(aReport.portal.longitude)}`;
+        const escapedPortalName: string = aReport.portal.name.replace(/"/g,'""');
         const ownedNumber: number = aReport.portal.owned ? 1 : 0;
-        const anInsert: string =
-          `INSERT INTO ${reportTableId} (hash, mailDate, portalLocation, portalName, portalOwned) ` +
-          'VALUES (' +
-            `'${hash}', ${String(aReport.mailDate)}, ` +
-            `'${location}', '${escape(aReport.portal.name)}', ${ownedNumber}` +
-          ');';
-        sql += anInsert;
+        const csvLine: string =
+          `"${hash}"\t${String(aReport.mailDate)}\t${location}\t"${escapedPortalName}"\t${ownedNumber}\n`;
+        csv += csvLine;
       }
 
       // insert実行
-      console.log('try to insert:' + sql);
+      console.log('try to import:', csv);
       try {
-        const res: any = await fusiontables.query.sql({
-          "sql": sql,
-          "auth": client
+        const res: any = await fusiontables.table.importRows({
+          "tableId": reportTableId,
+          "auth": client,
+          "delimiter": '\t',
+          "media": {
+            "mediaType": 'application/octet-stream',
+            "body": Buffer.from(csv, 'utf8')
+          }
         });
-        console.log('inserted:', res);
+        console.info(`imported: ${res.data.numRowsReceived} rows`);
       }catch(err){
         console.error(err);
       }
     }
-
-    // reportキューから削除
-    // const deleted =
-    //   await libQueue.deleteMessageBatch(job.report.queueUrl, queuedMessages);
-    // console.log(`${deleted} reports deleted.`);
 
     // reportキューに残があれば再帰
     // 残がなければ finalizeJobへ

@@ -53,9 +53,6 @@ export const parseMails = async (event: SNSEvent, context, callback): Promise<vo
           "portal": aPortal
         };
         rawReportMessages.push(oneReportMessage);
-          // "MessageId": String(reportMessages.length),
-          // "Body": JSON.stringify(oneReportMessage)
-        // });
       }
     }
     
@@ -74,11 +71,6 @@ export const parseMails = async (event: SNSEvent, context, callback): Promise<vo
       job.report.queuedCount += queued;
       console.info(`${queued} reports queued.`);
     }
-
-    // mailキューから削除
-    // const deleted =
-    //   await libQueue.deleteMessageBatch(job.mail.queueUrl, mailMessages);
-    // console.info(`${deleted} mails deleted.`);
 
     // job保存
     launcher.putJobAsync(job);
@@ -148,13 +140,6 @@ export const queueMails = async (event: SNSEvent, context, callback): Promise<vo
       console.info('no threads queued.');
     }
 
-
-
-    // threadキューから削除
-    // const deleted =
-    //   await libQueue.deleteMessageBatch(job.thread.queueUrl, threadMessages);
-    // console.info(`${deleted} threads deleted.`);
-
     // jobをdb保存
     job.lastAccessTime = Date.now();
     launcher.putJobAsync(job);
@@ -204,7 +189,6 @@ export const queueThreads = async (event: SNSEvent, context, callback): Promise<
     let req = {
       "auth": client,
       "userId": 'me',
-      // "maxResults": String(THREAD_COUNT),
       "maxResults": THREAD_COUNT,
       "fields": 'threads/id,nextPageToken',
       "q": '{from:ingress-support@google.com from:ingress-support@nianticlabs.com}' +

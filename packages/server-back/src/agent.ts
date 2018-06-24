@@ -70,7 +70,6 @@ export const createAgentQueue = async (event: SNSEvent, context, callback): Prom
       job.thread = {
         queueUrl: threadQueueRes.QueueUrl,
         queuedCount: 0
-        // dequeuedCount: 0
       };
 
       createQueueParams = {
@@ -78,14 +77,12 @@ export const createAgentQueue = async (event: SNSEvent, context, callback): Prom
         "Attributes": {
           "FifoQueue": 'true',
           "ContentBasedDeduplication": 'true',
-          // "ReceiveMessageWaitTimeSeconds": '3'
         }
       };
       const mailQueueRes = await sqs.createQueue(createQueueParams).promise();
       job.mail = {
         queueUrl: mailQueueRes.QueueUrl,
         queuedCount: 0
-        // dequeuedCount: 0
       };
 
       createQueueParams = {
@@ -99,7 +96,6 @@ export const createAgentQueue = async (event: SNSEvent, context, callback): Prom
       job.report = {
         queueUrl: reportQueueRes.QueueUrl,
         queuedCount: 0
-        // dequeuedCount: 0
       };
 
       job.lastAccessTime = Date.now();
