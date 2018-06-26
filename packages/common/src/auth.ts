@@ -1,4 +1,4 @@
-const env = require('@damage-report-plots/common/env');
+const env = require('./env');
 const {google} = require('googleapis');
 
 

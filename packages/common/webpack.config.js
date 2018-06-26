@@ -8,6 +8,7 @@ module.exports = {
   optimization: {
     minimize: false
   },
+  context: path.resolve(__dirname, 'src'),
   module: {
     rules: [
       {

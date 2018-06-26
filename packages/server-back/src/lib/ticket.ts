@@ -1,7 +1,6 @@
 import {GetItemOutput} from 'aws-sdk/clients/dynamodb';
-import {Job} from '@damage-report-plots/common/types';
+import {Job} from '@common/types';
 
-// import * as launcher from '@damage-report-plots/common/launcher';
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
 const AWS = awsXRay.captureAWS(awsPlain);

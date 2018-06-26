@@ -2,14 +2,14 @@ import {SNSEvent, Handler, ProxyResult,
   APIGatewayEvent} from 'aws-lambda';
 import {QueryOutput} from 'aws-sdk/clients/dynamodb';
 import {Job, JobStatus, CreateJobMessage, Session, Agent, QueueThreadsMessage} 
-  from '@damage-report-plots/common/types';
+  from '@common/types';
 
-const env = require('@damage-report-plots/common/env');
+const env = require('@common/env');
 
-import * as launcher from '@damage-report-plots/common/launcher';
+import * as launcher from '@common/launcher';
 import * as libQueue from './lib/queue';
 import * as libTicket from './lib/ticket';
-import * as libAuth from './lib/auth';
+import * as libAuth from '@common/auth';
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
 const AWS = awsXRay.captureAWS(awsPlain);

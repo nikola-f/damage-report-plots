@@ -95,7 +95,6 @@ export const receiveMessageBatch = async (url: string, maxCount: number): Promis
 
   console.log('try to receive messages:' + url);
 
-  // let remain = THREAD_COUNT;
   let remain = maxCount;
   let result: MessageList = [];
   while(remain > 0) {
@@ -121,7 +120,6 @@ export const receiveMessageBatch = async (url: string, maxCount: number): Promis
     Array.prototype.push.apply(result, res.Messages);
     
     const deletedCount = await deleteMessageBatch(url, res.Messages);
-    // console.info(`${deletedCount} messages deleted.`);
 
     if(res.Messages.length < 10) {
       break;
@@ -140,7 +138,7 @@ export const deleteMessage = async (url: string, message: Message): Promise<numb
 
 export const deleteMessageBatch = async (url: string, messages: MessageList): Promise<number> => {
 
-  console.log('try to delete messages:' + url);
+  // console.log('try to delete messages:' + url);
 
   let deletedCount: number = 0;
   let toDeleteList = messages.slice();
@@ -172,5 +170,6 @@ export const deleteMessageBatch = async (url: string, messages: MessageList): Pr
     }
   }
 
+  console.info(`${deletedCount} messages deleted.`);
   return Promise.resolve(deletedCount);
 };

@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "aws-xray-sdk": "^1.2.0",
+    "googleapis": "^29.0.0",
     "make-unique": "^1.0.4"
   }
 }

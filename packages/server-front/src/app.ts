@@ -1,4 +1,4 @@
-import {Session, Tokens, Agent} from '@damage-report-plots/common/types';
+import {Session, Tokens, Agent} from '@common/types';
 
 const express = require('express');
 const session = require('express-session');
@@ -8,10 +8,10 @@ const DynamoStore = connectDynamodbSession(session);
 const OAuth2Strategy = require('passport-google-oauth').OAuth2Strategy;
 
 const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware');
-const util = require('@damage-report-plots/common/util');
-const env = require('@damage-report-plots/common/env');
-const libAgent = require('@damage-report-plots/common/agent');
-const launcher = require('@damage-report-plots/common/launcher');
+const util = require('@common/util');
+const env = require('@common/env');
+const libAgent = require('@common/agent');
+const launcher = require('@common/launcher');
 const api = require('./api');
 // import {me} from './me';
 

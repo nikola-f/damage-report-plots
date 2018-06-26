@@ -1,8 +1,8 @@
 {
   "defs": {
     "report": {
-      "resource": {
-        "name": "report (Damage Rerpot Plots)",
+      "raw": {
+        "name": "report (Damage Report Plots)",
         "isExportable": true,
         "kind": "fusiontables#table",
         "columns": [

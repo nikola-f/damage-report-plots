@@ -1,13 +1,13 @@
 import {SNSEvent, Handler, ProxyResult} from 'aws-lambda';
 import {MessageList, Message} from 'aws-sdk/clients/sqs';
-import {Agent, OneReportMessage, Job} from '@damage-report-plots/common/types';
+import {Agent, OneReportMessage, Job} from '@common/types';
 
 import * as crypto from 'crypto';
-import * as launcher from '@damage-report-plots/common/launcher';
-import * as util from '@damage-report-plots/common/util';
-import * as env from '@damage-report-plots/common/env';
-import * as libAgent from '@damage-report-plots/common/agent';
-import * as libAuth from './lib/auth';
+import * as launcher from '@common/launcher';
+import * as util from '@common/util';
+import * as env from '@common/env';
+import * as libAgent from '@common/agent';
+import * as libAuth from '@common/auth';
 import * as libQueue from './lib/queue';
 import {google} from 'googleapis';
 const fusiontables = google.fusiontables('v2');
@@ -32,17 +32,28 @@ export const createTable = async (event: SNSEvent, context, callback): Promise<v
     );
 
     // 並行
-    let insertRes: any; 
+    let rawTableId: string, upxViewId: string;
     let agent: Agent;
     await Promise.all([
 
       // table作成
       (async () => {
-        insertRes = await fusiontables.table.insert({
-          "resource": FTDEFS.defs.report.resource,
+        const insertRes = await fusiontables.table.insert({
+          "resource": FTDEFS.defs.report.raw,
           "auth": client
         });
-        console.info('created:', insertRes);
+        console.info('raw table created:', insertRes);
+        rawTableId = insertRes.data.tableId;
+        
+        // const queryRes = await fusiontables.query.sql({
+        //   "sql": `CREATE VIEW upx AS (
+        //             SELECT portalLocation, MAX( portalName ), SUM( portalOwned )
+        //               FROM ${rawTableId}
+        //             GROUP BY portalLocation
+        //           )`,
+        //   "auth": client
+        // });
+        
       })(),
       
       // agentデータ取得
@@ -53,9 +64,9 @@ export const createTable = async (event: SNSEvent, context, callback): Promise<v
     ]);
 
     // agentデータ保存
-    agent.reportTableId = insertRes.data.tableId;
+    agent.reportTableId = rawTableId;
     launcher.putAgentAsync(agent);
-    
+
     launcher.queueThreadsAsync({
       "job": job
     });

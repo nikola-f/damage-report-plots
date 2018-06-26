@@ -1,13 +1,13 @@
-import {Job, JobStatus} from '@damage-report-plots/common/types';
+import {Job, JobStatus} from '@common/types';
 
 const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const csrf = require('csurf');
 
-const libJob = require('@damage-report-plots/common/job');
-const launcher = require('@damage-report-plots/common/launcher');
-const env = require('@damage-report-plots/common/env');
+const libJob = require('@common/job');
+const launcher = require('@common/launcher');
+const env = require('@common/env');
 
 
 const api = express.Router();
