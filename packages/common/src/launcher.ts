@@ -11,39 +11,33 @@ import * as env from './env';
 const sns: AWS.SNS = new AWS.SNS();
 
 
-const TOPIC_PREFIX = 'arn:aws:sns:' + env.ARN_REGION_ACCOUNT + ':',
-  CONSUME_TOPIC = TOPIC_PREFIX + 'drp-consume-ticket',
-  PUT_JOB_TOPIC = TOPIC_PREFIX + 'drp-put-job',
-  QUEUE_JOB_TOPIC = TOPIC_PREFIX + 'drp-queue-job',
-  FINALIZE_JOB_TOPIC = TOPIC_PREFIX + 'drp-finalize-job',
-  CREATE_AGENT_QUEUE_TOPIC = TOPIC_PREFIX + 'drp-create-agent-queue',
-  DELETE_AGENT_QUEUE_TOPIC = TOPIC_PREFIX + 'drp-delete-agent-queue',
-  QUEUE_THREADS_TOPIC = TOPIC_PREFIX + 'drp-queue-threads',
-  QUEUE_MAILS_TOPIC = TOPIC_PREFIX + 'drp-queue-mails',
-  PARSE_MAILS_TOPIC = TOPIC_PREFIX + 'drp-parse-mails',
-  INSERT_REPORTS_TOPIC = TOPIC_PREFIX + 'drp-insert-reports',
-  PUT_AGENT_TOPIC = TOPIC_PREFIX + 'drp-put-agent',
-  CREATE_TABLE_TOPIC = TOPIC_PREFIX + 'drp-create-table',
-  CHECK_TABLE_TOPIC = TOPIC_PREFIX + 'drp-check-table'
-;
+const TOPIC_PREFIX = 'arn:aws:sns:' + env.ARN_REGION_ACCOUNT + ':';
 
 
-export const createTableAsync = (job: Job): Promise<void> => {
+// export const createTableAsync = (job: Job): Promise<void> => {
+//   return publish({
+//     "Message": JSON.stringify(job),
+//     "Subject": 'CreateTable',
+//     "TopicArn": CREATE_TABLE_TOPIC
+//   });
+// };
+
+export const createSheetsAsync = (job: Job): Promise<void> => {
   return publish({
     "Message": JSON.stringify(job),
-    "Subject": 'CreateTable',
-    "TopicArn": CREATE_TABLE_TOPIC
+    "Subject": 'CreateSheets',
+    "TopicArn": TOPIC_PREFIX + 'drp-create-sheets'
   });
 };
 
 
-export const checkTableAsync = (job: Job): Promise<void> => {
-  return publish({
-    "Message": JSON.stringify(job),
-    "Subject": 'CheckTable',
-    "TopicArn": CHECK_TABLE_TOPIC
-  });
-};
+// export const checkTableAsync = (job: Job): Promise<void> => {
+//   return publish({
+//     "Message": JSON.stringify(job),
+//     "Subject": 'CheckTable',
+//     "TopicArn": CHECK_TABLE_TOPIC
+//   });
+// };
 
 
 
@@ -51,7 +45,7 @@ export const putJobAsync = (job: Job): Promise<void> => {
   return publish({
     "Message": JSON.stringify(job),
     "Subject": 'PutJob',
-    "TopicArn": PUT_JOB_TOPIC
+    "TopicArn": TOPIC_PREFIX + 'drp-put-job'
   });
 };
 
@@ -60,7 +54,7 @@ export const finalizeJobAsync = (job: Job): Promise<void> => {
   return publish({
     "Message": JSON.stringify(job),
     "Subject": 'FinalizeJob',
-    "TopicArn": FINALIZE_JOB_TOPIC
+    "TopicArn": TOPIC_PREFIX + 'drp-finalize-job'
   });
 };
 
@@ -69,7 +63,7 @@ export const queueJobAsync = (job: Job): Promise<void> => {
   return publish({
     "Message": JSON.stringify(job),
     "Subject": 'QueueJob',
-    "TopicArn": QUEUE_JOB_TOPIC
+    "TopicArn": TOPIC_PREFIX + 'drp-queue-job'
   });
 };
 
@@ -78,7 +72,7 @@ export const createAgentQueueAsync = (job: Job): Promise<void> => {
   return publish({
     "Message": JSON.stringify(job),
     "Subject": 'CreateAgentQueue',
-    "TopicArn": CREATE_AGENT_QUEUE_TOPIC
+    "TopicArn": TOPIC_PREFIX + 'drp-create-agent-queue'
   });
 };
 
@@ -87,7 +81,7 @@ export const deleteAgentQueueAsync = (job: Job): Promise<void> => {
   return publish({
     "Message": JSON.stringify(job),
     "Subject": 'DeleteAgentQueue',
-    "TopicArn": DELETE_AGENT_QUEUE_TOPIC
+    "TopicArn": TOPIC_PREFIX + 'drp-delete-agent-queue'
   });
 };
 
@@ -96,7 +90,7 @@ export const putAgentAsync = (agent: Agent): Promise<void> => {
   return publish({
     "Message": JSON.stringify(agent),
     "Subject": 'PutAgent',
-    "TopicArn": PUT_AGENT_TOPIC
+    "TopicArn": TOPIC_PREFIX + 'drp-put-agent'
   });
 };
 
@@ -105,7 +99,7 @@ export const queueThreadsAsync = (qtm: QueueThreadsMessage): Promise<void> => {
   return publish({
     "Message": JSON.stringify(qtm),
     "Subject": 'QueueThreads',
-    "TopicArn": QUEUE_THREADS_TOPIC
+    "TopicArn": TOPIC_PREFIX + 'drp-queue-threads'
   });
 };
 
@@ -113,7 +107,7 @@ export const queueMailsAsync = (job: Job): Promise<void> => {
   return publish({
     "Message": JSON.stringify(job),
     "Subject": 'QueueMails',
-    "TopicArn": QUEUE_MAILS_TOPIC
+    "TopicArn": TOPIC_PREFIX + 'drp-queue-mails'
   });
 };
 
@@ -121,17 +115,17 @@ export const parseMailsAsync = (job: Job): Promise<void> => {
   return publish({
     "Message": JSON.stringify(job),
     "Subject": 'ParseMails',
-    "TopicArn": PARSE_MAILS_TOPIC
+    "TopicArn": TOPIC_PREFIX + 'drp-parse-mails'
   });
 };
 
-export const insertReportsAsync = (job: Job): Promise<void> => {
-  return publish({
-    "Message": JSON.stringify(job),
-    "Subject": 'InsertReports',
-    "TopicArn": INSERT_REPORTS_TOPIC
-  });
-};
+// export const insertReportsAsync = (job: Job): Promise<void> => {
+//   return publish({
+//     "Message": JSON.stringify(job),
+//     "Subject": 'InsertReports',
+//     "TopicArn": INSERT_REPORTS_TOPIC
+//   });
+// };
 
 
 
@@ -139,7 +133,7 @@ export const consumeTicketsAsync = (number: number): Promise<void> => {
   return publish({
     "Message": String(number),
     "Subject": 'ConsumeTicket',
-    "TopicArn": CONSUME_TOPIC
+    "TopicArn": TOPIC_PREFIX + 'drp-consume-ticket'
   });
 };
 

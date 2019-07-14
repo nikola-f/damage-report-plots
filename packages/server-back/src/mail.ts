@@ -2,13 +2,13 @@ import {SNSEvent, Handler, ProxyResult} from 'aws-lambda';
 import {MessageList} from 'aws-sdk/clients/sqs';
 import {Job, JobStatus, QueueThreadsMessage,
   OneThreadMessage, OneMailMessage, Portal,
-  OneReportMessage} from '@common/types';
+  OneReportMessage} from ':common/types';
 
 const dateFormat = require('dateformat');
-import * as util from '@common/util';
-import * as env from '@common/env';
-import * as launcher from '@common/launcher';
-import * as libAuth from '@common/auth';
+import * as util from ':common/util';
+import * as env from ':common/env';
+import * as launcher from ':common/launcher';
+import * as libAuth from ':common/auth';
 import * as libQueue from './lib/queue';
 import * as libMail from './lib/mail';
 import {google} from 'googleapis';

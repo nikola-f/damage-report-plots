@@ -1,9 +1,9 @@
 import {MessageList, Message} from 'aws-sdk/clients/sqs';
 import {Job, JobStatus, QueueThreadsMessage,
   OneThreadMessage,
-  OneMailMessage, Portal} from '@common/types';
+  OneMailMessage, Portal} from ':common/types';
 
-import * as util from '@common/util';
+import * as util from ':common/util';
 import * as gapi from 'googleapis';
 import * as Batchelor from 'batchelor';
 import * as base64 from 'base-64';

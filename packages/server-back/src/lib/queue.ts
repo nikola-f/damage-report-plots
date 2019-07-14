@@ -13,7 +13,7 @@ const sqs: AWS.SQS = new AWS.SQS();
 const THREAD_COUNT: number = Number(process.env.THREAD_COUNT);
 
 /**
- * queueに入っているメッセージの数を返す
+ * キューに入っているメッセージの数を返す
  */
 export const getNumberOfMessages = async (url: string): Promise<number> => {
   return new Promise<number>((resolve, reject) => {
@@ -39,7 +39,7 @@ export const sendMessage = async (url: string, message: Message): Promise<number
 
 
 /**
- * 10件ずつキューイング
+ * まとめてキューイング
  */
 export const sendMessageBatch = async (url: string,
   messages: MessageList): Promise<number> => {
@@ -77,7 +77,9 @@ export const sendMessageBatch = async (url: string,
     return Promise.resolve(queuedCount);
 };
 
-
+/**
+ * 1件だけキューから受信
+ */
 export const receiveMessage = async (url: string): Promise<Message> => {
 
   console.log('try to receive message:' + url);
@@ -90,7 +92,9 @@ export const receiveMessage = async (url: string): Promise<Message> => {
   }
 };
 
-
+/**
+ * 最大maxCount件 キューから受信
+ */
 export const receiveMessageBatch = async (url: string, maxCount: number): Promise<MessageList> => {
 
   console.log('try to receive messages:' + url);
@@ -131,11 +135,17 @@ export const receiveMessageBatch = async (url: string, maxCount: number): Promis
 };
 
 
+/**
+ * 1件だけキューから削除
+ */
 export const deleteMessage = async (url: string, message: Message): Promise<number> => {
   return deleteMessageBatch(url, [message]);
 };
 
 
+/**
+ * まとめてキューから削除
+ */
 export const deleteMessageBatch = async (url: string, messages: MessageList): Promise<number> => {
 
   // console.log('try to delete messages:' + url);

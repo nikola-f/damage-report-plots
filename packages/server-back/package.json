@@ -1,36 +1,38 @@
 {
-  "name": "@damage-report-plots/server-back",
-  "version": "0.0.1",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "webpack": "sls webpack",
-    "deploy": "sls deploy"
-  },
-  "keywords": [],
-  "author": "nikola-f",
-  "license": "Apache License 2.0",
-  "private": true,
-  "dependencies": {
-    "@damage-report-plots/common": "^0.0.1",
-    "aws-xray-sdk": "^1.2.0",
-    "base-64": "^0.1.0",
-    "batchelor": "^2.0.2",
-    "cheerio": "^1.0.0-rc.2",
-    "cookie": "^0.3.1",
-    "dateformat": "^3.0.3",
-    "googleapis": "^29.0.0",
-    "utf8": "^3.0.0"
-  },
-  "devDependencies": {
-    "@types/aws-lambda": "8.10.3",
-    "@types/node": "^10.0.0",
-    "aws-sdk": "^2.104.0",
-    "serverless-plugin-tracing": "^2.0.0",
-    "serverless-webpack": "^5.1.1",
-    "ts-loader": "^4.2.0",
-    "typescript": "^2.4.2",
-    "webpack": "^4.6.0",
-    "webpack-node-externals": "^1.7.2"
-  }
+	"name": "@damage-report-plots/server-back",
+	"version": "0.0.1",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"webpack": "sls webpack",
+		"deploy": "sls deploy"
+	},
+	"keywords": [],
+	"author": "nikola-f",
+	"license": "Apache License 2.0",
+	"private": true,
+	"dependencies": {
+		"@damage-report-plots/common": "^0.0.1",
+		"aws-xray-sdk": "^1.2.0",
+		"base-64": "^0.1.0",
+		"batchelor": "^2.0.2",
+		"cheerio": "^1.0.0-rc.2",
+		"cookie": "^0.3.1",
+		"dateformat": "^3.0.3",
+		"googleapis": "^29.0.0",
+		"utf8": "^3.0.0",
+		"webpack": "^4.35.0"
+	},
+	"devDependencies": {
+		"@types/aws-lambda": "8.10.3",
+		"@types/node": "^10.0.0",
+		"aws-sdk": "^2.104.0",
+		"eslint-import-resolver-webpack": "^0.11.1",
+		"serverless-plugin-tracing": "^2.0.0",
+		"serverless-webpack": "^5.1.1",
+		"ts-loader": "^4.2.0",
+		"typescript": "^2.4.2",
+		"webpack": "^4.6.0",
+		"webpack-node-externals": "^1.7.2"
+	}
 }

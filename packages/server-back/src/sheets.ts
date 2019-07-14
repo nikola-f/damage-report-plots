@@ -11,6 +11,7 @@ import * as libAuth from ':common/auth';
 import * as libQueue from './lib/queue';
 import {google} from 'googleapis';
 const fusiontables = google.fusiontables('v2');
+const sheets = google.sheets('v4');
 const FTDEFS = require('./ftdef.json'),
       REPORTS_COUNT: number = Number(process.env.REPORTS_COUNT),
       REPORTS_BATCH_COUNT: number = Number(process.env.REPORTS_BATCH_COUNT);
@@ -75,46 +76,43 @@ export const createTable = async (event: SNSEvent, context, callback): Promise<v
 
 
 /**
- * fusiontableの存在チェック・不存在ならcreateTable
- * @next createTable, queueThreads
+ * sheetsの存在チェック・不存在ならcreateSheets
+ * @next createSheets, queueThreads
  */
-export const checkTable = async (event: SNSEvent, context, callback): Promise<void> => {
+export const checkSheetsExistence = async (event: SNSEvent, context, callback): Promise<void> => {
   console.log(JSON.stringify(event));
 
   for(let rec of event.Records) {
 
-    let notFound: boolean;
+    let found: boolean = false;
     const job: Job = JSON.parse(rec.Sns.Message);
     
     // agent情報取得
     const agent = await libAgent.getAgent(job.openId);
 
-    // reportTableIdがあれば現物の存在チェック
-    if(agent && agent.reportTableId) {
+    // spreadSheetsIdがあれば現物の存在チェック
+    if(agent && agent.spreadsheetId) {
       const client = libAuth.createGapiOAuth2Client(
         env.GOOGLE_CALLBACK_URL_ME,
         job.tokens.jobAccessToken,
         job.tokens.jobRefreshToken
       );
 
-      const res: any = await fusiontables.table.get({
-        "tableId": agent.reportTableId,
+      const res: any = await sheets.spreadsheets.get({
+        "spreadsheetId": agent.spreadsheetId,
+        "includeGridData": false,
         "auth": client
       });
       console.log('checked:', res);
-      if(util.isSet(() => res.data.tableId)) {
-        notFound = false;
-      }else{
-        notFound = true;
+      if(util.isSet(() => res.data.spreadsheetId)) {
+        found = true;
       }
-    }else{
-      notFound = true;
     }
 
     // 存在しなければcreateTable
-    if(notFound) {
-      console.log('tableId not found, try to create');
-      launcher.createTableAsync(job);
+    if(!found) {
+      console.log('spreadsheetId not found, try to create');
+      launcher.createSheetsAsync(job);
 
     // 存在すればqueueThreads
     }else{

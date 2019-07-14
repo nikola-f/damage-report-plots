@@ -1,8 +1,8 @@
 import {SNSEvent, Handler, ProxyResult} from 'aws-lambda';
 import {CreateQueueRequest} from 'aws-sdk/clients/sqs';
-import {Agent, JobStatus, CreateJobMessage, Job} from '@common/types';
+import {Agent, JobStatus, CreateJobMessage, Job} from ':common/types';
 
-import * as launcher from '@common/launcher';
+import * as launcher from ':common/launcher';
 
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';

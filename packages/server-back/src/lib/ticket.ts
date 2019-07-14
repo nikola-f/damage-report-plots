@@ -1,5 +1,5 @@
 import {GetItemOutput} from 'aws-sdk/clients/dynamodb';
-import {Job} from '@common/types';
+import {Job} from ':common/types';
 
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';

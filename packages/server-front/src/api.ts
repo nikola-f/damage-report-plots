@@ -1,13 +1,16 @@
-import {Job, JobStatus} from '@common/types';
+import {Job, JobStatus} from ':common/types';
 
 const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const csrf = require('csurf');
 
-const libJob = require('@common/job');
-const launcher = require('@common/launcher');
-const env = require('@common/env');
+const libJob = require(':common/job');
+const libAgent = require(':common/agent');
+const libAuth = require(':common/auth');
+const libFt = require(':common/fusiontables');
+const launcher = require(':common/launcher');
+const env = require(':common/env');
 
 
 const api = express.Router();
@@ -83,6 +86,27 @@ api.post('/job',
 );
 
 
+// mUPV, mUPC : //TODO clientから直接照会する
+// api.get('/mupx', isAuthenticated,
+//   async (req, res) => {
+
+//     const agent = await libAgent.getAgent(req.user.openId);
+//     if(agent) {
+//       res.json({
+//         "mUpv": agent.mUpv,
+//         "mUpc": agent.mUpc
+//       });
+
+//     }else{
+//       res.status(404).json({
+//         "message": 'Stats Not Found'
+//       });
+//     }
+
+//   }
+// );
+
+
 // 通常Map, heatMap等 URL一覧
 api.get('/maps', isAuthenticated,
   (req, res) => {
@@ -93,14 +117,14 @@ api.get('/maps', isAuthenticated,
 
 
 // 統計値
-api.get('/stats', isAuthenticated,
-  (req, res) => {
-  //pUPV, pUPC
-  //週ごとのレポート数サマリ
+// api.get('/stats', isAuthenticated,
+//   (req, res) => {
+//   //pUPV, pUPC
+//   //週ごとのレポート数サマリ
 
-    res.json(req.user);
-  }
-);
+//     res.json(req.user);
+//   }
+// );
 
 
 export = api;

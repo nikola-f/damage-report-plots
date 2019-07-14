@@ -13,7 +13,6 @@ export interface Tokens {
   meAccessToken?: string,
   jobAccessToken?: string,
   jobRefreshToken?: string,
-  // stateToken?: string
 }
 
 
@@ -23,6 +22,7 @@ export interface Agent {
   createTime: number,
   lastAccessTime: number,
   reportTableId?: string,
+  spreadsheetId?: string,
   // plotTableId?: string,
   // statTableId?: string
 
@@ -47,17 +47,14 @@ export interface Job {
   thread?: {
     queueUrl: string,
     queuedCount: number
-    // dequeuedCount: number,
   },
   mail?: {
     queueUrl: string,
     queuedCount: number
-    // dequeuedCount: number,
   },
   report?: {
     queueUrl: string,
     queuedCount: number
-    // dequeuedCount: number,
   }
 }
 

@@ -117,29 +117,37 @@ functions:
     memorySize: 256
     timeout: 30
 
-  insertReports:
-    handler: handler.insertReports
-    events:
-      - sns: drp-insert-reports
-    environment:
-      REPORTS_COUNT: 200 # sqsから読む最大レコード数
-      REPORTS_BATCH_COUNT: 100 # 1度のバッチ実行でfusiontablesへ書く最大レコード数
-      GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
-      GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
-    memorySize: 256
+  # insertReports:
+  #   handler: handler.insertReports
+  #   events:
+  #     - sns: drp-insert-reports
+  #   environment:
+  #     REPORTS_COUNT: 200 # sqsから読む最大レコード数
+  #     REPORTS_BATCH_COUNT: 100 # 1度のバッチ実行でfusiontablesへ書く最大レコード数
+  #     GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
+  #     GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
+  #   memorySize: 256
 
-  createTable:
-    handler: handler.createTable
-    events:
-      - sns: drp-create-table
-    environment:
-      GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
-      GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
+  # createTable:
+  #   handler: handler.createTable
+  #   events:
+  #     - sns: drp-create-table
+  #   environment:
+  #     GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
+  #     GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
 
-  checkTable:
-    handler: handler.checkTable
+  # checkTable:
+  #   handler: handler.checkTable
+  #   events:
+  #     - sns: drp-check-table
+  #   environment:
+  #     GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
+  #     GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
+
+  checkSheetsExistence:
+    handler: handler.checkSheetsExistence
     events:
-      - sns: drp-check-table
+      - sns: drp-check-sheets-existence
     environment:
       GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
       GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
