@@ -10,6 +10,7 @@ import * as launcher from ':common/launcher';
 import * as libQueue from './lib/queue';
 import * as libTicket from './lib/ticket';
 import * as libAuth from ':common/auth';
+import * as util from ':common/util';
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
 const AWS = awsXRay.captureAWS(awsPlain);
@@ -63,7 +64,7 @@ export const startJob = async (event, context, callback): Promise<void> => {
  * @next deleteAgentQueue, consumeTicket, putJob
  */
 export const finalizeJob = async (event: SNSEvent, context, callback): Promise<void> => {
-  console.log(JSON.stringify(event));
+  util.validateSnsEvent(event, callback);
 
   for(let rec of event.Records) {
     const job: Job = JSON.parse(rec.Sns.Message);
@@ -127,14 +128,16 @@ export const queueJob = async (event: SNSEvent, context, callback): Promise<void
  * @next -
  */
 export const putJob = async (event: SNSEvent, context, callback): Promise<void> => {
-  console.log(JSON.stringify(event));
+  util.validateSnsEvent(event, callback);
+  
 
   for(let rec of event.Records) {
     const job: Job = JSON.parse(rec.Sns.Message);
 
     job.lastAccessTime = Date.now();
-    // tokenは保存しない
+    // token,agentは保存しない
     job.tokens = null;
+    job.agent = null;
 
     dynamo.put({
       "TableName": "job",

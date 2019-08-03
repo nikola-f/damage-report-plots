@@ -31,6 +31,14 @@ export const createSheetsAsync = (job: Job): Promise<void> => {
 };
 
 
+export const checkSheetsExistenceAsync = (job: Job): Promise<void> => {
+  return publish({
+    "Message": JSON.stringify(job),
+    "Subject": 'CheckSheetsExistence',
+    "TopicArn": TOPIC_PREFIX + 'drp-check-sheets-existence'
+  });
+};
+
 // export const checkTableAsync = (job: Job): Promise<void> => {
 //   return publish({
 //     "Message": JSON.stringify(job),
@@ -119,13 +127,13 @@ export const parseMailsAsync = (job: Job): Promise<void> => {
   });
 };
 
-// export const insertReportsAsync = (job: Job): Promise<void> => {
-//   return publish({
-//     "Message": JSON.stringify(job),
-//     "Subject": 'InsertReports',
-//     "TopicArn": INSERT_REPORTS_TOPIC
-//   });
-// };
+export const appendReportsToSheetsAsync = (job: Job): Promise<void> => {
+  return publish({
+    "Message": JSON.stringify(job),
+    "Subject": 'AppendReportsToSheets',
+    "TopicArn": TOPIC_PREFIX + 'drp-append-reports-to-sheets'
+  });
+};
 
 
 

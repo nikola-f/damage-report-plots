@@ -19,7 +19,6 @@ const FTDEFS = require('./ftdef.json'),
 /**
  * fusionTableの作成
  * @next putAgent, queueThreads
- */
 export const createTable = async (event: SNSEvent, context, callback): Promise<void> => {
   console.log(JSON.stringify(event));
 
@@ -72,12 +71,12 @@ export const createTable = async (event: SNSEvent, context, callback): Promise<v
     });
   }
 };
+ */
 
 
 /**
  * fusiontableの存在チェック・不存在ならcreateTable
  * @next createTable, queueThreads
- */
 export const checkTable = async (event: SNSEvent, context, callback): Promise<void> => {
   console.log(JSON.stringify(event));
 
@@ -124,12 +123,12 @@ export const checkTable = async (event: SNSEvent, context, callback): Promise<vo
     }
   }
 };
+ */
 
 
 /**
  * reportデータの保存
  * @next insertReports, finalizeJob
- */
 export const insertReports = async (event: SNSEvent, context, callback): Promise<void> => {
   console.log(JSON.stringify(event));
 
@@ -215,6 +214,7 @@ export const insertReports = async (event: SNSEvent, context, callback): Promise
     "body": {}
   });
 };
+ */
 
 
 

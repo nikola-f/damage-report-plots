@@ -12,66 +12,64 @@ import * as libQueue from './lib/queue';
 import {google} from 'googleapis';
 const fusiontables = google.fusiontables('v2');
 const sheets = google.sheets('v4');
-const FTDEFS = require('./ftdef.json'),
+const SHEETS_DEF = require('./lib/sheetsdef.json'),
       REPORTS_COUNT: number = Number(process.env.REPORTS_COUNT),
       REPORTS_BATCH_COUNT: number = Number(process.env.REPORTS_BATCH_COUNT);
 
+import * as awsXRay from 'aws-xray-sdk';
+import * as awsPlain from 'aws-sdk';
+const AWS = awsXRay.captureAWS(awsPlain);
+
 
 /**
- * fusionTableの作成
+ * spreadsheetsの作成
  * @next putAgent, queueThreads
  */
-export const createTable = async (event: SNSEvent, context, callback): Promise<void> => {
-  console.log(JSON.stringify(event));
+export const createSheets = async (event: SNSEvent, context, callback): Promise<void> => {
+  util.validateSnsEvent(event, callback);
 
   for(let rec of event.Records) {
     const job: Job = JSON.parse(rec.Sns.Message);
     const client = libAuth.createGapiOAuth2Client(
-      env.GOOGLE_CALLBACK_URL_ME,
+      env.GOOGLE_CALLBACK_URL_JOB,
       job.tokens.jobAccessToken,
       job.tokens.jobRefreshToken
     );
 
-    // 並行
-    let rawTableId: string, upxViewId: string;
-    let agent: Agent;
-    await Promise.all([
-
-      // table作成
-      (async () => {
-        const insertRes = await fusiontables.table.insert({
-          "resource": FTDEFS.defs.report.raw,
-          "auth": client
-        });
-        console.info('raw table created:', insertRes);
-        rawTableId = insertRes.data.tableId;
+    let spreadsheetId: string;
+    try {
+      const createRes = await sheets.spreadsheets.create({
+        "resource": SHEETS_DEF,
+        "auth": client
+      });
+      console.info('raw sheets created:', createRes.data);
+      spreadsheetId = createRes.data.spreadsheetId;
         
-        // const queryRes = await fusiontables.query.sql({
-        //   "sql": `CREATE VIEW upx AS (
-        //             SELECT portalLocation, MAX( portalName ), SUM( portalOwned )
-        //               FROM ${rawTableId}
-        //             GROUP BY portalLocation
-        //           )`,
-        //   "auth": client
-        // });
-        
-      })(),
-      
-      // agentデータ取得
-      (async () => {
-        agent = await libAgent.getAgent(job.openId);
-        console.log('agent:', agent);
-      })()
-    ]);
+    }catch(error){
+      console.error(JSON.stringify(error));
+      continue;
+      // callback(error, {
+      //   "statusCode": 400,
+      //   "body": 'Bad Request'
+      // });
+    }
 
-    // agentデータ保存
-    agent.reportTableId = rawTableId;
-    launcher.putAgentAsync(agent);
-
-    launcher.queueThreadsAsync({
-      "job": job
-    });
+    if(spreadsheetId) {
+      // agentデータ保存
+      job.agent.spreadsheetId = spreadsheetId;
+      launcher.putAgentAsync(job.agent);
+  
+      launcher.queueThreadsAsync({
+        "job": job
+      });
+    }
   }
+
+  callback(null, {
+    "statusCode": 200,
+    "body": {}
+  });
+  
 };
 
 
@@ -80,47 +78,61 @@ export const createTable = async (event: SNSEvent, context, callback): Promise<v
  * @next createSheets, queueThreads
  */
 export const checkSheetsExistence = async (event: SNSEvent, context, callback): Promise<void> => {
-  console.log(JSON.stringify(event));
+  util.validateSnsEvent(event, callback);
 
   for(let rec of event.Records) {
 
     let found: boolean = false;
     const job: Job = JSON.parse(rec.Sns.Message);
     
-    // agent情報取得
-    const agent = await libAgent.getAgent(job.openId);
+    // // agent情報取得
+    // const agent = await libAgent.getAgent(job.openId);
 
     // spreadSheetsIdがあれば現物の存在チェック
-    if(agent && agent.spreadsheetId) {
+    if(job.agent && job.agent.spreadsheetId) {
       const client = libAuth.createGapiOAuth2Client(
-        env.GOOGLE_CALLBACK_URL_ME,
+        env.GOOGLE_CALLBACK_URL_JOB,
         job.tokens.jobAccessToken,
         job.tokens.jobRefreshToken
       );
 
-      const res: any = await sheets.spreadsheets.get({
-        "spreadsheetId": agent.spreadsheetId,
-        "includeGridData": false,
-        "auth": client
-      });
-      console.log('checked:', res);
-      if(util.isSet(() => res.data.spreadsheetId)) {
-        found = true;
+      try {
+        const res: any = await sheets.spreadsheets.get({
+          "spreadsheetId": job.agent.spreadsheetId,
+          "includeGridData": false,
+          "auth": client
+        });
+        console.log('checked:', res.data);
+        if(util.isSet(() => res.data.spreadsheetId)) {
+          found = true;
+        }
+      }catch(error){
+        console.error(error);
+        // 存在しない以外のエラーだったら次のsns record
+        if(!util.isSet(() => error.response.status) || 
+            error.response.status !== 404) {
+          continue;
+        }
       }
     }
 
-    // 存在しなければcreateTable
-    if(!found) {
-      console.log('spreadsheetId not found, try to create');
-      launcher.createSheetsAsync(job);
-
     // 存在すればqueueThreads
-    }else{
+    if(found) {
+      console.log('spreadsheet found');
       launcher.queueThreadsAsync({
         "job": job
       });
+    // 存在しなければcreateSheets
+    }else{
+      console.log('spreadsheet not found, try to create');
+      launcher.createSheetsAsync(job);
     }
   }
+
+  callback(null, {
+    "statusCode": 200,
+    "body": {}
+  });
 };
 
 
@@ -128,8 +140,8 @@ export const checkSheetsExistence = async (event: SNSEvent, context, callback): 
  * reportデータの保存
  * @next insertReports, finalizeJob
  */
-export const insertReports = async (event: SNSEvent, context, callback): Promise<void> => {
-  console.log(JSON.stringify(event));
+export const appendReportsToSheets = async (event: SNSEvent, context, callback): Promise<void> => {
+  util.validateSnsEvent(event, callback);
 
   for(let rec of event.Records) {
     const job: Job = JSON.parse(rec.Sns.Message);
@@ -202,7 +214,7 @@ export const insertReports = async (event: SNSEvent, context, callback): Promise
       await libQueue.getNumberOfMessages(job.report.queueUrl);
     if(reportRemain > 0) {
       console.log(`${reportRemain} reports remaining, recurse.`);
-      launcher.insertReportsAsync(job);
+      launcher.appendReportsToSheetsAsync(job);
     }else{
       launcher.finalizeJobAsync(job);
     }

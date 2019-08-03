@@ -44,6 +44,7 @@ export interface Job {
   rangeFromTime: number,
   rangeToTime: number,
   tokens: Tokens,
+  agent: Agent,
   thread?: {
     queueUrl: string,
     queuedCount: number
@@ -71,6 +72,11 @@ export interface QueueThreadsMessage {
 }
 
 
+export interface ThreadArrayMessage {
+  ids: string[]
+}
+
+// TODEL
 export interface OneThreadMessage {
   id: string
 }

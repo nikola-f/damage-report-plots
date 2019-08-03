@@ -51,7 +51,8 @@ export const getJobList = async (openId: string): Promise<Job[]> => {
             "queuedCount": util.isSet(() => item.report.queuedCount) ?
               Number(item.report.queuedCount) : 0
           },
-          "tokens": undefined
+          "tokens": undefined,
+          "agent": undefined
         });
       }
     }

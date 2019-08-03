@@ -166,7 +166,7 @@ const parseBatchResponse = (response: any): any => {
 
   console.log(`parse batch res:${messages.length} messages found.`);
   return messages;
-}
+};
 
 
 const url2latlong = (url: string): {lat: number, long: number} => {
@@ -177,4 +177,6 @@ const url2latlong = (url: string): {lat: number, long: number} => {
   result.lat = Number(url.split('pll=')[1].split('&')[0].split(',')[0]);
   result.long = Number(url.split('pll=')[1].split('&')[0].split(',')[1]);
   return result;
-}
+};
+
+

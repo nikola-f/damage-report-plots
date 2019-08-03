@@ -23,21 +23,21 @@ export const getAgent = async (openId: string): Promise<Agent> => {
       "ConsistentRead": false
     }).promise();
     
-    // console.log('result:', res);
+    console.log('get agent:', res);
 
     if(res.Item) {
       agent = {
         "openId": openId,
         "createTime": <number>res.Item.createTime,
         "lastAccessTime": Date.now(),
-        "reportTableId": <string>res.Item.reportTableId,
+        "spreadsheetId": <string>res.Item.spreadsheetId,
         "mUpv": <number>res.Item.mUpv,
         "mUpc": <number>res.Item.mUpc,
       };
     }
 
   }catch(err){
-    console.log(err);
+    console.log('error on get agent', JSON.stringify(err));
 
   }finally{
     return Promise.resolve(agent);

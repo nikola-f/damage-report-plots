@@ -3,15 +3,15 @@ import {CreateQueueRequest} from 'aws-sdk/clients/sqs';
 import {Agent, JobStatus, CreateJobMessage, Job} from ':common/types';
 
 import * as launcher from ':common/launcher';
+import * as util from ':common/util';
 
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
 const AWS = awsXRay.captureAWS(awsPlain);
-const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient()
-;
+const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
 
 const sqs: AWS.SQS = new AWS.SQS();
-
+import * as dateFormat from 'dateformat';
 
 /**
  * agentの保存
@@ -19,7 +19,7 @@ const sqs: AWS.SQS = new AWS.SQS();
  * @next -
  */
 export const putAgent = async (event: SNSEvent, context, callback): Promise<void> => {
-  console.log(JSON.stringify(event));
+  util.validateSnsEvent(event, callback);
 
   for(let rec of event.Records) {
     const agent: Agent = JSON.parse(rec.Sns.Message);
@@ -31,7 +31,7 @@ export const putAgent = async (event: SNSEvent, context, callback): Promise<void
       "Item": agent
     }).promise()
     .then(() => {
-      console.log('put agent:' + JSON.stringify(agent));
+      console.log('done put agent:' + JSON.stringify(agent));
     })
     .catch(err => {
       console.error(err);
@@ -50,17 +50,18 @@ export const putAgent = async (event: SNSEvent, context, callback): Promise<void
 
 /**
  * agent queueの作成
- * @next checkTable
+ * @next checkSheetsExistence
  */
 export const createAgentQueue = async (event: SNSEvent, context, callback): Promise<void> => {
-  console.log('event:' + JSON.stringify(event));
+  util.validateSnsEvent(event, callback);
 
   for(let rec of event.Records) {
     const job: Job = JSON.parse(rec.Sns.Message);
 
+    const formattedCreateTime: string = dateFormat(new Date(job.createTime), 'yyyymmdd_hhMMssl');
     try {
       let createQueueParams: CreateQueueRequest = {
-        "QueueName": String(job.createTime) + '_thread_' + job.openId + '.fifo',
+        "QueueName": formattedCreateTime + '_thread_' + job.openId + '.fifo',
         "Attributes": {
           "FifoQueue": 'true',
           "ContentBasedDeduplication": 'true'
@@ -73,7 +74,7 @@ export const createAgentQueue = async (event: SNSEvent, context, callback): Prom
       };
 
       createQueueParams = {
-        "QueueName": String(job.createTime) + '_mail_' + job.openId + '.fifo',
+        "QueueName": formattedCreateTime + '_mail_' + job.openId + '.fifo',
         "Attributes": {
           "FifoQueue": 'true',
           "ContentBasedDeduplication": 'true',
@@ -86,7 +87,7 @@ export const createAgentQueue = async (event: SNSEvent, context, callback): Prom
       };
 
       createQueueParams = {
-        "QueueName": String(job.createTime) + '_report_' + job.openId + '.fifo',
+        "QueueName": formattedCreateTime + '_report_' + job.openId + '.fifo',
         "Attributes": {
           "FifoQueue": 'true',
           "ContentBasedDeduplication": 'true'
@@ -99,9 +100,10 @@ export const createAgentQueue = async (event: SNSEvent, context, callback): Prom
       };
 
       job.lastAccessTime = Date.now();
-      console.log('queues created:' + JSON.stringify(job));
+      console.log('queues created:', 
+        threadQueueRes.QueueUrl, mailQueueRes.QueueUrl, reportQueueRes.QueueUrl);
 
-      launcher.checkTableAsync(job);
+      launcher.checkSheetsExistenceAsync(job);
 
     }catch(err){
       console.error(err);
@@ -122,22 +124,23 @@ export const createAgentQueue = async (event: SNSEvent, context, callback): Prom
  * @next -
  */
 export const deleteAgentQueue = async (event: SNSEvent, context, callback): Promise<void> => {
-  console.log('event:' + JSON.stringify(event));
+  util.validateSnsEvent(event, callback);
 
   for(let rec of event.Records) {
     const job: Job = JSON.parse(rec.Sns.Message);
 
     try {
-      sqs.deleteQueue({
+      const threadQueueRes = await sqs.deleteQueue({
         QueueUrl: job.thread.queueUrl
       }).promise();
-      sqs.deleteQueue({
+      const mailQueueRes = await sqs.deleteQueue({
         QueueUrl: job.mail.queueUrl
       }).promise();
-      sqs.deleteQueue({
+      const reportQueueRes = await sqs.deleteQueue({
         QueueUrl: job.report.queueUrl
       }).promise();
-      console.log('queues deleted:' + JSON.stringify(job));
+      console.log('queues deleted:',
+        threadQueueRes, mailQueueRes, reportQueueRes);
     }catch(err){
       console.error(err);
       callback(err, null);

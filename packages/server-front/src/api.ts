@@ -69,6 +69,7 @@ api.post('/job',
           "jobAccessToken": req.user.tokens.jobAccessToken,
           "jobRefreshToken": req.user.tokens.jobRefreshToken
         }
+        // TODO agent情報の追加
       };
       launcher.queueJobAsync(job);
       console.log('job queued:', job);

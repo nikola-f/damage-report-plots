@@ -1,0 +1,57 @@
+{
+  "properties": {
+    "title": "damage report plots, aggregated",
+    "locale": "en",
+    "autoRecalc": "ON_CHANGE"
+  },
+  "sheets": [{
+    "properties": {
+      "sheetId": 100,
+      "title": "reports",
+      "index": 1,
+      "sheetType": "GRID",
+      "gridProperties": {
+        "columnCount": 5,
+        "frozenRowCount": 1
+      },
+      "tabColor": {
+        "red": 10,
+        "green": 10,
+        "blue": 10,
+        "alpha": 1.0
+      }
+    },
+    "data": [{
+      "startRow": 0,
+      "startColumn": 0,
+      "rowData": [{
+        "values": [{
+            "userEnteredValue": {
+              "stringValue": "hash"
+            }
+          },
+          {
+            "userEnteredValue": {
+              "stringValue": "mailDate"
+            }
+          },
+          {
+            "userEnteredValue": {
+              "stringValue": "portalLocation"
+            }
+          },
+          {
+            "userEnteredValue": {
+              "stringValue": "portalName"
+            }
+          },
+          {
+            "userEnteredValue": {
+              "stringValue": "portalOwned"
+            }
+          }
+        ]
+      }]
+    }]
+  }]
+}

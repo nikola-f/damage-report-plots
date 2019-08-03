@@ -1,4 +1,23 @@
+import {SNSEvent, Handler, ProxyResult, APIGatewayEvent} from 'aws-lambda';
 const unique = require('make-unique');
+
+
+/**
+ * SNSオブジェクトの存在チェックと終了
+ */
+export const validateSnsEvent = (event: SNSEvent, callback) => {
+  console.log(JSON.stringify(event));
+
+  if(event && event.Records && event.Records.length && event.Records.length > 0) {
+    return;
+  }else{
+    callback(null, {
+      "statusCode": 400,
+      "body": 'Bad Request'
+    });
+  }
+  
+};
 
 
 /**

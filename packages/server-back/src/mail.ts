@@ -1,7 +1,7 @@
 import {SNSEvent, Handler, ProxyResult} from 'aws-lambda';
 import {MessageList} from 'aws-sdk/clients/sqs';
 import {Job, JobStatus, QueueThreadsMessage,
-  OneThreadMessage, OneMailMessage, Portal,
+  ThreadArrayMessage, OneMailMessage, Portal,
   OneReportMessage} from ':common/types';
 
 const dateFormat = require('dateformat');
@@ -15,16 +15,17 @@ import {google} from 'googleapis';
 const gmail = google.gmail('v1');
 
 
-const THREAD_COUNT: number = Number(process.env.THREAD_COUNT),
+const THREAD_FETCH_COUNT: number = Number(process.env.THREAD_FETCH_COUNT),
+      THREAD_QUEUE_ARRAY_SIZE: number = Number(process.env.THREAD_QUEUE_ARRAY_SIZE),
       MAIL_COUNT: number = Number(process.env.MAIL_COUNT);
 
 
 /**
  * mailの解析およびreportのキューイング
- * @next putJob, parseMails, insertReports
+ * @next putJob, parseMails, appendReportsToSheets
  */
 export const parseMails = async (event: SNSEvent, context, callback): Promise<void> => {
-  console.log(JSON.stringify(event));
+  util.validateSnsEvent(event, callback);
 
   for(let rec of event.Records) {
     let job: Job = JSON.parse(rec.Sns.Message);
@@ -48,8 +49,8 @@ export const parseMails = async (event: SNSEvent, context, callback): Promise<vo
       for(let aPortal of portals) {
         const oneReportMessage: OneReportMessage = {
           // "mailId": mail.id,
-          // 300秒単位に丸める
-          "mailDate": Math.floor(mail.internalDate / 300000) * 300,
+          // 1時間単位に丸める
+          "mailDate": Math.floor(mail.internalDate / (1000 * 3600)) * 3600,
           "portal": aPortal
         };
         rawReportMessages.push(oneReportMessage);
@@ -83,7 +84,7 @@ export const parseMails = async (event: SNSEvent, context, callback): Promise<vo
       console.info(`${mailRemain} mails remaining, recurse.`);
       launcher.parseMailsAsync(job);
     }else{
-      launcher.insertReportsAsync(job);
+      launcher.appendReportsToSheetsAsync(job);
     }
 
   }
@@ -99,7 +100,7 @@ export const parseMails = async (event: SNSEvent, context, callback): Promise<vo
  * @next putJob, queueMails, parseMails
  */
 export const queueMails = async (event: SNSEvent, context, callback): Promise<void> => {
-  console.log(JSON.stringify(event));
+  util.validateSnsEvent(event, callback);
 
   for(let rec of event.Records) {
     let job: Job = JSON.parse(rec.Sns.Message);
@@ -107,7 +108,7 @@ export const queueMails = async (event: SNSEvent, context, callback): Promise<vo
 
     // threadキューからthreadを取得
     const threadMessages: MessageList =
-      await libQueue.receiveMessageBatch(job.thread.queueUrl, THREAD_COUNT);
+      await libQueue.receiveMessageBatch(job.thread.queueUrl, THREAD_FETCH_COUNT); //FIXME
     if(threadMessages.length > 0) {
       // access_token 再作成
       const accessToken = 
@@ -168,7 +169,7 @@ export const queueMails = async (event: SNSEvent, context, callback): Promise<vo
  * @next putJob, queueThreads, queueMails
  */
 export const queueThreads = async (event: SNSEvent, context, callback): Promise<void> => {
-  console.log(JSON.stringify(event));
+  util.validateSnsEvent(event, callback);
 
   for(let rec of event.Records) {
     let qtm: QueueThreadsMessage = JSON.parse(rec.Sns.Message);
@@ -189,7 +190,7 @@ export const queueThreads = async (event: SNSEvent, context, callback): Promise<
     let req = {
       "auth": client,
       "userId": 'me',
-      "maxResults": THREAD_COUNT,
+      "maxResults": THREAD_FETCH_COUNT,
       "fields": 'threads/id,nextPageToken',
       "q": '{from:ingress-support@google.com from:ingress-support@nianticlabs.com}' +
           ' subject:"Ingress Damage Report: Entities attacked by"' +
@@ -226,18 +227,28 @@ export const queueThreads = async (event: SNSEvent, context, callback): Promise<
     }
 
     //job.thread.queueUrlにキューイング
+    const ids: string[] = [];
     const messages: MessageList = [];
+
     for(let aThread of threads) {
-      const message: OneThreadMessage = {
-        id: aThread.id
-      };
-      messages.push({
-        MessageId: aThread.id,
-        Body: JSON.stringify(message)
-      });
+      ids.push(aThread.id);
+      if(ids.length >= THREAD_QUEUE_ARRAY_SIZE) {
+        messages.push({
+          "MessageId": ids[0],
+          "Body": JSON.stringify(ids)
+        });
+        qtm.job.thread.queuedCount += ids.length;
+        ids.length = 0;
+      }
     }
-    qtm.job.thread.queuedCount +=
-      await libQueue.sendMessageBatch(qtm.job.thread.queueUrl, messages);
+    if(ids.length > 0) {
+      messages.push({
+        "MessageId": ids[0],
+        "Body": JSON.stringify(ids)
+      });
+      qtm.job.thread.queuedCount += ids.length;
+    }
+    libQueue.sendMessageBatch(qtm.job.thread.queueUrl, messages);
 
     // jobをdb保存
     launcher.putJobAsync(qtm.job);

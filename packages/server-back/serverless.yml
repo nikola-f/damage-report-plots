@@ -8,25 +8,30 @@ custom:
           - Ref: 'AWS::AccountId'
   webpack:
     includeModules: true
-  googleClientId:     ${file(.cred.yml):googleClientId}
-  googleClientSecret: ${file(.cred.yml):googleClientSecret}
-  # sessionSecret:      ${file(../.cred.yml):sessionSecret}
-  googleCallbackUrlMe:  'https://plots.run/auth/callback/me'
-  # googleCallbackUrlMe:  'https://2u2eb8fiug.execute-api.us-west-2.amazonaws.com/dev/auth/callback/me'
-  googleCallbackUrlJob:  'https://plots.run/auth/callback/job'
+  defaultStage: dev
+  awsProfiles:
+    dev: drp
+    prod: drp
 
 provider:
   name: aws
-  runtime: nodejs8.10
-  stage: dev
+  runtime: nodejs10.x
+  stage: ${opt:stage, self:custom.defaultStage}
   region: us-west-2
-  profile: drp
-  memorySize: 192
-  timeout: 15
+  profile: ${self:custom.awsProfiles.${self:provider.stage}}
+  memorySize: 256
+  timeout: 10
   tracing: true
-  environment:
+
+# TODO 一部commonに移す
+  environment: 
     ARN_REGION_ACCOUNT: ${self:custom.arnRegionAccount}
-    SNS_NOP: 'false'
+    SNS_NOP: ${file(env.${self:provider.stage}.yml):snsNop}
+    
+    GOOGLE_CLIENT_ID: ${file(.cred.${self:provider.stage}.yml):googleClientId}
+    GOOGLE_CLIENT_SECRET: ${file(.cred.${self:provider.stage}.yml):googleClientSecret}
+    GOOGLE_CALLBACK_URL_ME: ${file(env.${self:provider.stage}.yml):googleCallbackUrlMe}
+    GOOGLE_CALLBACK_URL_JOB: ${file(env.${self:provider.stage}.yml):googleCallbackUrlJob}
 
   iamRoleStatements:
     - Effect: "Allow"
@@ -71,6 +76,7 @@ plugins:
 package:
   individually: false
 
+
 functions:
 
   generateTicket:
@@ -92,10 +98,9 @@ functions:
     events:
       - sns: drp-queue-threads
     environment:
-      THREAD_COUNT: 50  # gmailから読む最大スレッド数
-      GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
-      GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
-    memorySize: 256
+      THREAD_FETCH_COUNT: 500  # gmailから読む最大スレッド数
+      THREAD_QUEUE_ARRAY_SIZE: 200  # sqsメッセージ1件に含める最大スレッド数
+    memorySize: 512
 
   queueMails:
     handler: handler.queueMails
@@ -104,8 +109,8 @@ functions:
     environment:
       THREAD_COUNT: 200 # sqsから読む最大スレッド数
       THREAD_BATCH_COUNT: 50 # 1度のバッチ実行でgmailから読む最大スレッド数
-      GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
-      GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
+      # GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
+      # GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
     memorySize: 256
 
   parseMails:
@@ -117,24 +122,24 @@ functions:
     memorySize: 256
     timeout: 30
 
-  # insertReports:
-  #   handler: handler.insertReports
-  #   events:
-  #     - sns: drp-insert-reports
-  #   environment:
-  #     REPORTS_COUNT: 200 # sqsから読む最大レコード数
-  #     REPORTS_BATCH_COUNT: 100 # 1度のバッチ実行でfusiontablesへ書く最大レコード数
-  #     GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
-  #     GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
-  #   memorySize: 256
+  appendReportsToSheets:
+    handler: handler.appendReportsToSheets
+    events:
+      - sns: drp-append-reports-to-sheets
+    environment:
+      REPORTS_COUNT: 200 # sqsから読む最大メッセージ数
+      REPORTS_BATCH_COUNT: 100 # 1度のリクエストでspreadsheetsへ書く最大メッセージ数
+      # GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
+      # GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
+    memorySize: 256
 
-  # createTable:
-  #   handler: handler.createTable
-  #   events:
-  #     - sns: drp-create-table
-  #   environment:
-  #     GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
-  #     GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
+  createSheets:
+    handler: handler.createSheets
+    events:
+      - sns: drp-create-sheets
+    # environment:
+    #   GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
+    #   GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
 
   # checkTable:
   #   handler: handler.checkTable
@@ -148,9 +153,9 @@ functions:
     handler: handler.checkSheetsExistence
     events:
       - sns: drp-check-sheets-existence
-    environment:
-      GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
-      GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
+    # environment:
+    #   GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
+    #   GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
 
   queueJob:
     handler: handler.queueJob
@@ -169,9 +174,9 @@ functions:
     handler: handler.finalizeJob
     events:
       - sns: drp-finalize-job
-    environment:
-      GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
-      GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
+    # environment:
+    #   GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
+    #   GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
 
   putAgent:
     handler: handler.putAgent
