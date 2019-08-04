@@ -1,9 +1,9 @@
 import {MessageList, Message} from 'aws-sdk/clients/sqs';
 import {Job, JobStatus, QueueThreadsMessage,
-  OneThreadMessage,
   OneMailMessage, Portal} from ':common/types';
 
 import * as util from ':common/util';
+import * as env from ':common/env';
 import * as gapi from 'googleapis';
 import * as Batchelor from 'batchelor';
 import * as base64 from 'base-64';
@@ -11,7 +11,7 @@ import * as utf8 from 'utf8';
 import * as cheerio from 'cheerio';
 
 
-const THREAD_BATCH_COUNT = Number(process.env.THREAD_BATCH_COUNT);
+// const THREAD_BATCH_COUNT = Number(process.env.THREAD_BATCH_COUNT);
 
 
 export const decodeBase64 = (origin: string): string => {
@@ -82,7 +82,7 @@ export const parseHtml = (html: string): Portal[] => {
 
 
 
-export const getMails = async (accessToken: string, threads: MessageList,
+export const getMails = async (accessToken: string, threadIds: string[],
   rangeFromTime: number, rangeToTime: number): Promise<OneMailMessage[]> => {
   console.log('try to get mails.');
 
@@ -98,22 +98,22 @@ export const getMails = async (accessToken: string, threads: MessageList,
   });
 
   // batch用配列の作成
-  let threadMessages = [];
-  let mails: OneMailMessage[] = [];
+  const threadMessages = [];
+  const mails: OneMailMessage[] = [];
   let threadGetRes;
-  for(let aThread of threads) {
-    const message: OneThreadMessage = JSON.parse(aThread.Body);
+  for(let aThreadId of threadIds) {
+    // const message: OneThreadMessage = JSON.parse(aThread.Body);
     threadMessages.push({
       "method": 'GET',
-      "path": `https://www.googleapis.com/gmail/v1/users/me/threads/${message.id}?fields=messages/id,messages/internalDate,messages/payload/parts/body/data`
+      "path": `https://www.googleapis.com/gmail/v1/users/me/threads/${aThreadId}?fields=messages/id,messages/internalDate,messages/payload/parts/body/data`
     });
   }
 
   // threadの詳細取得(mail付き)をバッチ実行
   while(threadMessages.length > 0) {
-    // THREAD_BATCH_COUNTずつ
-    const batchSize = threadMessages.length>=THREAD_BATCH_COUNT ?
-      THREAD_BATCH_COUNT : threadMessages.length
+    // THREAD_FETCH_COUNTずつ
+    const batchSize = threadMessages.length>=env.THREAD_FETCH_COUNT ?
+      env.THREAD_FETCH_COUNT : threadMessages.length
     const batch = threadMessages.slice(0, batchSize);
     threadMessages.splice(0, batchSize);
 
@@ -178,5 +178,3 @@ const url2latlong = (url: string): {lat: number, long: number} => {
   result.long = Number(url.split('pll=')[1].split('&')[0].split(',')[1]);
   return result;
 };
-
-

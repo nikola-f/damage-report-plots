@@ -10,3 +10,11 @@ export const GOOGLE_CALLBACK_URL_JOB = process.env.GOOGLE_CALLBACK_URL_JOB || ''
 export const SESSION_SECRET = process.env.SESSION_SECRET || '';
 
 export const SNS_NOP: boolean = process.env.SNS_NOP === 'false' ? false : true;
+
+
+export const THREAD_FETCH_COUNT: number = 
+  process.env.THREAD_FETCH_COUNT ? Number(process.env.THREAD_FETCH_COUNT) : undefined;
+export const THREAD_QUEUE_ARRAY_SIZE: number = 
+  process.env.THREAD_QUEUE_ARRAY_SIZE ? Number(process.env.THREAD_QUEUE_ARRAY_SIZE) : undefined;
+export const THREAD_ARRAY_FETCH_COUNT: number = 
+  process.env.THREAD_ARRAY_FETCH_COUNT ? Number(process.env.THREAD_ARRAY_FETCH_COUNT) : undefined;

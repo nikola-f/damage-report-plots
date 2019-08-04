@@ -1,5 +1,5 @@
 import {SNSEvent, Handler, ProxyResult} from 'aws-lambda';
-import {MessageList} from 'aws-sdk/clients/sqs';
+import {MessageList, Message} from 'aws-sdk/clients/sqs';
 import {Job, JobStatus, QueueThreadsMessage,
   ThreadArrayMessage, OneMailMessage, Portal,
   OneReportMessage} from ':common/types';
@@ -15,9 +15,9 @@ import {google} from 'googleapis';
 const gmail = google.gmail('v1');
 
 
-const THREAD_FETCH_COUNT: number = Number(process.env.THREAD_FETCH_COUNT),
-      THREAD_QUEUE_ARRAY_SIZE: number = Number(process.env.THREAD_QUEUE_ARRAY_SIZE),
-      MAIL_COUNT: number = Number(process.env.MAIL_COUNT);
+// const THREAD_FETCH_COUNT: number = Number(process.env.THREAD_FETCH_COUNT),
+//       THREAD_QUEUE_ARRAY_SIZE: number = Number(process.env.THREAD_QUEUE_ARRAY_SIZE),
+const MAIL_COUNT: number = Number(process.env.MAIL_COUNT);
 
 
 /**
@@ -107,16 +107,20 @@ export const queueMails = async (event: SNSEvent, context, callback): Promise<vo
     console.info('try to queue mails:', job.openId);
 
     // threadキューからthreadを取得
-    const threadMessages: MessageList =
-      await libQueue.receiveMessageBatch(job.thread.queueUrl, THREAD_FETCH_COUNT); //FIXME
-    if(threadMessages.length > 0) {
+    const threadArrayMessages: MessageList =
+      await libQueue.receiveMessageBatch(job.thread.queueUrl, env.THREAD_ARRAY_FETCH_COUNT);
+    const threadIds: string[] = [];
+    for(let aThreadArrayMessage of threadArrayMessages) {
+      Array.prototype.push.apply(threadIds, JSON.parse(aThreadArrayMessage.Body));
+    }
+
+    if(threadIds.length > 0) {
       // access_token 再作成
       const accessToken = 
         await libAuth.refreshAccessTokenManually(env.GOOGLE_CALLBACK_URL_JOB, job.tokens.jobRefreshToken);
       // gapiでthreadの詳細(mail付き)取得
       const mails: OneMailMessage[] =
-        await libMail.getMails(accessToken, threadMessages,
-          job.rangeFromTime, job.rangeToTime);
+        await libMail.getMails(accessToken, threadIds, job.rangeFromTime, job.rangeToTime);
       if(mails && mails.length > 0) {
         console.info(`${mails.length} mails found.`);
       }else{
@@ -124,18 +128,37 @@ export const queueMails = async (event: SNSEvent, context, callback): Promise<vo
       }
       
       // mailキューにキューイング
-      const mailMessages: MessageList = [];
+      let mailArrayMessage: Message;
+      const mailArray: OneMailMessage[] = [];
+      let messageSize = 0;
       for(let aMail of mails) {
-        mailMessages.push({
-          MessageId: aMail.id,
-          Body: JSON.stringify(aMail)
-        });
+        mailArray.push(aMail);
+        
+        mailArrayMessage = {
+          "MessageId": mails[0].id,
+          "Body": JSON.stringify(mailArray)
+        };
+        
+        messageSize = util.getSizeInBytes(mailArrayMessage);
+
+        if(messageSize >= 240 * 1024) {
+          await libQueue.sendMessage(job.mail.queueUrl, mailArrayMessage);
+          console.log(mailArray.length, ' mails queuing.');
+          job.mail.queuedCount += mailArray.length;
+          mailArray.length = 0;
+        }
       }
-      if(mailMessages.length > 0) {
-        job.mail.queuedCount +=
-          await libQueue.sendMessageBatch(job.mail.queueUrl, mailMessages);
-        console.info(`${mailMessages.length} mails queued.`);
+      if(mailArray.length > 0) {
+        mailArrayMessage = {
+          "MessageId": mails[0].id,
+          "Body": JSON.stringify(mailArray)
+        };
+        console.log(`${mailArray.length} mails queuing.`);
+        await libQueue.sendMessage(job.mail.queueUrl, mailArrayMessage);
+        job.mail.queuedCount += mailArray.length;
       }
+
+      console.info(`${job.mail.queuedCount} mails queued.`);
 
     }else{
       console.info('no threads queued.');
@@ -149,7 +172,7 @@ export const queueMails = async (event: SNSEvent, context, callback): Promise<vo
     // なければparseMailsを起動
     const threadRemain: number =
       await libQueue.getNumberOfMessages(job.thread.queueUrl);
-    console.info(`${threadRemain} threads remain.`);
+    console.info(`${threadRemain} threadArray remain.`);
     if(threadRemain > 0) {
       launcher.queueMailsAsync(job);
     }else{
@@ -190,7 +213,7 @@ export const queueThreads = async (event: SNSEvent, context, callback): Promise<
     let req = {
       "auth": client,
       "userId": 'me',
-      "maxResults": THREAD_FETCH_COUNT,
+      "maxResults": env.THREAD_FETCH_COUNT,
       "fields": 'threads/id,nextPageToken',
       "q": '{from:ingress-support@google.com from:ingress-support@nianticlabs.com}' +
           ' subject:"Ingress Damage Report: Entities attacked by"' +
@@ -230,9 +253,10 @@ export const queueThreads = async (event: SNSEvent, context, callback): Promise<
     const ids: string[] = [];
     const messages: MessageList = [];
 
+    //配列サイズごとにSQSメッセージを作成
     for(let aThread of threads) {
       ids.push(aThread.id);
-      if(ids.length >= THREAD_QUEUE_ARRAY_SIZE) {
+      if(ids.length >= env.THREAD_QUEUE_ARRAY_SIZE) {
         messages.push({
           "MessageId": ids[0],
           "Body": JSON.stringify(ids)

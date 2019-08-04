@@ -61,4 +61,12 @@ export const dedupe = (list: Array<any>): Array<any> => {
   }
   
   return result;
-}
+};
+
+
+/**
+ * 文字列表現時のバイト数を返す(UTF-8)
+ */
+export const getSizeInBytes = (object: any): number => {
+  return encodeURIComponent(JSON.stringify(object)).replace(/%../g,"x").length;
+};

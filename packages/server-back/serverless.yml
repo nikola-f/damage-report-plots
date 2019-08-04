@@ -99,7 +99,7 @@ functions:
       - sns: drp-queue-threads
     environment:
       THREAD_FETCH_COUNT: 500  # gmailから読む最大スレッド数
-      THREAD_QUEUE_ARRAY_SIZE: 200  # sqsメッセージ1件に含める最大スレッド数
+      THREAD_QUEUE_ARRAY_SIZE: 500  # sqsメッセージ1件に含める最大スレッド数
     memorySize: 512
 
   queueMails:
@@ -107,10 +107,8 @@ functions:
     events:
       - sns: drp-queue-mails
     environment:
-      THREAD_COUNT: 200 # sqsから読む最大スレッド数
-      THREAD_BATCH_COUNT: 50 # 1度のバッチ実行でgmailから読む最大スレッド数
-      # GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
-      # GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
+      THREAD_ARRAY_FETCH_COUNT: 10 # sqsから読むスレッド配列の数
+      THREAD_FETCH_COUNT: 100 # 1度のバッチ実行でgmailから読む最大スレッド数
     memorySize: 256
 
   parseMails:
