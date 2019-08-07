@@ -119,11 +119,11 @@ export const queueMailsAsync = (job: Job): Promise<void> => {
   });
 };
 
-export const parseMailsAsync = (job: Job): Promise<void> => {
+export const queueReportsAsync = (job: Job): Promise<void> => {
   return publish({
     "Message": JSON.stringify(job),
-    "Subject": 'ParseMails',
-    "TopicArn": TOPIC_PREFIX + 'drp-parse-mails'
+    "Subject": 'QueueReports',
+    "TopicArn": TOPIC_PREFIX + 'drp-queue-reports'
   });
 };
 

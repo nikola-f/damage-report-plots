@@ -5,6 +5,8 @@ import {GetQueueAttributesRequest, GetQueueAttributesResult,
   DeleteMessageBatchResult, DeleteMessageBatchRequestEntryList,
   Message} from 'aws-sdk/clients/sqs';
 
+import * as util from ':common/util';
+
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
 const AWS = awsXRay.captureAWS(awsPlain);
@@ -36,6 +38,56 @@ export const getNumberOfMessages = async (url: string): Promise<number> => {
 export const sendMessage = async (url: string, message: Message): Promise<number> => {
   return sendMessageBatch(url, [message]);
 };
+
+
+/**
+ * 256KBを上回らないよう分割してキューイング
+ */
+export const sendMessageDivisioinByMaxSize = async (url: string,
+                                      objArray: Array<any>): Promise<number> => {
+
+  const MAX_SIZE_IN_BYTES: number = 256 * 1024 - 100; //idとかの余裕分
+  const messageArray: Message[] = [];
+
+  let sizeSummary = 0;
+  const bodyArray: Array<any> = [];
+  for(let aObj of objArray) {
+    const aObjSize: number = util.getSizeInBytes(aObj);
+
+    // maxに達しそう
+    if(sizeSummary + aObjSize + 2 > MAX_SIZE_IN_BYTES) { //2は'[]'のぶん'
+      messageArray.push({
+        "MessageId": String(messageArray.length),
+        "Body": JSON.stringify(bodyArray)
+      });
+      console.log(`${bodyArray.length} objects(${sizeSummary} bytes) stored in a message.`);
+
+      bodyArray.length = 0;
+      sizeSummary = 0;
+    }
+
+    bodyArray.push(aObj);
+    sizeSummary = sizeSummary + aObjSize + 1; //1は','のぶん
+  }
+  if(bodyArray.length > 0) {
+    messageArray.push({
+      "MessageId": String(messageArray.length),
+      "Body": JSON.stringify(bodyArray)
+    });
+    console.log(`${bodyArray.length} objects(${sizeSummary} bytes) stored in a message.`);
+  }
+
+  // 1件ずつ送信
+  let queuedCount: number = 0;
+  for(let aMessage of messageArray) {
+    sendMessage(url, aMessage);
+    queuedCount++;
+  }
+
+  return Promise.resolve(queuedCount);
+}
+
+
 
 
 /**
@@ -102,17 +154,15 @@ export const receiveMessageBatch = async (url: string, maxCount: number): Promis
   let remain = maxCount;
   let result: MessageList = [];
   while(remain > 0) {
-    // console.log('remain:', remain);
-    
+
     const req: ReceiveMessageRequest = {
-      "MaxNumberOfMessages": 10,
+      "MaxNumberOfMessages": remain > 10 ? 10 : remain,
       "QueueUrl": url
     };
     let res: ReceiveMessageResult;
     try {
       res = await sqs.receiveMessage(req).promise();
       
-      // console.log('dump:', res);
     }catch(err){
       console.error(err);
       continue;

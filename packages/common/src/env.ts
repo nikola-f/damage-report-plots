@@ -16,5 +16,7 @@ export const THREAD_FETCH_COUNT: number =
   process.env.THREAD_FETCH_COUNT ? Number(process.env.THREAD_FETCH_COUNT) : undefined;
 export const THREAD_QUEUE_ARRAY_SIZE: number = 
   process.env.THREAD_QUEUE_ARRAY_SIZE ? Number(process.env.THREAD_QUEUE_ARRAY_SIZE) : undefined;
-export const THREAD_ARRAY_FETCH_COUNT: number = 
-  process.env.THREAD_ARRAY_FETCH_COUNT ? Number(process.env.THREAD_ARRAY_FETCH_COUNT) : undefined;
+export const THREAD_ARRAY_DEQUEUE_COUNT: number = 
+  process.env.THREAD_ARRAY_DEQUEUE_COUNT ? Number(process.env.THREAD_ARRAY_DEQUEUE_COUNT) : undefined;
+export const MAIL_ARRAY_DEQUEUE_COUNT: number = 
+  process.env.MAIL_ARRAY_DEQUEUE_COUNT ? Number(process.env.MAIL_ARRAY_DEQUEUE_COUNT) : undefined;

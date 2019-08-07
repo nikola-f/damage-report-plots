@@ -6,7 +6,7 @@ import * as util from ':common/util';
 import * as env from ':common/env';
 import * as gapi from 'googleapis';
 import * as Batchelor from 'batchelor';
-import * as base64 from 'base-64';
+import * as base64 from 'urlsafe-base64';
 import * as utf8 from 'utf8';
 import * as cheerio from 'cheerio';
 
@@ -15,10 +15,11 @@ import * as cheerio from 'cheerio';
 
 
 export const decodeBase64 = (origin: string): string => {
-  // '-' -> '+' と '_' -> '/'
-  const replaced = origin.replace(/-/g, '+').replace(/_/g, '/');
-  const bytes = base64.decode(replaced);
-  const decoded = utf8.decode(bytes);
+  // // '-' -> '+' と '_' -> '/'
+  // const replaced = origin.replace(/-/g, '+').replace(/_/g, '/');
+  const bytes = base64.decode(origin);
+  // const decoded = utf8.decode(bytes);
+  const decoded = bytes.toString('utf-8');
   return decoded;
 };
 

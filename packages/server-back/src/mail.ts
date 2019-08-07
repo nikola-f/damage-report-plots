@@ -17,60 +17,75 @@ const gmail = google.gmail('v1');
 
 // const THREAD_FETCH_COUNT: number = Number(process.env.THREAD_FETCH_COUNT),
 //       THREAD_QUEUE_ARRAY_SIZE: number = Number(process.env.THREAD_QUEUE_ARRAY_SIZE),
-const MAIL_COUNT: number = Number(process.env.MAIL_COUNT);
+// const MAIL_COUNT: number = Number(process.env.MAIL_COUNT);
 
 
 /**
  * mailの解析およびreportのキューイング
  * @next putJob, parseMails, appendReportsToSheets
  */
-export const parseMails = async (event: SNSEvent, context, callback): Promise<void> => {
+export const queueReports = async (event: SNSEvent, context, callback): Promise<void> => {
   util.validateSnsEvent(event, callback);
 
   for(let rec of event.Records) {
     let job: Job = JSON.parse(rec.Sns.Message);
-    console.info('try to parse mails:', job.openId);
+    console.info('try to queue reports:', job.openId);
 
-    // mailキューからmailを取得
-    const mailMessages: MessageList =
-      await libQueue.receiveMessageBatch(job.mail.queueUrl, MAIL_COUNT);
-    if(mailMessages.length <= 0) {
+    // mailキューからmail配列を取得 //FIXME ループで1件ずつ取るように変える
+    const mailArrayMessages: MessageList =
+      await libQueue.receiveMessageBatch(job.mail.queueUrl, env.MAIL_ARRAY_DEQUEUE_COUNT);
+    if(mailArrayMessages.length <= 0) {
       console.info('no mails queued.');
     }
 
     // ポータル情報抽出
-    let rawReportMessages: Array<OneReportMessage> = [];
-    const dedupedReportMessages: MessageList = [];
-    for(let message of mailMessages) {
-      const mail: OneMailMessage = JSON.parse(message.Body);
-      const html: string = libMail.decodeBase64(mail.body);
-      const portals: Portal[] = libMail.parseHtml(html);
+    const rawReportArray: OneReportMessage[] = [];
+    // const dedupedReportMessages: MessageList = [];
 
-      for(let aPortal of portals) {
-        const oneReportMessage: OneReportMessage = {
-          // "mailId": mail.id,
-          // 1時間単位に丸める
-          "mailDate": Math.floor(mail.internalDate / (1000 * 3600)) * 3600,
-          "portal": aPortal
-        };
-        rawReportMessages.push(oneReportMessage);
+    // メール配列メッセージリスト -> メール配列
+    for(let aMailArrayMessage of mailArrayMessages) {
+      const mailArray: OneMailMessage[] = JSON.parse(aMailArrayMessage.Body);
+
+      // メール配列 -> メール
+      for(let aMail of mailArray) {
+        const html: string = libMail.decodeBase64(aMail.body);
+
+        // メール -> 重複ありレポート配列
+        const portals: Portal[] = libMail.parseHtml(html);
+        for(let aPortal of portals) {
+          // const aReportMessage: OneReportMessage = {
+          //   // "mailId": mail.id,
+          //   "mailDate": Math.floor(aMail.internalDate / (1000 * 3600)) * 3600,
+          //   "portal": aPortal
+          // };
+          rawReportArray.push({
+            // 1時間単位に丸める
+            "mailDate": Math.floor(aMail.internalDate / (1000 * 3600)) * 3600,
+            "portal": aPortal
+          });
+        }
       }
     }
     
-    // 重複削除
-    rawReportMessages = util.dedupe(rawReportMessages);
-    for(let oneReportMessage of rawReportMessages) {
-      dedupedReportMessages.push({
-        "MessageId": String(dedupedReportMessages.length),
-        "Body": JSON.stringify(oneReportMessage)
-      });
-    }
+    // 重複ありレポート配列 -> 重複なしレポート配列
+    const dedupedReportArray: OneReportMessage[] = util.dedupe(rawReportArray);
+
+
+    // for(let oneReportMessage of rawReportMessages) {
+    //   dedupedReportMessages.push({
+    //     "MessageId": String(dedupedReportMessages.length),
+    //     "Body": JSON.stringify(oneReportMessage)
+    //   });
+    // }
 
     // reportキューにキューイング
-    if(dedupedReportMessages.length > 0) {
-      const queued = await libQueue.sendMessageBatch(job.report.queueUrl, dedupedReportMessages);
-      job.report.queuedCount += queued;
-      console.info(`${queued} reports queued.`);
+    if(dedupedReportArray.length > 0) {
+      await libQueue.sendMessageDivisioinByMaxSize(job.report.queueUrl, dedupedReportArray);
+      // const queued = await dedupedReportMessageArray.length
+      job.report.queuedCount += dedupedReportArray.length;
+      console.info(`${dedupedReportArray.length} reports queued.`);
+    }else{
+      console.info("no reports found.");
     }
 
     // job保存
@@ -82,7 +97,7 @@ export const parseMails = async (event: SNSEvent, context, callback): Promise<vo
       await libQueue.getNumberOfMessages(job.mail.queueUrl);
     if(mailRemain > 0) {
       console.info(`${mailRemain} mails remaining, recurse.`);
-      launcher.parseMailsAsync(job);
+      launcher.queueReportsAsync(job);
     }else{
       launcher.appendReportsToSheetsAsync(job);
     }
@@ -97,7 +112,7 @@ export const parseMails = async (event: SNSEvent, context, callback): Promise<vo
 
 /**
  * mailの詳細取得およびキューイング
- * @next putJob, queueMails, parseMails
+ * @next putJob, queueMails, queueReports
  */
 export const queueMails = async (event: SNSEvent, context, callback): Promise<void> => {
   util.validateSnsEvent(event, callback);
@@ -108,7 +123,7 @@ export const queueMails = async (event: SNSEvent, context, callback): Promise<vo
 
     // threadキューからthreadを取得
     const threadArrayMessages: MessageList =
-      await libQueue.receiveMessageBatch(job.thread.queueUrl, env.THREAD_ARRAY_FETCH_COUNT);
+      await libQueue.receiveMessageBatch(job.thread.queueUrl, env.THREAD_ARRAY_DEQUEUE_COUNT);
     const threadIds: string[] = [];
     for(let aThreadArrayMessage of threadArrayMessages) {
       Array.prototype.push.apply(threadIds, JSON.parse(aThreadArrayMessage.Body));
@@ -128,35 +143,38 @@ export const queueMails = async (event: SNSEvent, context, callback): Promise<vo
       }
       
       // mailキューにキューイング
-      let mailArrayMessage: Message;
-      const mailArray: OneMailMessage[] = [];
-      let messageSize = 0;
-      for(let aMail of mails) {
-        mailArray.push(aMail);
-        
-        mailArrayMessage = {
-          "MessageId": mails[0].id,
-          "Body": JSON.stringify(mailArray)
-        };
-        
-        messageSize = util.getSizeInBytes(mailArrayMessage);
+      await libQueue.sendMessageDivisioinByMaxSize(job.mail.queueUrl, mails);
+      job.mail.queuedCount += mails.length;
 
-        if(messageSize >= 240 * 1024) {
-          await libQueue.sendMessage(job.mail.queueUrl, mailArrayMessage);
-          console.log(mailArray.length, ' mails queuing.');
-          job.mail.queuedCount += mailArray.length;
-          mailArray.length = 0;
-        }
-      }
-      if(mailArray.length > 0) {
-        mailArrayMessage = {
-          "MessageId": mails[0].id,
-          "Body": JSON.stringify(mailArray)
-        };
-        console.log(`${mailArray.length} mails queuing.`);
-        await libQueue.sendMessage(job.mail.queueUrl, mailArrayMessage);
-        job.mail.queuedCount += mailArray.length;
-      }
+      // let mailArrayMessage: Message;
+      // const mailArray: OneMailMessage[] = [];
+      // let messageSize = 0;
+      // for(let aMail of mails) {
+      //   mailArray.push(aMail);
+        
+      //   mailArrayMessage = {
+      //     "MessageId": mails[0].id,
+      //     "Body": JSON.stringify(mailArray)
+      //   };
+        
+      //   messageSize = util.getSizeInBytes(mailArrayMessage);
+
+      //   if(messageSize >= 240 * 1024) {
+      //     await libQueue.sendMessage(job.mail.queueUrl, mailArrayMessage);
+      //     console.log(mailArray.length, ' mails queuing.');
+      //     job.mail.queuedCount += mailArray.length;
+      //     mailArray.length = 0;
+      //   }
+      // }
+      // if(mailArray.length > 0) {
+      //   mailArrayMessage = {
+      //     "MessageId": mails[0].id,
+      //     "Body": JSON.stringify(mailArray)
+      //   };
+      //   console.log(`${mailArray.length} mails queuing.`);
+      //   await libQueue.sendMessage(job.mail.queueUrl, mailArrayMessage);
+      //   job.mail.queuedCount += mailArray.length;
+      // }
 
       console.info(`${job.mail.queuedCount} mails queued.`);
 
@@ -176,7 +194,7 @@ export const queueMails = async (event: SNSEvent, context, callback): Promise<vo
     if(threadRemain > 0) {
       launcher.queueMailsAsync(job);
     }else{
-      launcher.parseMailsAsync(job);
+      launcher.queueReportsAsync(job);
     }
 
   }

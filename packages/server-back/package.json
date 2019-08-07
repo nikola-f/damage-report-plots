@@ -14,13 +14,12 @@
 	"dependencies": {
 		"@damage-report-plots/common": "^0.0.1",
 		"aws-xray-sdk": "^1.2.0",
-		"base-64": "^0.1.0",
 		"batchelor": "^2.0.2",
 		"cheerio": "^1.0.0-rc.2",
 		"cookie": "^0.3.1",
 		"dateformat": "^3.0.3",
 		"googleapis": "^29.0.0",
-		"utf8": "^3.0.0"
+		"urlsafe-base64": "^1.0.0"
 	},
 	"devDependencies": {
 		"@types/aws-lambda": "8.10.3",
