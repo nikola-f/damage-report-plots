@@ -111,13 +111,13 @@ export const queueThreadsAsync = (qtm: QueueThreadsMessage): Promise<void> => {
   });
 };
 
-export const queueMailsAsync = (job: Job): Promise<void> => {
-  return publish({
-    "Message": JSON.stringify(job),
-    "Subject": 'QueueMails',
-    "TopicArn": TOPIC_PREFIX + 'drp-queue-mails'
-  });
-};
+// export const queueMailsAsync = (job: Job): Promise<void> => {
+//   return publish({
+//     "Message": JSON.stringify(job),
+//     "Subject": 'QueueMails',
+//     "TopicArn": TOPIC_PREFIX + 'drp-queue-mails'
+//   });
+// };
 
 export const queueReportsAsync = (job: Job): Promise<void> => {
   return publish({

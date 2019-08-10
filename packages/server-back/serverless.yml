@@ -99,25 +99,18 @@ functions:
       - sns: drp-queue-threads
     environment:
       THREAD_FETCH_COUNT: 500  # gmailから読む最大スレッド数
-      THREAD_QUEUE_ARRAY_SIZE: 100  # sqsメッセージ1件に含める最大スレッド数
+      THREAD_QUEUE_ARRAY_SIZE: 500  # sqsメッセージ1件に含める最大スレッド数
     memorySize: 512
-
-  queueMails:
-    handler: handler.queueMails
-    events:
-      - sns: drp-queue-mails
-    environment:
-      THREAD_ARRAY_DEQUEUE_COUNT: 2 # sqsから読むスレッド配列の数
-      THREAD_FETCH_COUNT: 100 # 1度のバッチ実行でgmailから読む最大スレッド数
-    memorySize: 256
 
   queueReports:
     handler: handler.queueReports
     events:
       - sns: drp-queue-reports
     environment:
-      MAIL_ARRAY_DEQUEUE_COUNT: 50 # sqsから読むメール配列の数
-    memorySize: 256
+      THREAD_ARRAY_DEQUEUE_COUNT: 1 # sqsから読むスレッド配列の数
+      THREAD_FETCH_COUNT: 100 # 1度のバッチ実行でgmailから読む最大スレッド数
+      MAIL_ARRAY_DEQUEUE_COUNT: 1 # sqsから読むメール配列の数
+    memorySize: 512
     timeout: 30
 
   appendReportsToSheets:
@@ -127,25 +120,12 @@ functions:
     environment:
       REPORTS_COUNT: 200 # sqsから読む最大メッセージ数
       REPORTS_BATCH_COUNT: 100 # 1度のリクエストでspreadsheetsへ書く最大メッセージ数
-      # GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
-      # GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
     memorySize: 256
 
   createSheets:
     handler: handler.createSheets
     events:
       - sns: drp-create-sheets
-    # environment:
-    #   GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
-    #   GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
-
-  # checkTable:
-  #   handler: handler.checkTable
-  #   events:
-  #     - sns: drp-check-table
-  #   environment:
-  #     GOOGLE_CLIENT_ID: ${self:custom.googleClientId}
-  #     GOOGLE_CLIENT_SECRET: ${self:custom.googleClientSecret}
 
   checkSheetsExistence:
     handler: handler.checkSheetsExistence

@@ -7,18 +7,12 @@ import * as env from ':common/env';
 import * as gapi from 'googleapis';
 import * as Batchelor from 'batchelor';
 import * as base64 from 'urlsafe-base64';
-import * as utf8 from 'utf8';
 import * as cheerio from 'cheerio';
 
 
-// const THREAD_BATCH_COUNT = Number(process.env.THREAD_BATCH_COUNT);
-
 
 export const decodeBase64 = (origin: string): string => {
-  // // '-' -> '+' と '_' -> '/'
-  // const replaced = origin.replace(/-/g, '+').replace(/_/g, '/');
   const bytes = base64.decode(origin);
-  // const decoded = utf8.decode(bytes);
   const decoded = bytes.toString('utf-8');
   return decoded;
 };
@@ -26,9 +20,9 @@ export const decodeBase64 = (origin: string): string => {
 
 export const parseHtml = (html: string): Portal[] => {
 
-  // console.log(html);
+  // console.log('html:', html);
+  
   const $ = cheerio.load(html);
-
   const agentName = $('body')
                       .children('div').first()
                         .children('table').first()
@@ -58,7 +52,7 @@ export const parseHtml = (html: string): Portal[] => {
     portal.name = $(element).parent().prev().text();
     // link destroyは無視
     if(!portal.name || portal.name === '') {
-      console.log('name not found:' + JSON.stringify(portal));
+      console.log('name not found:', portal);
       return true;
     }
 
@@ -135,10 +129,12 @@ export const getMails = async (accessToken: string, threadIds: string[],
         continue;
       }
       if(util.isSet(() => aMessage.payload.parts[1].body.data)) {
+        // base64デコード
+        const decodedBody = decodeBase64(aMessage.payload.parts[1].body.data);
         mails.push({
           "id": aMessage.id,
           "internalDate": aMessage.internalDate,
-          "body": aMessage.payload.parts[1].body.data
+          "body": decodedBody
         });
       }else{
         console.error('mail body not found:' + aMessage.id);

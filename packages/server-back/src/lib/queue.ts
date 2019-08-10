@@ -43,10 +43,10 @@ export const sendMessage = async (url: string, message: Message): Promise<number
 /**
  * 256KBを上回らないよう分割してキューイング
  */
-export const sendMessageDivisioinByMaxSize = async (url: string,
-                                      objArray: Array<any>): Promise<number> => {
+export const sendMessageDivisioinBySize = async (url: string,
+                                      objArray: Array<any>, size: number): Promise<number> => {
 
-  const MAX_SIZE_IN_BYTES: number = 256 * 1024 - 100; //idとかの余裕分
+  const MAX_SIZE_IN_BYTES: number = size - 100; //idとかの余裕分
   const messageArray: Message[] = [];
 
   let sizeSummary = 0;
@@ -134,7 +134,7 @@ export const sendMessageBatch = async (url: string,
  */
 export const receiveMessage = async (url: string): Promise<Message> => {
 
-  console.log('try to receive message:' + url);
+  // console.log('try to receive message:' + url);
 
   const messages: MessageList = await receiveMessageBatch(url, 1);
   if(messages.length > 0) {
@@ -175,9 +175,9 @@ export const receiveMessageBatch = async (url: string, maxCount: number): Promis
     
     const deletedCount = await deleteMessageBatch(url, res.Messages);
 
-    if(res.Messages.length < 10) {
-      break;
-    }
+    // if(res.Messages.length < 10) {
+    //   break;
+    // }
   }
 
   console.log(`${result.length} messages received from ${url}`);
