@@ -49,10 +49,6 @@ export interface Job {
     queueUrl: string,
     queuedCount: number
   },
-  mail?: {
-    queueUrl: string,
-    queuedCount: number
-  },
   report?: {
     queueUrl: string,
     queuedCount: number

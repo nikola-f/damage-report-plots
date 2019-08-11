@@ -18,7 +18,7 @@ const gmail = google.gmail('v1');
 
 /**
  * mailの詳細取得,解析,reportのキューイング
- * @next putJob, parseMails, appendReportsToSheets
+ * @next putJob, queueReports, appendReportsToSheets
  */
 export const queueReports = async (event: SNSEvent, context, callback): Promise<void> => {
   util.validateSnsEvent(event, callback);

@@ -48,10 +48,6 @@ export const createSheets = async (event: SNSEvent, context, callback): Promise<
     }catch(error){
       console.error(JSON.stringify(error));
       continue;
-      // callback(error, {
-      //   "statusCode": 400,
-      //   "body": 'Bad Request'
-      // });
     }
 
     if(spreadsheetId) {
@@ -145,22 +141,27 @@ export const appendReportsToSheets = async (event: SNSEvent, context, callback):
 
   for(let rec of event.Records) {
     const job: Job = JSON.parse(rec.Sns.Message);
-    console.log('try to insert reports:', job.openId);
+    console.log('try to append reports:', job.openId);
     
-    //agentテーブルからreportTableIdを取得
-    const agent: Agent = await libAgent.getAgent(job.openId);
-    const reportTableId = agent.reportTableId;
-
     // reportキューからreportを取得
-    const queuedMessages: MessageList =
-      await libQueue.receiveMessageBatch(job.report.queueUrl, REPORTS_COUNT);
-    if(queuedMessages.length <= 0) {
+    const reportArrayMessages: MessageList =
+      await libQueue.receiveMessageBatch(job.report.queueUrl, env.REPORTS_ARRAY_DEQUEUE_COUNT);
+    if(reportArrayMessages.length <= 0) {
       console.log('no reports queued.');
     }
-    const reportMessages: OneReportMessage[] = [];
-    for(const aMessage of queuedMessages) {
-      const aReport: OneReportMessage = JSON.parse(aMessage.Body);
-      reportMessages.push(aReport);
+    const reportRows: any[] = [];
+    for(const aReportArrayMessage of reportArrayMessages) {
+      const reportArray: OneReportMessage[] = JSON.parse(aReportArrayMessage.Body);
+      for(const aReport of reportArray) {
+        reportRows.push([
+          getHash(aReport),
+          aReport.mailDate, // TODO iso format
+          aReport.portal.latitude,
+          aReport.portal.longitude,
+          aReport.portal.name,
+          aReport.portal.owned
+        ]);
+      }
     }
 
     const client = libAuth.createGapiOAuth2Client(
@@ -169,43 +170,26 @@ export const appendReportsToSheets = async (event: SNSEvent, context, callback):
       job.tokens.jobRefreshToken
     );
 
-    // fusiontablesにinsert
-    while(reportMessages.length > 0) {
-      // batch単位に分割
-      const batchSize = reportMessages.length>=REPORTS_BATCH_COUNT ?
-        REPORTS_BATCH_COUNT : reportMessages.length;
-      const batch = reportMessages.slice(0, batchSize);
-      reportMessages.splice(0, batchSize);
 
-      // csvの組み立て
-      let csv: string = '';
-      for(const aReport of batch) {
-        const hash: string = getHash(aReport);
-        const location: string = `${String(aReport.portal.latitude)},${String(aReport.portal.longitude)}`;
-        const escapedPortalName: string = aReport.portal.name.replace(/"/g,'""');
-        const ownedNumber: number = aReport.portal.owned ? 1 : 0;
-        const csvLine: string =
-          `"${hash}"\t${String(aReport.mailDate)}\t${location}\t"${escapedPortalName}"\t${ownedNumber}\n`;
-        csv += csvLine;
-      }
+    try {
+      const appendRes = await sheets.spreadsheets.values.append({
+        "spreadsheetId": job.agent.spreadsheetId,
+        "range": 'reports!A2:E2',
+        "valueInputOption": 'USER_ENTERED',
+        "insertDataOption": 'INSERT_ROWS',
+        "resource": {
+          "range": 'reports!A2:E2',
+          "values": reportRows
+        },
+        "auth": client
+      });
+      console.info('reports appended:', appendRes.data);
 
-      // insert実行
-      console.log('try to import:', csv);
-      try {
-        const res: any = await fusiontables.table.importRows({
-          "tableId": reportTableId,
-          "auth": client,
-          "delimiter": '\t',
-          "media": {
-            "mediaType": 'application/octet-stream',
-            "body": Buffer.from(csv, 'utf8')
-          }
-        });
-        console.info(`imported: ${res.data.numRowsReceived} rows`);
-      }catch(err){
-        console.error(err);
-      }
+    }catch(error){
+      console.error(error);
+      continue;
     }
+
 
     // reportキューに残があれば再帰
     // 残がなければ finalizeJobへ

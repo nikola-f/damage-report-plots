@@ -18,3 +18,6 @@ export const THREAD_QUEUE_ARRAY_SIZE: number =
   process.env.THREAD_QUEUE_ARRAY_SIZE ? Number(process.env.THREAD_QUEUE_ARRAY_SIZE) : undefined;
 export const THREAD_ARRAY_DEQUEUE_COUNT: number = 
   process.env.THREAD_ARRAY_DEQUEUE_COUNT ? Number(process.env.THREAD_ARRAY_DEQUEUE_COUNT) : undefined;
+
+export const REPORTS_ARRAY_DEQUEUE_COUNT: number = 
+  process.env.REPORTS_ARRAY_DEQUEUE_COUNT ? Number(process.env.REPORTS_ARRAY_DEQUEUE_COUNT) : undefined;

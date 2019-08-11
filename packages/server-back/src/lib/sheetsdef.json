@@ -11,7 +11,7 @@
       "index": 1,
       "sheetType": "GRID",
       "gridProperties": {
-        "columnCount": 5,
+        "columnCount": 6,
         "frozenRowCount": 1
       },
       "tabColor": {
@@ -37,7 +37,12 @@
           },
           {
             "userEnteredValue": {
-              "stringValue": "portalLocation"
+              "stringValue": "portalLatitude"
+            }
+          },
+          {
+            "userEnteredValue": {
+              "stringValue": "portalLongitude"
             }
           },
           {

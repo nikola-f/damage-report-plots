@@ -74,19 +74,6 @@ export const createAgentQueue = async (event: SNSEvent, context, callback): Prom
       };
 
       createQueueParams = {
-        "QueueName": formattedCreateTime + '_mail_' + job.openId + '.fifo',
-        "Attributes": {
-          "FifoQueue": 'true',
-          "ContentBasedDeduplication": 'true',
-        }
-      };
-      const mailQueueRes = await sqs.createQueue(createQueueParams).promise();
-      job.mail = {
-        queueUrl: mailQueueRes.QueueUrl,
-        queuedCount: 0
-      };
-
-      createQueueParams = {
         "QueueName": formattedCreateTime + '_report_' + job.openId + '.fifo',
         "Attributes": {
           "FifoQueue": 'true',
@@ -100,8 +87,7 @@ export const createAgentQueue = async (event: SNSEvent, context, callback): Prom
       };
 
       job.lastAccessTime = Date.now();
-      console.log('queues created:', 
-        threadQueueRes.QueueUrl, mailQueueRes.QueueUrl, reportQueueRes.QueueUrl);
+      console.log('queues created:', threadQueueRes.QueueUrl, reportQueueRes.QueueUrl);
 
       launcher.checkSheetsExistenceAsync(job);
 
@@ -133,14 +119,10 @@ export const deleteAgentQueue = async (event: SNSEvent, context, callback): Prom
       const threadQueueRes = await sqs.deleteQueue({
         QueueUrl: job.thread.queueUrl
       }).promise();
-      const mailQueueRes = await sqs.deleteQueue({
-        QueueUrl: job.mail.queueUrl
-      }).promise();
       const reportQueueRes = await sqs.deleteQueue({
         QueueUrl: job.report.queueUrl
       }).promise();
-      console.log('queues deleted:',
-        threadQueueRes, mailQueueRes, reportQueueRes);
+      console.log('queues deleted:', threadQueueRes, reportQueueRes);
     }catch(err){
       console.error(err);
       callback(err, null);
