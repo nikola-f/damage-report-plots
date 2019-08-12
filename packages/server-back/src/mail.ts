@@ -62,7 +62,7 @@ export const queueReports = async (event: SNSEvent, context, callback): Promise<
       for(let aPortal of portals) {
         rawReportArray.push({
           // 1時間単位に丸める
-          "mailDate": Math.floor(aMail.internalDate / (1000 * 3600)) * 3600,
+          "mailDate": Math.floor(aMail.internalDate /(1000*3600)) *1000*3600,
           "portal": aPortal
         });
       }
@@ -70,12 +70,20 @@ export const queueReports = async (event: SNSEvent, context, callback): Promise<
 
     // 重複ありレポート配列 -> 重複なしレポート配列
     const dedupedReportArray: OneReportMessage[] = util.dedupe(rawReportArray);
+    
+    // 要素が欠けているレポートをfilter out
+    const filteredReportArray: OneReportMessage[] = dedupedReportArray.filter((aReport) => {
+      return aReport.portal && aReport.mailDate && aReport.portal.name &&
+        aReport.portal.name !== '' &&
+        aReport.portal.latitude && aReport.portal.longitude &&
+        aReport.portal.owned !== null;
+    });
 
     // reportキューにキューイング
-    if(dedupedReportArray.length > 0) {
-      await libQueue.sendMessageDivisioinBySize(job.report.queueUrl, dedupedReportArray, 250*1024);
-      job.report.queuedCount += dedupedReportArray.length;
-      console.info(`${dedupedReportArray.length} reports queued.`);
+    if(filteredReportArray.length > 0) {
+      await libQueue.sendMessageDivisioinBySize(job.report.queueUrl, filteredReportArray, 250*1024);
+      job.report.queuedCount += filteredReportArray.length;
+      console.info(`${filteredReportArray.length} reports queued.`);
     }else{
       console.info("no reports found.");
     }

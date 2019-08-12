@@ -6,15 +6,14 @@ import * as crypto from 'crypto';
 import * as launcher from ':common/launcher';
 import * as util from ':common/util';
 import * as env from ':common/env';
-import * as libAgent from ':common/agent';
 import * as libAuth from ':common/auth';
 import * as libQueue from './lib/queue';
+import * as base64 from 'urlsafe-base64';
 import {google} from 'googleapis';
-const fusiontables = google.fusiontables('v2');
+const dateFormat = require('dateformat');
 const sheets = google.sheets('v4');
-const SHEETS_DEF = require('./lib/sheetsdef.json'),
-      REPORTS_COUNT: number = Number(process.env.REPORTS_COUNT),
-      REPORTS_BATCH_COUNT: number = Number(process.env.REPORTS_BATCH_COUNT);
+const SHEETS_DEF = require('./lib/sheetsdef.json');
+
 
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
@@ -46,7 +45,7 @@ export const createSheets = async (event: SNSEvent, context, callback): Promise<
       spreadsheetId = createRes.data.spreadsheetId;
         
     }catch(error){
-      console.error(JSON.stringify(error));
+      console.info(error);
       continue;
     }
 
@@ -150,16 +149,29 @@ export const appendReportsToSheets = async (event: SNSEvent, context, callback):
       console.log('no reports queued.');
     }
     const reportRows: any[] = [];
+    const now = new Date();
     for(const aReportArrayMessage of reportArrayMessages) {
       const reportArray: OneReportMessage[] = JSON.parse(aReportArrayMessage.Body);
       for(const aReport of reportArray) {
+        // const md5 = crypto.createHash('md5');
+        // const buf = md5
+        //   .update(String(aReport.mailDate))
+        //   .update(String(aReport.portal.latitude))
+        //   .update(String(aReport.portal.longitude))
+        //   .update(String(aReport.portal.owned))
+        //   .digest();
+        const mailDate = dateFormat(aReport.mailDate, 'isoDateTime');
+
         reportRows.push([
-          getHash(aReport),
-          aReport.mailDate, // TODO iso format
-          aReport.portal.latitude,
-          aReport.portal.longitude,
-          aReport.portal.name,
-          aReport.portal.owned
+          // base64.encode(buf),
+          dateFormat(aReport.mailDate, 'isoDateTime'),
+          // aReport.portal.latitude,
+          // aReport.portal.longitude,
+          // aReport.portal.name,
+          aReport.portal.owned ? 1 : 0,
+          `${aReport.portal.latitude},${aReport.portal.longitude}`,
+          `=indirect(address(row(), column()-3)) & ",${aReport.portal.name}"`,
+          dateFormat(now, 'isoDateTime')
         ]);
       }
     }
@@ -174,11 +186,11 @@ export const appendReportsToSheets = async (event: SNSEvent, context, callback):
     try {
       const appendRes = await sheets.spreadsheets.values.append({
         "spreadsheetId": job.agent.spreadsheetId,
-        "range": 'reports!A2:E2',
+        "range": 'reports!A2:G2',
         "valueInputOption": 'USER_ENTERED',
         "insertDataOption": 'INSERT_ROWS',
         "resource": {
-          "range": 'reports!A2:E2',
+          "range": 'reports!A2:G2',
           "values": reportRows
         },
         "auth": client
@@ -186,7 +198,7 @@ export const appendReportsToSheets = async (event: SNSEvent, context, callback):
       console.info('reports appended:', appendRes.data);
 
     }catch(error){
-      console.error(error);
+      console.info(error);
       continue;
     }
 
@@ -211,14 +223,3 @@ export const appendReportsToSheets = async (event: SNSEvent, context, callback):
 };
 
 
-
-const getHash = (report: OneReportMessage): string => {
-
-  const shasum = crypto.createHash('md5');
-  return shasum
-    .update(String(report.mailDate))
-    .update(String(report.portal.latitude))
-    .update(String(report.portal.longitude))
-    .update(String(report.portal.owned))
-    .digest('base64').substr(0, 22);
-};

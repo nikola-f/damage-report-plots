@@ -82,7 +82,7 @@ export const getMails = async (accessToken: string, threadIds: string[],
   console.log('try to get mails.');
 
   const batchelor = new Batchelor({
-    "uri": 'https://www.googleapis.com/batch',
+    "uri": 'https://www.googleapis.com/batch/gmail/v1',
     "method": 'POST',
     "auth": {
       "bearer": accessToken
@@ -115,7 +115,12 @@ export const getMails = async (accessToken: string, threadIds: string[],
     batchelor.add(batch);
     threadGetRes = await new Promise((resolve, reject) => {
       batchelor.run((err, res) => {
-        err ? reject(err) : resolve(res);
+        if(err) {
+          console.info(err);
+          reject(err);
+        }else{
+          resolve(res);
+        }
       });
     });
     batchelor.reset();
