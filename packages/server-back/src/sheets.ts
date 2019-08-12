@@ -153,24 +153,18 @@ export const appendReportsToSheets = async (event: SNSEvent, context, callback):
     for(const aReportArrayMessage of reportArrayMessages) {
       const reportArray: OneReportMessage[] = JSON.parse(aReportArrayMessage.Body);
       for(const aReport of reportArray) {
-        // const md5 = crypto.createHash('md5');
-        // const buf = md5
-        //   .update(String(aReport.mailDate))
-        //   .update(String(aReport.portal.latitude))
-        //   .update(String(aReport.portal.longitude))
-        //   .update(String(aReport.portal.owned))
-        //   .digest();
-        const mailDate = dateFormat(aReport.mailDate, 'isoDateTime');
+        const md5 = crypto.createHash('md5');
+        const buf = md5
+          .update(String(aReport.portal.latitude))
+          .update(String(aReport.portal.longitude))
+          .digest();
 
         reportRows.push([
-          // base64.encode(buf),
-          dateFormat(aReport.mailDate, 'isoDateTime'),
-          // aReport.portal.latitude,
-          // aReport.portal.longitude,
-          // aReport.portal.name,
+          base64.encode(buf),
+          aReport.portal.latitude,
+          aReport.portal.longitude,
           aReport.portal.owned ? 1 : 0,
-          `${aReport.portal.latitude},${aReport.portal.longitude}`,
-          `=indirect(address(row(), column()-3)) & ",${aReport.portal.name}"`,
+          `${aReport.mailDate},${aReport.portal.name}`,
           dateFormat(now, 'isoDateTime')
         ]);
       }
@@ -186,11 +180,11 @@ export const appendReportsToSheets = async (event: SNSEvent, context, callback):
     try {
       const appendRes = await sheets.spreadsheets.values.append({
         "spreadsheetId": job.agent.spreadsheetId,
-        "range": 'reports!A2:G2',
+        "range": 'reports!A2:F2',
         "valueInputOption": 'USER_ENTERED',
         "insertDataOption": 'INSERT_ROWS',
         "resource": {
-          "range": 'reports!A2:G2',
+          "range": 'reports!A2:F2',
           "values": reportRows
         },
         "auth": client

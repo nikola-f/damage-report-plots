@@ -21,10 +21,8 @@ export interface Agent {
 
   createTime: number,
   lastAccessTime: number,
-  reportTableId?: string,
+  // reportTableId?: string,
   spreadsheetId?: string,
-  // plotTableId?: string,
-  // statTableId?: string
 
   mUpv?: number,
   mUpc?: number

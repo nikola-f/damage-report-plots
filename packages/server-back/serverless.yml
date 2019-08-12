@@ -107,7 +107,7 @@ functions:
     events:
       - sns: drp-queue-reports
     environment:
-      THREAD_ARRAY_DEQUEUE_COUNT: 1 # sqsから読むスレッド配列の数
+      THREAD_ARRAY_DEQUEUE_COUNT: 2 # sqsから読むスレッド配列の数
       THREAD_FETCH_COUNT: 50 # 1度のバッチ実行でgmailから読む最大スレッド数
     memorySize: 512
     timeout: 30
