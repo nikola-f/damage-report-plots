@@ -1,5 +1,6 @@
 const path = require('path');
 const slsw = require('serverless-webpack');
+const hswp = require('hard-source-webpack-plugin');
 // const nodeExternals = require('webpack-node-externals');
 
 module.exports = {
@@ -10,12 +11,10 @@ module.exports = {
     minimize: false
   },
   module: {
-    rules: [
-      {
-        test: /\.ts$/,
-        loader: 'ts-loader',
-      }
-    ]
+    rules: [{
+      test: /\.ts$/,
+      loader: 'ts-loader',
+    }]
   },
   resolve: {
     extensions: ['.ts', '.js', '.json'],
@@ -28,5 +27,8 @@ module.exports = {
     path: path.join(__dirname, '.built'),
     filename: 'handler.js'
   },
+  plugins: [
+    new hswp()
+  ]
   // externals: [ nodeExternals() ]
 };

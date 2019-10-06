@@ -133,7 +133,7 @@ export const checkSheetsExistence = async (event: SNSEvent, context, callback): 
 
 /**
  * reportデータの保存
- * @next insertReports, finalizeJob
+ * @next appendReportsToSheets, finalizeJob
  */
 export const appendReportsToSheets = async (event: SNSEvent, context, callback): Promise<void> => {
   util.validateSnsEvent(event, callback);
