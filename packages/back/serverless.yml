@@ -173,6 +173,11 @@ functions:
     handler: handler.deleteAgentQueue
     events:
       - sns: drp-delete-agent-queue
+  
+  signin:
+    handler: handler.signin
+    events:
+      - http: POST api/signin
 
 
 

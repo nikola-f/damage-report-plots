@@ -1,6 +1,29 @@
-import {SNSEvent, Handler, ProxyResult, APIGatewayEvent} from 'aws-lambda';
+import {SNSEvent, Handler, ProxyResult, APIGatewayProxyEvent} from 'aws-lambda';
 const unique = require('make-unique');
 
+
+
+/**
+ * httpProxyオブジェクトの存在チェックと終了
+ */
+export const validateProxyEvent = (event: APIGatewayProxyEvent, callback) => {
+  console.log(JSON.stringify(event));
+  
+  if(event && event.headers && event.httpMethod) {
+    switch(event.httpMethod) {
+      case 'POST':
+        if(event.body) {
+          return;
+        }
+        break;
+    }
+  }
+  
+  callback(null, {
+    "statusCode": 400,
+    "body": 'Bad Request'
+  })
+};
 
 /**
  * SNSオブジェクトの存在チェックと終了

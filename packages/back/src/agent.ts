@@ -1,9 +1,10 @@
-import {SNSEvent, Handler, ProxyResult} from 'aws-lambda';
+import {SNSEvent, APIGatewayProxyEvent} from 'aws-lambda';
 import {CreateQueueRequest} from 'aws-sdk/clients/sqs';
 import {Agent, JobStatus, CreateJobMessage, Job} from ':common/types';
 
 import * as launcher from ':common/launcher';
 import * as util from ':common/util';
+import * as env from ':common/env';
 
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
@@ -12,6 +13,30 @@ const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
 
 const sqs: AWS.SQS = new AWS.SQS();
 import * as dateFormat from 'dateformat';
+import {OAuth2Client} from 'google-auth-library';
+const authClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
+
+/**
+ * agentのログイン
+ * @next -
+ */
+export const signin = async (event: APIGatewayProxyEvent, context, callback): Promise<void> => {
+  util.validateProxyEvent(event, callback);
+  
+  const token = JSON.parse(event.body);
+  const ticket = await authClient.verifyIdToken({
+    "idToken": token,
+    "audience": env.GOOGLE_CLIENT_ID
+  });
+  
+  const payload = ticket.getPayload();
+  // const openId = payload['sub'];
+  
+  console.table(payload);
+  
+};
+
+
 
 /**
  * agentの保存
