@@ -11,6 +11,8 @@ export const SESSION_SECRET = process.env.SESSION_SECRET || '';
 
 export const SNS_NOP: boolean = process.env.SNS_NOP === 'false' ? false : true;
 
+export const CLIENT_ORIGIN: string = process.env.CLIENT_ORIGIN || '';
+
 
 export const THREAD_FETCH_COUNT: number = 
   process.env.THREAD_FETCH_COUNT ? Number(process.env.THREAD_FETCH_COUNT) : undefined;
@@ -21,3 +23,4 @@ export const THREAD_ARRAY_DEQUEUE_COUNT: number =
 
 export const REPORTS_ARRAY_DEQUEUE_COUNT: number = 
   process.env.REPORTS_ARRAY_DEQUEUE_COUNT ? Number(process.env.REPORTS_ARRAY_DEQUEUE_COUNT) : undefined;
+

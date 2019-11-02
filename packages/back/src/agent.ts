@@ -5,6 +5,7 @@ import {Agent, JobStatus, CreateJobMessage, Job} from ':common/types';
 import * as launcher from ':common/launcher';
 import * as util from ':common/util';
 import * as env from ':common/env';
+import * as libAgent from ':common/agent';
 
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
@@ -22,18 +23,59 @@ const authClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
  */
 export const signin = async (event: APIGatewayProxyEvent, context, callback): Promise<void> => {
   util.validateProxyEvent(event, callback);
+
+  // token検証  
+  const token = event.body;
+  let payload;
+  try {
+    const ticket = await authClient.verifyIdToken({
+      "idToken": token,
+      "audience": env.GOOGLE_CLIENT_ID
+    });
+    payload = ticket.getPayload();
+
+    console.log('payload:', payload);
+  }catch(err) {
+    console.error(err);
+    callback(null, {
+      "statusCode": 400,
+      "headers": {
+        "Access-Control-Allow-Origin": env.CLIENT_ORIGIN
+      },
+      "body": {}
+    });
+    return;
+  }
   
-  const token = JSON.parse(event.body);
-  const ticket = await authClient.verifyIdToken({
-    "idToken": token,
-    "audience": env.GOOGLE_CLIENT_ID
+  // agent取得
+  const openId = payload['sub'];
+  let agent = await libAgent.getAgent(openId);
+
+  // なければ204
+  if(!agent) {
+    callback(null, {
+      "statusCode": 204,
+      "headers": {
+        "Access-Control-Allow-Origin": env.CLIENT_ORIGIN
+      },
+      "body": {}
+    });
+    return;
+  }
+
+
+  callback(null, {
+    "statusCode": 200,
+    "headers": {
+      "Access-Control-Allow-Origin": env.CLIENT_ORIGIN
+    },
+    "body": JSON.stringify({
+      "spreadsheetId": agent.spreadsheetId ? agent.spreadsheetId : null,
+      "name": payload['name'],
+      "picture": payload['picture'],
+      "locale": payload['locale']
+    })
   });
-  
-  const payload = ticket.getPayload();
-  // const openId = payload['sub'];
-  
-  console.table(payload);
-  
 };
 
 

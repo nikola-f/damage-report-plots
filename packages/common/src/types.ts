@@ -24,8 +24,8 @@ export interface Agent {
   // reportTableId?: string,
   spreadsheetId?: string,
 
-  mUpv?: number,
-  mUpc?: number
+  // mUpv?: number,
+  // mUpc?: number
 
 }
 

@@ -1,0 +1,17 @@
+@font-face {
+  font-family: 'Exo';
+  src: url('https://fonts.googleapis.com/css?family=Exo');
+}
+
+* :not(.v-icon) {
+  font-family: 'Exo'!important;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+a:active {
+  background-color: white;
+  text-decoration: underline;
+}

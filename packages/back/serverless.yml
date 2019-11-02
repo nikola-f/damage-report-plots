@@ -27,6 +27,7 @@ provider:
   environment: 
     ARN_REGION_ACCOUNT: ${self:custom.arnRegionAccount}
     SNS_NOP: ${file(env.${self:provider.stage}.yml):snsNop}
+    CLIENT_ORIGIN: ${file(env.${self:provider.stage}.yml):clientOrigin}
     
     GOOGLE_CLIENT_ID: ${file(.cred.${self:provider.stage}.yml):googleClientId}
     GOOGLE_CLIENT_SECRET: ${file(.cred.${self:provider.stage}.yml):googleClientSecret}
@@ -177,8 +178,10 @@ functions:
   signin:
     handler: handler.signin
     events:
-      - http: POST api/signin
-
+      - http:
+          path: api/signin
+          method: post
+          cors: true
 
 
 resources:
