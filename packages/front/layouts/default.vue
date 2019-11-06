@@ -3,9 +3,9 @@
     <v-navigation-drawer
       v-model="drawer"
       app
-      right
-      clipped
       color="primary"
+      right
+      temporary
       width="auto"
     >
 
@@ -15,13 +15,17 @@
 
     <v-app-bar
       app
-      clipped-right
       color="primary"
     >
-      <!--<v-toolbar-title>damage report plots</v-toolbar-title>-->
+      <!--clipped-right-->
+            <!--<v-toolbar-title>damage report plots</v-toolbar-title>-->
       <div class="flex-grow-1"></div>
-      <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
+      <v-app-bar-nav-icon @click.stop="toggleDrawer"></v-app-bar-nav-icon>
     </v-app-bar>
+
+    <v-overlay v-model="overlay">
+      <v-progress-circular indeterminate size="64"></v-progress-circular>
+    </v-overlay>
 
     <v-content>
       <v-container>
@@ -51,11 +55,56 @@
     data() {
       return {
         drawer: null,
+        overlay: null
       };
     },
 
+
     components: {
       Menu
+    },
+
+    head: {
+      script: [{
+        src: 'https://apis.google.com/js/platform.js',
+        async: true,
+        defer: true
+      }],
+    },
+
+    methods: {
+      toggleDrawer: function() {
+        this.$store.commit('toggleDrawer');
+      }
+    },
+
+
+    mounted() {
+      this.$store.subscribe((mutation, state) => {
+        switch (mutation.type) {
+          case 'startWaiting':
+            this.overlay = true;
+            setTimeout(() => {
+              this.overlay = false;
+            }, 30000);
+            break;
+
+          case 'endWaiting':
+            this.overlay = false;
+            break;
+
+          case 'toggleDrawer':
+            this.drawer = !this.drawer;
+            break;
+
+          case 'hideDrawer':
+            this.drawer = false;
+            break;
+        }
+
+
+
+      });
     }
 
   };
