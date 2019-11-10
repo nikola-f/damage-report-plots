@@ -1,5 +1,13 @@
 <template>
   <v-list>
+    <v-list-item v-if="isSignedIn">
+      <v-list-item-avatar>
+        <v-img :src="agent.picture"></v-img>
+      </v-list-item-avatar>
+      <v-list-item-content>
+        <v-list-item-title v-html="agent.name"></v-list-item-title>
+      </v-list-item-content>
+    </v-list-item>
 
     <v-list-item @click="home">
       <v-list-item-action>
@@ -9,6 +17,9 @@
         <v-list-item-title>Home</v-list-item-title>
       </v-list-item-content>
     </v-list-item>
+
+    <SigninItem />
+
     <v-list-item v-if="isSignedIn" @click="signout">
       <v-list-item-action>
         <v-icon>mdi-logout</v-icon>
@@ -18,26 +29,27 @@
       </v-list-item-content>
     </v-list-item>
 
-    <Login />
-
   </v-list>
 </template>
 
 
 
 <script>
-  import Login from './Login';
+  import SigninItem from './SigninItem';
 
   export default {
 
     computed: {
       isSignedIn() {
         return this.$store.state.isSignedIn;
+      },
+      agent() {
+        return this.$store.state.agent;
       }
     },
 
     components: {
-      Login
+      SigninItem
     },
 
     methods: {
@@ -54,6 +66,7 @@
             console.error(err);
           });
       },
+
       home: function() {
         this.$router.push('/');
         this.$store.commit('hideDrawer');

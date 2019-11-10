@@ -1,12 +1,18 @@
 <template>
-  <v-list-item v-if="!isSignedIn" @click="signin" v-bind:disabled="inProgress">
+
+  <v-list-item v-if="!isSignedIn" @click="signin" :disabled="inProgress">
+
     <v-list-item-action>
       <v-icon>mdi-login</v-icon>
     </v-list-item-action>
     <v-list-item-content>
       <v-list-item-title>Sign in</v-list-item-title>
     </v-list-item-content>
+    
+    <SignupDialog :dialog="signupDialog" />
+
   </v-list-item>
+
 </template>
 
 
@@ -14,6 +20,7 @@
 <script>
   import authConfig from '../.auth.config.json';
   import Vue from 'vue';
+  import SignupDialog from './SignupDialog';
   /* global gapi */
 
   export default {
@@ -24,15 +31,40 @@
       },
       inProgress() {
         return this.$store.state.isWaiting;
+      },
+      signupDialog:{
+        get() {
+          return this.value
+        },
+        set(value) {
+          this.value = value
+        }
       }
     },
 
+    // data() {
+    //   return {
+    //     signupDialog: true
+    //   };
+    // },
+    
+    components: {
+      SignupDialog
+    },
+
     methods: {
+      signup: function() {
+
+      },
+
+
       signin: function() {
         // console.log(this.$repositoryFactory.get('agent'));
         // this.$store.state.isWaiting = true;
         this.$store.commit('startWaiting');
         this.$store.commit('hideDrawer');
+
+        let idToken;
 
         gapi.load('auth2', () => {
           if (!this.$auth2) {
@@ -43,28 +75,36 @@
           }
           this.$auth2.signIn()
             .then(() => {
-              const token = this.$auth2.currentUser.get().getAuthResponse()['id_token'];
-              return this.$repositoryFactory.get('agent').signin(token);
+              idToken = this.$auth2.currentUser.get().getAuthResponse()['id_token'];
+              return this.$repositoryFactory.get('agent').signin(idToken);
             })
 
             .then((res) => {
-              // 新規ユーザ -> signup
-              if (res.status && res.status === 204) {
+              console.log('res:', res);
 
-              }
-              // 既存ユーザ -> スプシconsent or job作成待ち
-              else if (res.status && res.status === 200) {
-
-              }
               // signin失敗
-              else {
+              if (!res.status || res.status > 204) {
                 throw new Error(res.statusText || 'signin error');
               }
 
-              console.log('res:', res);
 
-              // this.$isSignedIn = this.auth2.isSignedIn.get();
-              this.$auth2.isSignedIn.get() ? this.$store.commit('signin') : this.$store.commit('signout');
+              // 新規ユーザ -> signup
+              if (res.status === 204) {
+                this.signupDialog = true;
+              }
+
+              // 既存ユーザ -> スプシconsent or job作成待ち
+              else if (res.status === 200) {
+                const agent = res.data;
+                agent['idToken'] = idToken;
+                this.$store.commit('signin', agent);
+              }
+
+
+
+              if (!this.$auth2.isSignedIn.get()) {
+                this.$store.commit('signout');
+              }
 
               this.$store.commit('endWaiting');
               console.info('signed in.');

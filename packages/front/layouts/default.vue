@@ -1,20 +1,22 @@
 <template>
-  <v-app dark>
+  <v-app dark id="fontSetting">
+
     <v-navigation-drawer
-      v-model="drawer"
       app
+      v-model="drawer"
       color="primary"
       right
       temporary
       width="auto"
     >
 
-      <Menu />
+      <MenuList />
 
     </v-navigation-drawer>
 
     <v-app-bar
       app
+      elevation="0"
       color="primary"
     >
       <!--clipped-right-->
@@ -26,6 +28,8 @@
     <v-overlay v-model="overlay">
       <v-progress-circular indeterminate size="64"></v-progress-circular>
     </v-overlay>
+    
+    <SignupDialog />
 
     <v-content>
       <v-container>
@@ -44,11 +48,19 @@
         <a class="mx-2 grey--text text--lighten-2">Terms</a>
       </div>
     </v-footer>
+      
   </v-app>
 </template>
 
+<style>
+  #fontSetting {
+    font-family: 'Exo', sans-serif;
+  }
+</style>
+
 <script>
-  import Menu from '../components/Menu';
+  import MenuList from '../components/MenuList';
+  import SignupDialog from '../components/SignupDialog';
 
   export default {
 
@@ -61,7 +73,8 @@
 
 
     components: {
-      Menu
+      MenuList,
+      SignupDialog
     },
 
     head: {

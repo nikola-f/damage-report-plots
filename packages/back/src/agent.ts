@@ -42,40 +42,41 @@ export const signin = async (event: APIGatewayProxyEvent, context, callback): Pr
       "headers": {
         "Access-Control-Allow-Origin": env.CLIENT_ORIGIN
       },
-      "body": {}
+      "body": 'bad request'
     });
     return;
   }
   
-  // agent取得
+  // dbからagent取得
   const openId = payload['sub'];
   let agent = await libAgent.getAgent(openId);
 
+  let statusCode: number;
+  let body: string = null;
+
   // なければ204
-  if(!agent) {
-    callback(null, {
-      "statusCode": 204,
-      "headers": {
-        "Access-Control-Allow-Origin": env.CLIENT_ORIGIN
-      },
-      "body": {}
-    });
-    return;
-  }
+  if(!agent || Object.keys(agent).length === 0) {
+    statusCode = 204;
 
-
-  callback(null, {
-    "statusCode": 200,
-    "headers": {
-      "Access-Control-Allow-Origin": env.CLIENT_ORIGIN
-    },
-    "body": JSON.stringify({
-      "spreadsheetId": agent.spreadsheetId ? agent.spreadsheetId : null,
+  // あれば200  
+  }else{
+    statusCode = 200;
+    const spreadsheetId = agent && agent.spreadsheetId ? agent.spreadsheetId : null;
+    body = JSON.stringify({
+      "spreadsheetId": spreadsheetId,
       "name": payload['name'],
       "picture": payload['picture'],
       "locale": payload['locale']
-    })
+    });
+  }
+  callback(null, {
+    "statusCode": statusCode,
+    "headers": {
+      "Access-Control-Allow-Origin": env.CLIENT_ORIGIN
+    },
+    "body": body
   });
+
 };
 
 

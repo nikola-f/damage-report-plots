@@ -45,14 +45,14 @@ export default {
    */
   modules: [
     '@nuxtjs/axios',
-    '@nuxtjs/proxy'
+    'nuxt-webfontloader'
   ],
 
 
   // proxy: {
   //   '/api/': { target: 'https://g0ocwkh0h2.execute-api.us-west-2.amazonaws.com' }
   // },
-        /*
+  /*
    ** vuetify module configuration
    ** https://github.com/nuxt-community/vuetify-module
    */
@@ -74,6 +74,12 @@ export default {
           success: colors.green.accent3
         }
       }
+    }
+  },
+
+  webfontloader: {
+    google: {
+      families: ['Exo']
     }
   },
 

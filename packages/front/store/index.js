@@ -1,6 +1,7 @@
 export const state = () => ({
   isSignedIn: null,
   isWaiting: null,
+  agent: null,
   // drawer: null
   // auth2: null
 });
@@ -8,12 +9,14 @@ export const state = () => ({
 
 
 export const mutations = {
-  signin(state) {
+  signin(state, agent) {
     state.isSignedIn = true;
+    state.agent = agent;
   },
 
   signout(state) {
     state.isSignedIn = false;
+    state.agent = null;
   },
 
   startWaiting(state) {
