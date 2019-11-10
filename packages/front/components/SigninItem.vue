@@ -9,7 +9,7 @@
       <v-list-item-title>Sign in</v-list-item-title>
     </v-list-item-content>
     
-    <SignupDialog :dialog="signupDialog" />
+    <SignupDialog ref="signupDialog" />
 
   </v-list-item>
 
@@ -32,22 +32,8 @@
       inProgress() {
         return this.$store.state.isWaiting;
       },
-      signupDialog:{
-        get() {
-          return this.value
-        },
-        set(value) {
-          this.value = value
-        }
-      }
     },
 
-    // data() {
-    //   return {
-    //     signupDialog: true
-    //   };
-    // },
-    
     components: {
       SignupDialog
     },
@@ -90,7 +76,16 @@
 
               // 新規ユーザ -> signup
               if (res.status === 204) {
-                this.signupDialog = true;
+                this.$refs.signupDialog.open()
+                  .then((confirmed) => {
+                    if (confirmed) {
+                      console.log('try to signup');
+
+                    }
+                    else {
+                      console.info('signup cancelled.');
+                    }
+                  });
               }
 
               // 既存ユーザ -> スプシconsent or job作成待ち

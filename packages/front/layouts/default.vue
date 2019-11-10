@@ -29,7 +29,7 @@
       <v-progress-circular indeterminate size="64"></v-progress-circular>
     </v-overlay>
     
-    <SignupDialog />
+    <!--<SignupDialog />-->
 
     <v-content>
       <v-container>
@@ -60,7 +60,7 @@
 
 <script>
   import MenuList from '../components/MenuList';
-  import SignupDialog from '../components/SignupDialog';
+  // import SignupDialog from '../components/SignupDialog';
 
   export default {
 
@@ -74,7 +74,7 @@
 
     components: {
       MenuList,
-      SignupDialog
+      // SignupDialog
     },
 
     head: {
