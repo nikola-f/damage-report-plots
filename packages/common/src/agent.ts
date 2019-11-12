@@ -31,8 +31,6 @@ export const getAgent = async (openId: string): Promise<Agent> => {
         "createTime": <number>res.Item.createTime,
         "lastAccessTime": Date.now(),
         "spreadsheetId": <string>res.Item.spreadsheetId,
-        // "mUpv": <number>res.Item.mUpv,
-        // "mUpc": <number>res.Item.mUpc,
       };
     }
 

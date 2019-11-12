@@ -17,11 +17,6 @@
       <v-card-text style="height: 300px;">
       </v-card-text>
 
-
-      <!--<v-card-actions>-->
-      <!--  <v-spacer />-->
-      <!--</v-card-actions>-->
-
       <v-card-actions>
         <v-spacer />
         <v-checkbox

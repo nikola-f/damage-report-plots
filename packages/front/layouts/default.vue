@@ -19,8 +19,6 @@
       elevation="0"
       color="primary"
     >
-      <!--clipped-right-->
-            <!--<v-toolbar-title>damage report plots</v-toolbar-title>-->
       <div class="flex-grow-1"></div>
       <v-app-bar-nav-icon @click.stop="toggleDrawer"></v-app-bar-nav-icon>
     </v-app-bar>
@@ -29,7 +27,6 @@
       <v-progress-circular indeterminate size="64"></v-progress-circular>
     </v-overlay>
     
-    <!--<SignupDialog />-->
 
     <v-content>
       <v-container>
@@ -60,7 +57,6 @@
 
 <script>
   import MenuList from '../components/MenuList';
-  // import SignupDialog from '../components/SignupDialog';
 
   export default {
 
@@ -74,7 +70,6 @@
 
     components: {
       MenuList,
-      // SignupDialog
     },
 
     head: {

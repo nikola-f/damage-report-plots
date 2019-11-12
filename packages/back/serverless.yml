@@ -183,6 +183,14 @@ functions:
           method: post
           cors: true
 
+  signup:
+    handler: handler.signup
+    events:
+      - http:
+          path: api/signup
+          method: post
+          cors: true
+
 
 resources:
   Resources:

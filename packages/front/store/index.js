@@ -2,8 +2,6 @@ export const state = () => ({
   isSignedIn: null,
   isWaiting: null,
   agent: null,
-  // drawer: null
-  // auth2: null
 });
 
 
@@ -27,13 +25,9 @@ export const mutations = {
     state.isWaiting = false;
   },
 
-  toggleDrawer(state) {
-    // state.drawer = !state.drawer;
-  },
+  toggleDrawer(state) {},
 
-  hideDrawer(state) {
-    // state.drawer = false;
-  }
+  hideDrawer(state) {}
 
 
 };

@@ -6,6 +6,7 @@ import * as launcher from ':common/launcher';
 import * as util from ':common/util';
 import * as env from ':common/env';
 import * as libAgent from ':common/agent';
+import * as libAuth from ':common/auth';
 
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
@@ -14,28 +15,23 @@ const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
 
 const sqs: AWS.SQS = new AWS.SQS();
 import * as dateFormat from 'dateformat';
-import {OAuth2Client} from 'google-auth-library';
-const authClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
+// import {OAuth2Client} from 'google-auth-library';
+// const authClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
+
+
 
 /**
- * agentのログイン
+ * agentの登録
  * @next -
  */
-export const signin = async (event: APIGatewayProxyEvent, context, callback): Promise<void> => {
+export const signup = async (event: APIGatewayProxyEvent, context, callback): Promise<void> => {
   util.validateProxyEvent(event, callback);
 
   // token検証  
-  const token = event.body;
   let payload;
   try {
-    const ticket = await authClient.verifyIdToken({
-      "idToken": token,
-      "audience": env.GOOGLE_CLIENT_ID
-    });
-    payload = ticket.getPayload();
-
-    console.log('payload:', payload);
-  }catch(err) {
+    payload = await libAuth.verifyIdToken(event.body);
+  }catch(err){
     console.error(err);
     callback(null, {
       "statusCode": 400,
@@ -46,7 +42,72 @@ export const signin = async (event: APIGatewayProxyEvent, context, callback): Pr
     });
     return;
   }
-  
+
+
+  // dbからagent取得
+  const openId = payload['sub'];
+  let agent = await libAgent.getAgent(openId);
+
+  let statusCode: number;
+  let body: string = null;
+
+  // なければ作成
+  if(!agent || Object.keys(agent).length === 0) {
+    launcher.putAgentAsync({
+      "openId": openId,
+      "createTime": Date.now(),
+      "lastAccessTime": Date.now()
+    });
+    statusCode = 200;
+    body = JSON.stringify({
+      "name": payload['name'],
+      "picture": payload['picture'],
+      "locale": payload['locale']
+    });
+
+
+  // あれば400  
+  }else{
+    statusCode = 400;
+    body = 'bad request';
+    console.error('agent already exists.');
+  }
+
+  callback(null, {
+    "statusCode": statusCode,
+    "headers": {
+      "Access-Control-Allow-Origin": env.CLIENT_ORIGIN
+    },
+    "body": body
+  });
+
+};
+
+
+/**
+ * agentのログイン
+ * @next -
+ */
+export const signin = async (event: APIGatewayProxyEvent, context, callback): Promise<void> => {
+  util.validateProxyEvent(event, callback);
+
+  // token検証  
+  let payload;
+  try {
+    payload = await libAuth.verifyIdToken(event.body);
+  }catch(err){
+    console.error(err);
+    callback(null, {
+      "statusCode": 400,
+      "headers": {
+        "Access-Control-Allow-Origin": env.CLIENT_ORIGIN
+      },
+      "body": 'bad request'
+    });
+    return;
+  }
+
+
   // dbからagent取得
   const openId = payload['sub'];
   let agent = await libAgent.getAgent(openId);

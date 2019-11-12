@@ -1,6 +1,29 @@
 const env = require('./env');
 const {google} = require('googleapis');
 
+import {OAuth2Client} from 'google-auth-library';
+const authClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
+
+
+
+export const verifyIdToken = async (token: string): Promise<Object> => {
+  
+  
+  let payload;
+  try {
+    const ticket = await authClient.verifyIdToken({
+      "idToken": token,
+      "audience": env.GOOGLE_CLIENT_ID
+    });
+    payload = ticket.getPayload();
+    return Promise.resolve(payload);
+  }catch(err){
+    return Promise.reject(err);
+  }
+};
+
+
+
 
 /**
  * gapiClientの作成

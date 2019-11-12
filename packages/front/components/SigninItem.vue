@@ -34,88 +34,93 @@
       },
     },
 
+
     components: {
       SignupDialog
     },
 
     methods: {
-      signup: function() {
+      signup: async function(idToken) {
 
+        try {
+          const confirmed = await this.$refs.signupDialog.open();
+          if (confirmed) {
+            console.log('try to signup');
+            const res = await this.$repositoryFactory.get('agent').signup(idToken);
+            console.log(res);
+            if (res && res.status === 200) {
+              const agent = res.data;
+              agent['idToken'] = idToken;
+              this.$store.commit('signin', agent);
+              console.info('signed up.');
+            }
+          }
+          else {
+            console.log('signup cancelled.');
+          }
+        }
+        catch (err) {
+          this.$auth2.signOut();
+          this.$store.commit('signout');
+          this.$store.commit('endWaiting');
+          console.error(err);
+        }
       },
 
 
-      signin: function() {
-        // console.log(this.$repositoryFactory.get('agent'));
-        // this.$store.state.isWaiting = true;
+      signin: async function() {
         this.$store.commit('startWaiting');
         this.$store.commit('hideDrawer');
 
-        let idToken;
+        // let idToken;
 
-        gapi.load('auth2', () => {
+        gapi.load('auth2', async() => {
           if (!this.$auth2) {
             Vue.prototype.$auth2 = gapi.auth2.init({
               client_id: authConfig.google.client_id,
               scope: 'openid',
             });
           }
-          this.$auth2.signIn()
-            .then(() => {
-              idToken = this.$auth2.currentUser.get().getAuthResponse()['id_token'];
-              return this.$repositoryFactory.get('agent').signin(idToken);
-            })
 
-            .then((res) => {
-              console.log('res:', res);
+          try {
+            await this.$auth2.signIn();
+            const idToken = this.$auth2.currentUser.get().getAuthResponse()['id_token'];
+            const res = await this.$repositoryFactory.get('agent').signin(idToken);
+            console.log('res:', res);
 
-              // signin失敗
-              if (!res.status || res.status > 204) {
-                throw new Error(res.statusText || 'signin error');
-              }
+            // signin失敗
+            if (!res.status || res.status > 204) {
+              throw new Error(res.statusText || 'signin error');
+            }
 
+            // 新規ユーザ -> signup
+            if (res.status === 204) {
+              await this.signup(idToken);
+            }
 
-              // 新規ユーザ -> signup
-              if (res.status === 204) {
-                this.$refs.signupDialog.open()
-                  .then((confirmed) => {
-                    if (confirmed) {
-                      console.log('try to signup');
-
-                    }
-                    else {
-                      console.info('signup cancelled.');
-                    }
-                  });
-              }
-
-              // 既存ユーザ -> スプシconsent or job作成待ち
-              else if (res.status === 200) {
-                const agent = res.data;
-                agent['idToken'] = idToken;
-                this.$store.commit('signin', agent);
-              }
-
-
-
-              if (!this.$auth2.isSignedIn.get()) {
-                this.$store.commit('signout');
-              }
-
-              this.$store.commit('endWaiting');
+            // 既存ユーザ -> スプシconsent or job作成待ち
+            else if (res.status === 200) {
+              const agent = res.data;
+              agent['idToken'] = idToken;
+              this.$store.commit('signin', agent);
               console.info('signed in.');
-            })
+            }
 
-            // signin失敗, 成功+新規ユーザ, 成功+既存ユーザ+シートidなし, 成功+既存ユーザ+シートidあり
-            .catch((err) => {
-              this.$auth2.signOut();
+            if (!this.$auth2.isSignedIn.get()) {
               this.$store.commit('signout');
-              this.$store.commit('endWaiting');
-              console.error(err);
-            });
+            }
+
+            this.$store.commit('endWaiting');
+
+          }
+          catch (err) {
+            this.$auth2.signOut();
+            this.$store.commit('signout');
+            this.$store.commit('endWaiting');
+            console.error(err);
+          }
         });
       },
-
     },
-
   };
 </script>
