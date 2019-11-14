@@ -31,7 +31,9 @@ export default {
    ** Plugins to load before mounting the App
    */
   plugins: [
-    { src: '~/plugins/repository', mode: 'client' }
+    { src: '~/plugins/repository', mode: 'client' },
+    { src: '~/plugins/localStorage.js', mode: 'client' },
+    { src: '~/plugins/gapi.js', mode: 'client' }
   ],
   /*
    ** Nuxt.js dev-modules
@@ -49,9 +51,6 @@ export default {
   ],
 
 
-  // proxy: {
-  //   '/api/': { target: 'https://g0ocwkh0h2.execute-api.us-west-2.amazonaws.com' }
-  // },
   /*
    ** vuetify module configuration
    ** https://github.com/nuxt-community/vuetify-module
@@ -62,9 +61,6 @@ export default {
       dark: true,
       themes: {
         dark: {
-          // primary: colors.blue.darken2,
-          // accent: colors.grey.darken3,
-          // secondary: colors.amber.darken3,
           primary: '#170925',
           secondary: colors.red.base,
           accent: '#3b1e5f',
@@ -83,20 +79,6 @@ export default {
     }
   },
 
-
-  // auth: {
-  //   redirect: {
-  //     login: '/login', //未ログイン リダイレクト先
-  //     logout: '/', //ログアウト後
-  //     callback: '/callback',
-  //     home: '/me' //ログイン後
-  //   },
-  //   strategies: {
-  //     google: {
-  //       client_id: authConfig.google.client_id
-  //     },
-  //   }
-  // },
 
   /*
    ** Build configuration

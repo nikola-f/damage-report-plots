@@ -15,8 +15,6 @@ const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
 
 const sqs: AWS.SQS = new AWS.SQS();
 import * as dateFormat from 'dateformat';
-// import {OAuth2Client} from 'google-auth-library';
-// const authClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
 
 
 
@@ -66,7 +64,7 @@ export const signup = async (event: APIGatewayProxyEvent, context, callback): Pr
     });
 
 
-  // あれば400  
+  // あれば400
   }else{
     statusCode = 400;
     body = 'bad request';

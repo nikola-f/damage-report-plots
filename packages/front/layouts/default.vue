@@ -58,6 +58,7 @@
 <script>
   import MenuList from '../components/MenuList';
 
+
   export default {
 
     data() {
@@ -72,14 +73,6 @@
       MenuList,
     },
 
-    head: {
-      script: [{
-        src: 'https://apis.google.com/js/platform.js',
-        async: true,
-        defer: true
-      }],
-    },
-
     methods: {
       toggleDrawer: function() {
         this.$store.commit('toggleDrawer');
@@ -88,6 +81,7 @@
 
 
     mounted() {
+
       this.$store.subscribe((mutation, state) => {
         switch (mutation.type) {
           case 'startWaiting':
@@ -109,8 +103,6 @@
             this.drawer = false;
             break;
         }
-
-
 
       });
     }

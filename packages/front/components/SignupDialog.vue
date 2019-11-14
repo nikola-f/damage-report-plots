@@ -25,8 +25,8 @@
           class="mx-4"
           required
         />
-        <v-btn color="primary" @click="cancel">Cancel</v-btn>
-        <v-btn color="accent" @click="signup" :disabled="!consent">Sign up</v-btn>
+        <v-btn color="primary" @click="cancel">CANCEL</v-btn>
+        <v-btn color="accent" @click="signup" :disabled="!consent">SIGN UP</v-btn>
       </v-card-actions>
     </v-card>
 

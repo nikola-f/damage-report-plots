@@ -1,8 +1,8 @@
 <template>
 
-  <p>
-    Change is Here
-  </p>
+  <h1>
+    Damage Report Plots
+  </h1>
 
 </template>
 
