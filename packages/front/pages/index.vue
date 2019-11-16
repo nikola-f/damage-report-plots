@@ -1,11 +1,23 @@
 <template>
 
-  <h1>
-    Damage Report Plots
-  </h1>
+  <Jumbotron v-if="!isSignedIn" />
 
 </template>
 
 <script>
-  export default {};
+  import Jumbotron from '../components/Jumbotron';
+  export default {
+
+    components: {
+      Jumbotron
+    },
+
+    computed: {
+      isSignedIn() {
+        return this.$store.state.isSignedIn;
+      }
+    }
+
+
+  };
 </script>

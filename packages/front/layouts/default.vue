@@ -29,7 +29,7 @@
     
 
     <v-content>
-      <v-container>
+      <v-container fluid style="height: 100%;">
         <nuxt />
       </v-container>
     </v-content>
@@ -88,7 +88,7 @@
             this.overlay = true;
             setTimeout(() => {
               this.overlay = false;
-            }, 30000);
+            }, 300000);
             break;
 
           case 'endWaiting':
