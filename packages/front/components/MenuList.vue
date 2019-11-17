@@ -20,7 +20,7 @@
 
     <SigninItem />
 
-    <v-list-item v-if="isSignedIn" @click="signout">
+    <v-list-item v-if="isSignedIn" @click="signout" :disabled="inProgress">
       <v-list-item-action>
         <v-icon>mdi-logout</v-icon>
       </v-list-item-action>
@@ -29,42 +29,60 @@
       </v-list-item-content>
     </v-list-item>
 
+    <v-list-item v-else @click="signin" :disabled="inProgress">
+      <v-list-item-action>
+        <v-icon>mdi-login</v-icon>
+      </v-list-item-action>
+      <v-list-item-content>
+        <v-list-item-title>Sign in</v-list-item-title>
+      </v-list-item-content>
+      <SigninLogic ref="signinLogic" />
+    </v-list-item>
+
   </v-list>
 </template>
 
 
 
 <script>
-  import SigninItem from './SigninItem';
+  // import SigninItem from './SigninItem';
+  import SigninLogic from './SigninLogic';
 
   export default {
+
+    components: {
+      SigninLogic
+    },
 
     computed: {
       isSignedIn() {
         return this.$store.state.isSignedIn;
+      },
+      inProgress() {
+        return this.$store.state.isWaiting;
       },
       agent() {
         return this.$store.state.agent;
       }
     },
 
-    components: {
-      SigninItem
-    },
-
     methods: {
-      signout: function() {
+      signout: async function() {
         this.$store.commit('startWaiting');
         this.$store.commit('hideDrawer');
-        this.$auth2.signOut()
-          .then(() => {
-            this.$store.commit('signout');
-            console.info('signed out.');
-            this.$store.commit('endWaiting');
-          })
-          .catch((err) => {
-            console.error(err);
-          });
+        try {
+          await this.$auth2.signOut();
+        }
+        catch (err) {
+          console.error(err);
+        }
+        this.$store.commit('signout');
+        console.info('signed out.');
+        this.$store.commit('endWaiting');
+      },
+
+      signin: async function() {
+        this.$refs.signinLogic.signin();
       },
 
       home: function() {

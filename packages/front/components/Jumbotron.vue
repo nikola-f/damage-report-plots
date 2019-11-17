@@ -10,12 +10,14 @@
           </h2>
         </v-row>
         <v-row justify="center">
-          <v-btn color="accent">
+          <v-btn color="accent" @click="start">
             START
           </v-btn>
         </v-row>
       </v-container>
     </v-overlay>
+    
+    <StartDialog ref="startDialog"/>
   </v-parallax>
 
 </template>
@@ -24,12 +26,27 @@
 
 <script>
   import image from "~/assets/.jumbotron.jpg";
+  import StartDialog from "./StartDialog";
 
   export default {
+    components: {
+      StartDialog
+    },
+
+
     computed: {
       img() {
         return image;
       }
+    },
+
+    methods: {
+      start: async function() {
+        await this.$refs.startDialog.open();
+
+      }
     }
+
+
   };
 </script>
