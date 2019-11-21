@@ -1,15 +1,18 @@
 // @import url('https://fonts.googleapis.com/css?family=Exo&display=swap');
 // @font-face {
-  //   font-family: 'Exo';
-  //   src: url('https://fonts.googleapis.com/css?family=Exo&display=swap');
-  // }
-
+//   font-family: 'Exo';
+//   src: url('https://fonts.googleapis.com/css?family=Exo&display=swap');
+// }
 // .application {
 //   font-family: "Exo";
 // }
 // * :not(.v-icon) {
 //   font-family: 'Exo', sans-serif!important;
 // }
+a {
+  text-decoration: none;
+}
+
 a:hover {
   text-decoration: underline;
 }

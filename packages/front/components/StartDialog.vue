@@ -1,26 +1,28 @@
 <template>
   <v-dialog
     v-model="dialog"
-    max-width="80%" max-height="80%" @keydown.esc="cancel"
+    max-width="90%" max-height="90%" @keydown.esc="cancel"
   >
 
-    <v-card color="grey darken-3">
-      <v-toolbar color="primary">
+    <v-card color="grey darken-3" style="opacity: 0.92;">
+      <v-toolbar color="primary" dense>
         <v-toolbar-title>
           <v-icon class="mx-2">
-            mdi-information
+            mdi-run
           </v-icon>
           Start
         </v-toolbar-title>
       </v-toolbar>
 
-      <v-card-text style="height: 300px;">
+      <v-card-text class="my-4" style="height: 300px;">
+        <h2>Lorem</h2>
+        <p>Lorem</p>
       </v-card-text>
 
       <v-card-actions>
         <v-spacer />
         <v-btn color="primary" @click="cancel">CANCEL</v-btn>
-        <v-btn color="accent" @click="signin">GO NEXT, SIGN IN</v-btn>
+        <v-btn color="accent" @click="signin">GO NEXT; SIGN IN</v-btn>
       </v-card-actions>
     </v-card>
     

@@ -16,6 +16,7 @@
 
     <v-app-bar
       app
+      dense
       elevation="0"
       color="primary"
     >
@@ -41,8 +42,8 @@
     >
       <div class="flex-grow-1 text-center">
         <!--<span class="mx-1">&copy; 2019</span>-->
-        <a class="mx-2 grey--text text--lighten-2">Privacy Policy</a>
-        <a class="mx-2 grey--text text--lighten-2">Terms</a>
+        <nuxt-link to="/privacy-policy" class="mx-2 grey--text text--lighten-2">Privacy Policy</nuxt-link>
+        <nuxt-link to="/terms" class="mx-2 grey--text text--lighten-2">Terms</nuxt-link>
       </div>
     </v-footer>
       

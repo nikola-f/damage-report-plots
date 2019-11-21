@@ -6,11 +6,11 @@
         <v-row justify="center">
           <h2 class="my-4">
             Damage Report Plots
-            <span class="subtitle-1">&beta;0</span>
+            <span class="subtitle-1">&beta;</span>
           </h2>
         </v-row>
         <v-row justify="center">
-          <v-btn color="accent" @click="start">
+          <v-btn color="accent" @click="start" large>
             START
           </v-btn>
         </v-row>
@@ -33,7 +33,6 @@
       StartDialog
     },
 
-
     computed: {
       img() {
         return image;
@@ -43,7 +42,6 @@
     methods: {
       start: async function() {
         await this.$refs.startDialog.open();
-
       }
     }
 

@@ -4,8 +4,8 @@
     max-width="80%" max-height="80%" @keydown.esc="cancel"
   >
 
-    <v-card color="grey darken-3">
-      <v-toolbar color="primary">
+    <v-card color="grey darken-3" style="opacity: 0.96;">
+      <v-toolbar color="primary" dense>
         <v-toolbar-title>
           <v-icon class="mx-2">
             mdi-account-plus
@@ -14,7 +14,8 @@
         </v-toolbar-title>
       </v-toolbar>
 
-      <v-card-text style="height: 300px;">
+      <v-card-text class="my-4" style="height: 300px;">
+        <TermsContent />
       </v-card-text>
 
       <v-card-actions>
@@ -34,6 +35,7 @@
 </template>
 
 <script>
+  import TermsContent from './TermsContent';
   export default {
     data() {
       return {
@@ -42,6 +44,10 @@
         resolve: null,
         reject: null,
       };
+    },
+
+    components: {
+      TermsContent
     },
 
     methods: {

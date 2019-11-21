@@ -18,8 +18,6 @@
       </v-list-item-content>
     </v-list-item>
 
-    <SigninItem />
-
     <v-list-item v-if="isSignedIn" @click="signout" :disabled="inProgress">
       <v-list-item-action>
         <v-icon>mdi-logout</v-icon>
@@ -45,7 +43,6 @@
 
 
 <script>
-  // import SigninItem from './SigninItem';
   import SigninLogic from './SigninLogic';
 
   export default {
