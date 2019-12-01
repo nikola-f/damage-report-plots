@@ -15,7 +15,7 @@ custom:
 
 provider:
   name: aws
-  runtime: nodejs10.x
+  runtime: nodejs12.x
   stage: ${opt:stage, self:custom.defaultStage}
   region: us-west-2
   profile: ${self:custom.awsProfiles.${self:provider.stage}}

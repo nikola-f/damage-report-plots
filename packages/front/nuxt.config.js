@@ -33,7 +33,8 @@ export default {
   plugins: [
     { src: '~/plugins/repository', mode: 'client' },
     { src: '~/plugins/localStorage.js', mode: 'client' },
-    { src: '~/plugins/gapi.js', mode: 'client' }
+    { src: '~/plugins/gapi.js', mode: 'client' },
+    { src: '~/plugins/leaflet.js', mode: 'client' }
   ],
   /*
    ** Nuxt.js dev-modules

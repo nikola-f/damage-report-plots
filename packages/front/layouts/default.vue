@@ -1,5 +1,5 @@
 <template>
-  <v-app dark id="fontSetting">
+  <v-app dark id="font-ek6sblj72q373bb1">
 
     <v-navigation-drawer
       app
@@ -51,7 +51,7 @@
 </template>
 
 <style>
-  #fontSetting {
+  #font-ek6sblj72q373bb1 {
     font-family: 'Exo', sans-serif;
   }
 </style>
