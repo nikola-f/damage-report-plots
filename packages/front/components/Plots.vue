@@ -1,33 +1,48 @@
 <template>
-  <v-container fluid class="ma-0 pa-0" style="height: 100%;" id="plots-ryqyh7ci1hf96eeb">
-    <l-map style="height: 100%; margin: 0;" 
-      zoom="2" minZoom="2"
-    >
-
-      <!--preferCanvas="true"-->
-
-      <l-tile-layer :url="url" :attribution="attribution"
-        zIndex="0"
-      />
-    </l-map>
-    
-  </v-container>
+  <v-container fluid
+    class="ma-0 pa-0"
+    style="height: 100%; z-index: 0;"
+    id="plots-ryqyh7ci1hf96eeb"
+  />
 </template>
 
 <script>
   import L from 'leaflet';
 
   export default {
-    name: "plots-ryqyh7ci1hf96eeb",
 
-    computed: {
-      url() {
-        return "http://{s}.tile.osm.org/{z}/{x}/{y}.png";
+    methods: {
+      zoomend() {
+        this.$store.commit('mapZoomed', this.map.getZoom());
       },
-      attribution() {
-        return '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+      moveend() {
+        const center = this.map.getCenter();
+        this.$store.commit('mapMoved', center.lat, center.lng);
       }
     },
+
+    data() {
+      return {
+        map: null
+      };
+    },
+
+    mounted() {
+      const latitude = this.$store.state.centerLatitude || 0;
+      const longitude = this.$store.state.centerLongitude || 0;
+      const zoom = this.$store.state.zoom || 3;
+      this.map = L.map('plots-ryqyh7ci1hf96eeb', {
+          "center": L.latLng(latitude, longitude),
+          "zoom": zoom,
+          "minZoom": 2
+        })
+        .addLayer(L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+          "attribution": '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }))
+        .on('zoomend', this.zoomend)
+        .on('moveend', this.moveend);
+    }
 
   };
 </script>
