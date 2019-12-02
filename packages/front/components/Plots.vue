@@ -17,8 +17,7 @@
       },
 
       moveend() {
-        const center = this.map.getCenter();
-        this.$store.commit('mapMoved', center.lat, center.lng);
+        this.$store.commit('mapMoved', this.map.getCenter());
       }
     },
 
@@ -29,11 +28,10 @@
     },
 
     mounted() {
-      const latitude = this.$store.state.centerLatitude || 0;
-      const longitude = this.$store.state.centerLongitude || 0;
+      const center = this.$store.state.center || { "lat": 0, "lng": 0 };
       const zoom = this.$store.state.zoom || 3;
       this.map = L.map('plots-ryqyh7ci1hf96eeb', {
-          "center": L.latLng(latitude, longitude),
+          "center": center,
           "zoom": zoom,
           "minZoom": 2
         })

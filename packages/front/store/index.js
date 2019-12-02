@@ -2,8 +2,7 @@ export const state = () => ({
   isSignedIn: null,
   isWaiting: null,
   agent: null,
-  centerLatitude: 0,
-  centerLongitude: 0,
+  center: null,
   zoom: 2
 });
 
@@ -11,9 +10,8 @@ export const state = () => ({
 
 export const mutations = {
 
-  mapMoved(state, latitude, longitude) {
-    state.centerLatitude = latitude;
-    state.centerLongitude = longitude;
+  mapMoved(state, center) {
+    state.center = center;
   },
 
   mapZoomed(state, zoom) {
