@@ -8,6 +8,7 @@
 <script>
   import Jumbotron from '../components/Jumbotron';
   import Plots from '../components/Plots';
+
   export default {
 
     components: {

@@ -1,6 +1,6 @@
 <template>
   <v-dialog
-    v-model="dialog" scrollable persistent 
+    v-model="dialog" persistent 
     max-width="80%" max-height="80%" @keydown.esc="cancel"
   >
 
@@ -8,26 +8,21 @@
       <v-toolbar color="primary" dense>
         <v-toolbar-title>
           <v-icon class="mx-2">
-            mdi-account-plus
+            mdi-email-search
           </v-icon>
-          Sign up
+          Plot portals
         </v-toolbar-title>
       </v-toolbar>
 
       <v-card-text class="my-4" style="height: 300px;">
-        <TermsContent />
+        <h2>Lorem</h2>
+        <p>Ipsum</p>
       </v-card-text>
 
       <v-card-actions>
         <v-spacer />
-        <v-checkbox
-          v-model="consent"
-          label="I accept the Terms of Service."
-          class="mx-4"
-          required
-        />
         <v-btn color="primary" @click="cancel">CANCEL</v-btn>
-        <v-btn color="accent" @click="signup" :disabled="!consent">SIGN UP</v-btn>
+        <v-btn color="accent" @click="goNext">GO NEXT; PLOT PORTALS</v-btn>
       </v-card-actions>
     </v-card>
 
@@ -35,7 +30,6 @@
 </template>
 
 <script>
-  import TermsContent from './TermsContent';
   export default {
     data() {
       return {
@@ -44,10 +38,6 @@
         resolve: null,
         reject: null,
       };
-    },
-
-    components: {
-      TermsContent
     },
 
     methods: {
@@ -59,7 +49,7 @@
         });
       },
 
-      signup() {
+      goNext() {
         this.resolve(true);
         this.dialog = false;
       },
