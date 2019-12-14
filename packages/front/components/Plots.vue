@@ -10,6 +10,7 @@
 
 <script>
   import L from 'leaflet';
+  import 'leaflet.tilelayer.colorfilter/src/leaflet-tilelayer-colorfilter.js';
   import AnalyzeDialog from './AnalyzeDialog';
 
   export default {
@@ -36,15 +37,21 @@
     async mounted() {
       const center = this.$store.state.center || { "lat": 0, "lng": 0 };
       const zoom = this.$store.state.zoom || 3;
+      const inverseFilter = [
+        'hue:180deg',
+        'invert:100%',
+        'saturate:40%'
+      ];
       this.map = L.map('plots-ryqyh7ci1hf96eeb', {
           "center": center,
           "zoom": zoom,
           "minZoom": 2
         })
-        .addLayer(L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        .addLayer(L.tileLayer.colorFilter('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
           "attribution": '&copy; ' +
             '<a href="https://www.openstreetmap.org/copyright">' +
-            'OpenStreetMap</a> contributors'
+            'OpenStreetMap</a> contributors',
+          "filter": inverseFilter
         }))
         .on('zoomend', this.zoomend)
         .on('moveend', this.moveend);
@@ -53,7 +60,6 @@
 
       }
       else if (await this.$refs.analyzeDialog.open()) {
-        console.log('go');
         const user = this.$auth2.currentUser.get();
         const res = await user.grant({
           "scope": 'https://www.googleapis.com/auth/spreadsheets' +
