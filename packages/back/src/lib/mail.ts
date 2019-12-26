@@ -1,6 +1,5 @@
-import {MessageList, Message} from 'aws-sdk/clients/sqs';
-import {Job, JobStatus, QueueThreadsMessage,
-  OneMailMessage, Portal} from ':common/types';
+// import {MessageList, Message} from 'aws-sdk/clients/sqs';
+import {OneMailMessage, Portal, EstimatedMailCount} from ':common/types';
 
 import * as util from ':common/util';
 import * as env from ':common/env';
@@ -8,6 +7,75 @@ import * as gapi from 'googleapis';
 import * as Batchelor from 'batchelor';
 import * as base64 from 'urlsafe-base64';
 import * as cheerio from 'cheerio';
+import * as dateFormat from 'dateformat';
+
+
+
+export const getEstimatedMailCountList = async (accessToken: string, startDate: number): Promise<EstimatedMailCount[]> => {
+
+  const NOW: number = Date.now();
+  const TIME_UNIT: number = 1000 * 3600 * 24 * 30; //30 days
+  const result: EstimatedMailCount[] = [];
+
+
+  const batchelor = new Batchelor({
+    "uri": 'https://www.googleapis.com/batch/gmail/v1',
+    "method": 'POST',
+    "auth": {
+      "bearer": accessToken
+    },
+   	"headers": {
+      "Content-Type": 'multipart/mixed'
+    }
+  });
+  
+  let endDate: number = startDate;
+  let batchLength: number = 0;
+  do {
+    endDate += TIME_UNIT;
+    batchLength++;
+
+    const after = dateFormat(new Date(startDate), 'isoDate'),
+          before = dateFormat(new Date(endDate), 'isoDate');
+    
+    const params = {
+      "fields": 'resultSizeEstimate',
+      "maxResults": '1',
+      "q": '{from:ingress-support@google.com from:ingress-support@nianticlabs.com}' +
+        ' subject:"Ingress Damage Report: Entities attacked by"' +
+        ' smaller:200K' +
+        ` after:${after}` +
+        ` before:${before}`
+    };
+
+    batchelor.add({
+      "method": 'GET',
+      "path": 'https://www.googleapis.com/gmail/v1/users/me/messages?' +
+        (new URLSearchParams(params)).toString()
+    });
+  } while(endDate < NOW && batchLength < 100);
+  
+  
+  const res = await new Promise((resolve, reject) => {
+    batchelor.run((err, res) => {
+      if(err) {
+        console.info(err);
+        reject(err);
+      }else{
+        resolve(res);
+      }
+    });
+  });
+  
+  const messages = parseBatchResponse(res);
+  for(let aMessage of messages) {
+    console.log(aMessage);
+  }
+  
+  batchelor.reset();
+  return result;
+};
+
 
 
 

@@ -1,13 +1,83 @@
 import {GetItemOutput, QueryOutput} from 'aws-sdk/clients/dynamodb';
-import {Job, JobStatus, Session} from './types';
+import {CreateQueueRequest} from 'aws-sdk/clients/sqs';
+import {Job, JobStatus, Session} from '@common/types';
 
-import * as util from './util';
+import * as util from '@common/util';
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
 const AWS = awsXRay.captureAWS(awsPlain);
 const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
+const sqs: AWS.SQS = new AWS.SQS();
+import * as dateFormat from 'dateformat';
 
 const INGRESS_EPOCH: number = Date.UTC(2012, 10, 15, 0, 0, 0, 0);
+
+
+/**
+ * delete job queue (for an agent, one job)
+ */
+export const deleteJobQueue = async (job: Job): Promise<void> => {
+  try {
+    const threadQueueRes = await sqs.deleteQueue({
+      QueueUrl: job.thread.queueUrl
+    }).promise();
+    const reportQueueRes = await sqs.deleteQueue({
+      QueueUrl: job.report.queueUrl
+    }).promise();
+    console.log('queues deleted:', threadQueueRes, reportQueueRes);
+  }catch(err){
+    console.error(err);
+    throw err;
+  }
+};
+
+
+/**
+ * create job queue (for an agent, one job)
+ */
+export const createJobQueue = async (job: Job): Promise<Job> => {
+
+  const formattedCreateTime: string = dateFormat(new Date(job.createTime), 'yyyymmdd_hhMMssl');
+  try {
+    let createQueueParams: CreateQueueRequest = {
+      "QueueName": formattedCreateTime + '_thread_' + job.openId + '.fifo',
+      "Attributes": {
+        "FifoQueue": 'true',
+        "ContentBasedDeduplication": 'true'
+      }
+    };
+    const threadQueueRes = await sqs.createQueue(createQueueParams).promise();
+    job.thread = {
+      queueUrl: threadQueueRes.QueueUrl,
+      queuedCount: 0
+    };
+
+    createQueueParams = {
+      "QueueName": formattedCreateTime + '_report_' + job.openId + '.fifo',
+      "Attributes": {
+        "FifoQueue": 'true',
+        "ContentBasedDeduplication": 'true'
+      }
+    };
+    const reportQueueRes = await sqs.createQueue(createQueueParams).promise();
+    job.report = {
+      queueUrl: reportQueueRes.QueueUrl,
+      queuedCount: 0
+    };
+
+    job.lastAccessTime = Date.now();
+    console.log('queues created:', threadQueueRes.QueueUrl, reportQueueRes.QueueUrl);
+
+  }catch(err){
+    console.error(err);
+    throw err;
+  }
+
+  return job;
+};
+
+
+
 
 
 // jobテーブルから降順で10件取得
@@ -41,11 +111,11 @@ export const getJobList = async (openId: string): Promise<Job[]> => {
             "queuedCount": util.isSet(() => item.thread.queuedCount) ?
               Number(item.thread.queuedCount) : 0
           },
-          "mail": {
-            "queueUrl": '',
-            "queuedCount": util.isSet(() => item.mail.queuedCount) ?
-              Number(item.mail.queuedCount) : 0
-          },
+          // "mail": {
+          //   "queueUrl": '',
+          //   "queuedCount": util.isSet(() => item.mail.queuedCount) ?
+          //     Number(item.mail.queuedCount) : 0
+          // },
           "report": {
             "queueUrl": '',
             "queuedCount": util.isSet(() => item.report.queuedCount) ?

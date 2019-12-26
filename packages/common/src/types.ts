@@ -30,7 +30,7 @@ export interface Agent {
 }
 
 export enum JobStatus {
-  Created, Processing, Done, Cancelled
+  Created, Processing, Timeout, Done, Cancelled
 }
 
 export interface Job {
@@ -39,10 +39,11 @@ export interface Job {
 
   status: JobStatus,
   lastAccessTime: number,
-  rangeFromTime: number,
-  rangeToTime: number,
+  rangeFromTime?: number,
+  rangeToTime?: number,
   tokens: Tokens,
   agent: Agent,
+  ranges?: Range[],
   thread?: {
     queueUrl: string,
     queuedCount: number
@@ -51,6 +52,12 @@ export interface Job {
     queueUrl: string,
     queuedCount: number
   }
+}
+
+export interface Range {
+  fromTime: number,
+  toTime: number,
+  done: boolean
 }
 
 
@@ -97,12 +104,18 @@ export interface Portal {
 }
 
 
-
-export interface EphemeralHistory {
-  remoteIpAddress: string,
-
-  ttl: number
+export interface EstimatedMailCount {
+  count: number,
+  startDate: number,
+  endDate: number
 }
+
+
+export interface CreateJobRequest {
+  jwt: string,
+  accessToken: string
+}
+
 
 // export as namespace DamageReportPlots;
 

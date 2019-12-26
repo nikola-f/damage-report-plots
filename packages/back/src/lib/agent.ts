@@ -1,5 +1,5 @@
 import {GetItemOutput} from 'aws-sdk/clients/dynamodb';
-import {Agent} from './types';
+import {Agent} from '@common/types';
 
 
 import * as awsXRay from 'aws-xray-sdk';

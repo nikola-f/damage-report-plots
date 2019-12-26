@@ -31,6 +31,15 @@ export const createSheetsAsync = (job: Job): Promise<void> => {
 };
 
 
+export const preExecuteJobAsync = (job: Job): Promise<void> => {
+  return publish({
+    "Message": JSON.stringify(job),
+    "Subject": 'PreExecuteJob',
+    "TopicArn": TOPIC_PREFIX + 'drp-pre-execute-job'
+  });
+};
+
+
 export const checkSheetsExistenceAsync = (job: Job): Promise<void> => {
   return publish({
     "Message": JSON.stringify(job),

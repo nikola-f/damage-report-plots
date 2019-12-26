@@ -61,8 +61,8 @@ export const queueReports = async (event: SNSEvent, context, callback): Promise<
       const portals: Portal[] = libMail.parseHtml(aMail.body);
       for(let aPortal of portals) {
         rawReportArray.push({
-          // 1時間単位に丸める
-          "mailDate": Math.floor(aMail.internalDate /(1000*3600)) *1000*3600,
+          // 6時間単位に丸める
+          "mailDate": Math.floor(aMail.internalDate /(1000*3600*6)) *1000*3600*6,
           "portal": aPortal
         });
       }

@@ -19,7 +19,6 @@ provider:
   stage: ${opt:stage, self:custom.defaultStage}
   region: us-west-2
   profile: ${self:custom.awsProfiles.${self:provider.stage}}
-  memorySize: 256
   timeout: 10
   tracing: true
 
@@ -88,11 +87,12 @@ functions:
           enabled: false
     environment:
       TICKET_GENERATE_UNIT: 200
+    memorySize: 128
 
-  consumeTicket:
-    handler: handler.consumeTicket
+  preExecuteJob:
+    handler: handler.preExecuteJob
     events:
-      - sns: drp-consume-ticket
+      - sns: drp-pre-execute-job
 
   queueThreads:
     handler: handler.queueThreads
@@ -120,61 +120,24 @@ functions:
     environment:
       REPORTS_ARRAY_DEQUEUE_COUNT: 10 # sqsから読む最大メッセージ数
       REPORTS_BATCH_COUNT: 100 # 1度のリクエストでspreadsheetsへ書く最大メッセージ数
-    memorySize: 256
 
-  createSheets:
-    handler: handler.createSheets
+  postExecuteJob:
+    handler: handler.postExecuteJob
     events:
-      - sns: drp-create-sheets
-
-  checkSheetsExistence:
-    handler: handler.checkSheetsExistence
-    events:
-      - sns: drp-check-sheets-existence
-
-  queueJob:
-    handler: handler.queueJob
-    events:
-      - sns: drp-queue-job
-    environment:
-      JOB_QUEUE_URL:
-        Ref: JobQueue
+      - sns: drp-post-execute-job
 
   putJob:
     handler: handler.putJob
     events:
       - sns: drp-put-job
-
-  finalizeJob:
-    handler: handler.finalizeJob
-    events:
-      - sns: drp-finalize-job
+    memorySize: 128
 
   putAgent:
     handler: handler.putAgent
     events:
       - sns: drp-put-agent
+    memorySize: 128
 
-  startJob:
-    handler: handler.startJob
-    events:
-      - schedule:
-          rate: rate(2 minutes)
-          enabled: false
-    environment:
-      JOB_QUEUE_URL:
-        Ref: JobQueue
-
-  createAgentQueue:
-    handler: handler.createAgentQueue
-    events:
-      - sns: drp-create-agent-queue
-
-  deleteAgentQueue:
-    handler: handler.deleteAgentQueue
-    events:
-      - sns: drp-delete-agent-queue
-  
   signin:
     handler: handler.signin
     events:
@@ -190,6 +153,15 @@ functions:
           path: api/signup
           method: post
           cors: true
+
+  createJob:
+    handler: handler.createJob
+    events:
+      - http:
+          path: api/job
+          method: post
+          cors: true
+
 
 
 resources:

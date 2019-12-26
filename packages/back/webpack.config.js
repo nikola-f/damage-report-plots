@@ -19,6 +19,7 @@ module.exports = {
   resolve: {
     extensions: ['.ts', '.js', '.json'],
     alias: {
+      "@common": "@damage-report-plots/common/src",
       ":common": "@damage-report-plots/common/src",
     }
   },
