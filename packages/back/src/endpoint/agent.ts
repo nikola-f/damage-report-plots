@@ -14,7 +14,6 @@ const AWS = awsXRay.captureAWS(awsPlain);
 const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
 
 const sqs: AWS.SQS = new AWS.SQS();
-import * as dateFormat from 'dateformat';
 
 
 

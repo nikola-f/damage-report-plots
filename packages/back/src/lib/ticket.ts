@@ -1,5 +1,5 @@
-import {GetItemOutput} from 'aws-sdk/clients/dynamodb';
-import {Job} from ':common/types';
+import {GetItemOutput, UpdateItemOutput} from 'aws-sdk/clients/dynamodb';
+import {Job} from '@common/types';
 
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
@@ -8,9 +8,33 @@ const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient()
 
 
 
-export const computeAmount = (job: Job): number => {
-  return 100;
+export const consume = async (job: Job): Promise<void> => {
+  
+  const count = 1; // TODO computeAmount
+  
+  let res: UpdateItemOutput;
+  try {
+    res = await dynamo.update({
+      "TableName": "ticket",
+      "Key": {
+        "name": 'default'
+      },
+      "AttributeUpdates": {
+        "remain": {
+          "Action": 'ADD',
+          "Value": -count
+        }
+      },
+      "ReturnValues": 'UPDATED_NEW'
+    }).promise();
+  }catch(err){
+    console.error(err);
+    return;
+  }
+  console.log('ticket remain updated:' + JSON.stringify(res));
 };
+
+
 
 
 export const hasAvailable = async (): Promise<boolean> => {

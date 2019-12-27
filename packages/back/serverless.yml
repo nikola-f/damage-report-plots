@@ -86,7 +86,7 @@ functions:
           rate: rate(10 minutes)
           enabled: false
     environment:
-      TICKET_GENERATE_UNIT: 200
+      TICKET_GENERATE_UNIT: 20
     memorySize: 128
 
   preExecuteJob:

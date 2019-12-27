@@ -7,6 +7,11 @@ export const BAD_REQUEST: APIGatewayProxyResult = {
   "body": 'bad request'
 };
 
+export const OK: APIGatewayProxyResult = {
+  "statusCode": 200,
+  "body": 'ok'
+};
+
 
 
 /**
@@ -40,45 +45,6 @@ export const isValidSNSEvent = (event: SNSEvent): boolean => {
   return false;
 };
 
-
-/**
- * httpProxyオブジェクトの存在チェックと終了
- */
-export const validateProxyEvent = (event: APIGatewayProxyEvent, callback) => {
-  console.log(JSON.stringify(event));
-  
-  if(event && event.headers && event.httpMethod) {
-    switch(event.httpMethod) {
-      case 'POST':
-        if(event.body) {
-          return;
-        }
-        break;
-    }
-  }
-  
-  callback(null, {
-    "statusCode": 400,
-    "body": 'Bad Request'
-  })
-};
-
-/**
- * SNSオブジェクトの存在チェックと終了
- */
-export const validateSnsEvent = (event: SNSEvent, callback) => {
-  console.log(JSON.stringify(event));
-
-  if(event && event.Records && event.Records.length && event.Records.length > 0) {
-    return;
-  }else{
-    callback(null, {
-      "statusCode": 400,
-      "body": 'Bad Request'
-    });
-  }
-  
-};
 
 
 /**

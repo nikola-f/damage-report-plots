@@ -1,16 +1,15 @@
-import {SNSEvent, Handler, ProxyResult} from 'aws-lambda';
-import {MessageList, Message} from 'aws-sdk/clients/sqs';
-import {Job, JobStatus, QueueThreadsMessage,
-  ThreadArrayMessage, OneMailMessage, Portal,
-  OneReportMessage} from ':common/types';
+import {SNSEvent} from 'aws-lambda';
+import {MessageList} from 'aws-sdk/clients/sqs';
+import {Job, JobStatus, QueueThreadsMessage, OneMailMessage, Portal,
+  OneReportMessage} from '@common/types';
 
 const dateFormat = require('dateformat');
 import * as util from ':common/util';
 import * as env from ':common/env';
 import * as launcher from ':common/launcher';
 import * as libAuth from ':common/auth';
-import * as libQueue from './lib/queue';
-import * as libMail from './lib/mail';
+import * as libQueue from '../lib/queue';
+import * as libMail from '../lib/mail';
 import {google} from 'googleapis';
 const gmail = google.gmail('v1');
 
@@ -20,8 +19,10 @@ const gmail = google.gmail('v1');
  * mailの詳細取得,解析,reportのキューイング
  * @next putJob, queueReports, appendReportsToSheets
  */
-export const queueReports = async (event: SNSEvent, context, callback): Promise<void> => {
-  util.validateSnsEvent(event, callback);
+export const queueReports = async (event: SNSEvent): Promise<void> => {
+  if(!util.isValidSNSEvent(event)) {
+    return;
+  }
 
   for(let rec of event.Records) {
     let job: Job = JSON.parse(rec.Sns.Message);
@@ -103,10 +104,11 @@ export const queueReports = async (event: SNSEvent, context, callback): Promise<
     }
 
   }
-  callback(null, {
-    "statusCode": 200,
-    "body": {}
-  });
+  return;
+  // callback(null, {
+  //   "statusCode": 200,
+  //   "body": {}
+  // });
 };
 
 
@@ -115,8 +117,10 @@ export const queueReports = async (event: SNSEvent, context, callback): Promise<
  * threadのid取得およびキューイング
  * @next putJob, queueThreads, queueReports
  */
-export const queueThreads = async (event: SNSEvent, context, callback): Promise<void> => {
-  util.validateSnsEvent(event, callback);
+export const queueThreads = async (event: SNSEvent): Promise<void> => {
+  if(!util.isValidSNSEvent(event)) {
+    return;
+  }
 
   for(let rec of event.Records) {
     let qtm: QueueThreadsMessage = JSON.parse(rec.Sns.Message);
@@ -214,9 +218,9 @@ export const queueThreads = async (event: SNSEvent, context, callback): Promise<
     }
 
   }
-
-  callback(null, {
-    "statusCode": 200,
-    "body": {}
-  });
+  return;
+  // callback(null, {
+  //   "statusCode": 200,
+  //   "body": {}
+  // });
 };
