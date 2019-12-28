@@ -6,6 +6,7 @@ const env = require(':common/env');
 import * as libTicket from '../lib/ticket';
 import * as libAgent from '../lib/agent';
 import * as libJob from '../lib/job';
+import * as libSheets from '../lib/sheets';
 import * as launcher from '@common/launcher';
 import * as libAuth from '@common/auth';
 import * as util from '@common/util';
@@ -54,61 +55,54 @@ export const createJob = async (event: APIGatewayProxyEvent): Promise<APIGateway
     "agent": agent
   }
 
-  // save job  
+  // save db
   launcher.putJobAsync(job);
 
   // preExecute
   launcher.preExecuteJobAsync(job);
 
   return util.OK;
-
-  // // queueからjob取得
-  // const message = await libQueue.receiveMessage(JOB_QUEUE_URL);
-  // if(message) {
-  //   const job: Job = JSON.parse(message.Body);
-
-  //   // JobStatusをProcessingに
-  //   job.status = JobStatus.Processing;
-  //   job.lastAccessTime = Date.now();
-  //   launcher.putJobAsync(job);
-
-  //   // createAgentQueueから起動
-  //   launcher.createAgentQueueAsync(job);
-    
-  //   // queueからjob削除
-  //   libQueue.deleteMessage(JOB_QUEUE_URL, message);
-
-  // }else{
-  //   console.info('JobQueue is empty.');
-  // }
-
-  // callback(null, {
-  //   "statusCode": 200,
-  //   "body": {
-  //     "createTime": createTime
-  //   }
-  // });
 };
 
 
 
 /**
  * pre execute
- * @next deleteAgentQueue, consumeTicket, putJob
+ * @next putAgent, putJob, queueThreads
  */
 export const preExecuteJob = async (event: SNSEvent): Promise<void> => {
   if(!util.isValidSNSEvent(event)) {
     return;
   }
+  
+  for(let rec of event.Records) {
+    let job: Job = JSON.parse(rec.Sns.Message);
+    console.info('try to preExecute', job.openId);
 
+    // create job queue
+    libJob.createJobQueue(job);
+
+    // check exists, create spreadsheets
+    if(await libSheets.exists(job)) {
+      job.agent.spreadsheetId = await libSheets.create(job);
+      launcher.putAgentAsync(job.agent);
+    }
+    
+    
+    // add ranges
+    
+    
+    
+    // go next, queue threads
+  }
   
 };
 
 
 
 /**
- * jobの終了
- * @next deleteAgentQueue, consumeTicket, putJob
+ * finalize job
+ * @next putJob
  */
 export const postExecuteJob = async (event: SNSEvent): Promise<void> => {
   if(!util.isValidSNSEvent(event)) {
@@ -119,9 +113,8 @@ export const postExecuteJob = async (event: SNSEvent): Promise<void> => {
     const job: Job = JSON.parse(rec.Sns.Message);
 
     try {
-      // agentQueue削除
       await libJob.deleteJobQueue(job);
-    // launcher.deleteAgentQueueAsync(job);
+      await libTicket.consume(job);
 
       job.status = JobStatus.Done;
     }catch(err){
@@ -129,62 +122,29 @@ export const postExecuteJob = async (event: SNSEvent): Promise<void> => {
       job.status = JobStatus.Cancelled;
     }
 
-    // ticket消費
-    await libTicket.consume(job);
+    // revoke
+    libAuth.revokeTokens(
+      env.GOOGLE_CALLBACK_URL_JOB,
+      job.tokens.jobAccessToken,
+      job.tokens.jobRefreshToken
+    );
+    job.tokens = null;
 
-    // token無効化
-    // libAuth.revokeTokens(
-    //   env.GOOGLE_CALLBACK_URL_JOB,
-    //   job.tokens.jobAccessToken,
-    //   job.tokens.jobRefreshToken
-    // );
-    // job.tokens = null;
-
-    // DB保存
+    // save db
     launcher.putJobAsync(job);
 
   }
   
   return;
-
-  // callback(null, {
-  //   "statusCode": 200,
-  //   "body": {}
-  // });
 };
 
 
-/**
- * jobのキューイング
- * @next putJob
- */
-// export const queueJob = async (event: SNSEvent, context, callback): Promise<void> => {
-//   console.log(JSON.stringify(event));
-
-//   for(let rec of event.Records) {
-//     const job: Job = JSON.parse(rec.Sns.Message);
-
-//     job.lastAccessTime = Date.now();
-//     libQueue.sendMessage(JOB_QUEUE_URL, {
-//       "MessageId": '0',
-//       "Body": JSON.stringify(job)
-//     });
-
-//     launcher.putJobAsync(job);
-//   }
-
-//   callback(null, {
-//     "statusCode": 200,
-//     "body": {}
-//   });
-// };
-
 
 /**
- * jobのdb保存
+ * save job on db
  * @next -
  */
-export const putJob = async (event: SNSEvent, context, callback): Promise<void> => {
+export const putJob = async (event: SNSEvent): Promise<void> => {
   if(!util.isValidSNSEvent(event)) {
     return;
   }
@@ -194,7 +154,7 @@ export const putJob = async (event: SNSEvent, context, callback): Promise<void> 
     const job: Job = JSON.parse(rec.Sns.Message);
 
     job.lastAccessTime = Date.now();
-    // token,agentは保存しない
+    // ignore tokens,agent
     job.tokens = null;
     job.agent = null;
 
@@ -207,16 +167,11 @@ export const putJob = async (event: SNSEvent, context, callback): Promise<void> 
     })
     .catch(err => {
       console.error(err);
-      callback(err, null);
-      return;
+      throw err;
     });
   }
 
   return;
-  // callback(null, {
-  //   "statusCode": 200,
-  //   "body": {}
-  // });
 };
 
 

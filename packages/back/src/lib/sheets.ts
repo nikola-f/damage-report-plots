@@ -1,9 +1,8 @@
 import {Job} from '@common/types';
 
-import * as util from ':common/util';
+import * as util from '@common/util';
 import * as env from ':common/env';
 import * as libAuth from ':common/auth';
-// import * as libQueue from './lib/queue';
 import {google} from 'googleapis';
 const sheets = google.sheets('v4');
 const SHEETS_DEF = require('./sheetsdef.json');
@@ -15,10 +14,9 @@ const AWS = awsXRay.captureAWS(awsPlain);
 
 
 /**
- * spreadsheetsの作成
- * @next putAgent, queueThreads
+ * create spreadsheets
  */
-export const createSheets = async (job: Job): Promise<string> => {
+export const create = async (job: Job): Promise<string> => {
 
   const client = libAuth.createGapiOAuth2Client(
     env.GOOGLE_CALLBACK_URL_JOB,
@@ -41,27 +39,14 @@ export const createSheets = async (job: Job): Promise<string> => {
     throw err;
   }
 
-  // if(spreadsheetId) {
-  //   // agentデータ保存
-  //   job.agent.spreadsheetId = spreadsheetId;
-  //   launcher.putAgentAsync(job.agent);
-  // }
 };
 
 
 /**
- * sheetsの存在チェック・不存在ならcreateSheets
- * @next createSheets, queueThreads
+ * check exists spreadsheets
  */
-export const sheetsExists = async (job: Job): Promise<boolean> => {
+export const exists = async (job: Job): Promise<boolean> => {
 
-  // let found: boolean = false;
-  // const job: Job = JSON.parse(rec.Sns.Message);
-  
-  // // agent情報取得
-  // const agent = await libAgent.getAgent(job.openId);
-
-  // spreadSheetsIdがあれば現物の存在チェック
   if(job.agent && job.agent.spreadsheetId) {
     const client = libAuth.createGapiOAuth2Client(
       env.GOOGLE_CALLBACK_URL_JOB,
@@ -82,7 +67,7 @@ export const sheetsExists = async (job: Job): Promise<boolean> => {
       }
     }catch(err){
       console.error(err);
-      // 存在しない以外のエラーだったらthrow
+      // error except 404 occurs, throw
       if(!util.isSet(() => err.response.status) || 
           err.response.status !== 404) {
         throw err;
@@ -93,21 +78,6 @@ export const sheetsExists = async (job: Job): Promise<boolean> => {
   console.log('spreadsheet not found.');
   return false;
 
-
-  // 存在すればqueueThreads
-  // if(found) {
-  //   console.log('spreadsheet found');
-  //   return true;
-  // }else{
-  //   // launcher.queueThreadsAsync({
-  //   //   "job": job
-  //   // });
-  // // 存在しなければcreateSheets
-  // // }else{
-  //   console.log('spreadsheet not found, try to create');
-  //   return false;
-  // //   launcher.createSheetsAsync(job);
-  // }
 };
 
 

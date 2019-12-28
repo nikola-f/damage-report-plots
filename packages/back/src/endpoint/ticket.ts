@@ -14,7 +14,7 @@ const TICKET_GENERATE_UNIT = Number(process.env.TICKET_GENERATE_UNIT)
 
 
 /**
- * チケット生成
+ * generate and save
  * @next -
  */
 export const generateTicket = async (event: ScheduledEvent): Promise<void> => {
@@ -37,53 +37,11 @@ export const generateTicket = async (event: ScheduledEvent): Promise<void> => {
     }).promise();
   }catch(err){
     console.error(err);
-    return;
+    throw err;
   }
   console.log('ticket remain updated:' + JSON.stringify(res));
   
   return;
-  // callback(null, {
-  //   "statusCode": 200,
-  //   "body": {}
-  // });
 };
 
 
-/**
- * チケット消費
- * @next -
- */
-// export const consumeTicket = async (event: SNSEvent, context, callback): Promise<void> => {
-//   console.log(JSON.stringify(event));
-
-//   for(let rec of event.Records) {
-//     const count: number = JSON.parse(rec.Sns.Message);
-
-//     let res: UpdateItemOutput;
-//     try {
-//       res = await dynamo.update({
-//         "TableName": "ticket",
-//         "Key": {
-//           "name": 'default'
-//         },
-//         "AttributeUpdates": {
-//           "remain": {
-//             "Action": 'ADD',
-//             "Value": -count
-//           }
-//         },
-//         "ReturnValues": 'UPDATED_NEW'
-//       }).promise();
-//     }catch(err){
-//       console.error(err);
-//       return;
-//     }
-//     console.log('ticket remain updated:' + JSON.stringify(res));
-
-//   }
-
-//   callback(null, {
-//     "statusCode": 200,
-//     "body": {}
-//   });
-// };
