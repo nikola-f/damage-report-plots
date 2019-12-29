@@ -1,14 +1,15 @@
 import {SNSEvent, APIGatewayProxyEvent, APIGatewayProxyResult} from 'aws-lambda';
-import {Job, JobStatus, CreateJobRequest} from '@common/types';
+import {Job, JobStatus, CreateJobRequest, Range} from '@common/types';
 
-const env = require(':common/env');
-
+import * as env from '../lib/env';
 import * as libTicket from '../lib/ticket';
+import * as libMail from '../lib/mail';
+import * as libRange from '../lib/range';
 import * as libAgent from '../lib/agent';
 import * as libJob from '../lib/job';
 import * as libSheets from '../lib/sheets';
-import * as launcher from '@common/launcher';
-import * as libAuth from '@common/auth';
+import * as launcher from '../lib/launcher';
+import * as libAuth from '../lib/auth';
 import * as util from '@common/util';
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
@@ -49,9 +50,10 @@ export const createJob = async (event: APIGatewayProxyEvent): Promise<APIGateway
     
     "status": JobStatus.Created,
     "lastAccessTime": createTime,
-    "tokens": {
-      "jobAccessToken": req.accessToken
-    },
+    "accessToken": req.accessToken,
+    // "tokens": {
+    //   "jobAccessToken": req.accessToken
+    // },
     "agent": agent
   }
 
@@ -87,11 +89,14 @@ export const preExecuteJob = async (event: SNSEvent): Promise<void> => {
       job.agent.spreadsheetId = await libSheets.create(job);
       launcher.putAgentAsync(job.agent);
     }
+
+    // get raw ranges
+    const rawRanges: Range[] = libRange.getRawRanges(job.lastReportTime);
     
+    // filter ranges
+    job.ranges = await libMail.filterRanges(job.accessToken, rawRanges);
     
-    // add ranges
-    
-    
+
     
     // go next, queue threads
   }
@@ -123,12 +128,13 @@ export const postExecuteJob = async (event: SNSEvent): Promise<void> => {
     }
 
     // revoke
-    libAuth.revokeTokens(
+    libAuth.revokeToken(
       env.GOOGLE_CALLBACK_URL_JOB,
-      job.tokens.jobAccessToken,
-      job.tokens.jobRefreshToken
+      job.accessToken
+      // job.tokens.jobAccessToken,
+      // job.tokens.jobRefreshToken
     );
-    job.tokens = null;
+    job.accessToken = null;
 
     // save db
     launcher.putJobAsync(job);
@@ -155,7 +161,7 @@ export const putJob = async (event: SNSEvent): Promise<void> => {
 
     job.lastAccessTime = Date.now();
     // ignore tokens,agent
-    job.tokens = null;
+    job.accessToken = null;
     job.agent = null;
 
     dynamo.put({

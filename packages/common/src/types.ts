@@ -1,19 +1,19 @@
 
-export interface Session {
-  openId: string,
+// export interface Session {
+//   openId: string,
 
-  createTime: number,
-  lastAccessTime: number,
-  // ttl: number,
-  photoUrl?: string
-  tokens: Tokens
-}
+//   createTime: number,
+//   lastAccessTime: number,
+//   // ttl: number,
+//   photoUrl?: string
+//   tokens: Tokens
+// }
 
-export interface Tokens {
-  meAccessToken?: string,
-  jobAccessToken?: string,
-  jobRefreshToken?: string,
-}
+// export interface Tokens {
+//   meAccessToken?: string,
+//   jobAccessToken?: string,
+//   jobRefreshToken?: string,
+// }
 
 
 export interface Agent {
@@ -39,9 +39,10 @@ export interface Job {
 
   status: JobStatus,
   lastAccessTime: number,
-  rangeFromTime?: number,
-  rangeToTime?: number,
-  tokens: Tokens,
+  lastReportTime?: number,
+  // rangeToTime?: number,
+  // tokens: Tokens,
+  accessToken: string,
   agent: Agent,
   ranges?: Range[],
   thread?: {
@@ -69,11 +70,13 @@ export interface CreateJobMessage {
 
 export interface QueueThreadsMessage {
   job: Job,
+  range: Range,
   nextPageToken?: string
 }
 
 
 export interface ThreadArrayMessage {
+  range: Range,
   ids: string[]
 }
 

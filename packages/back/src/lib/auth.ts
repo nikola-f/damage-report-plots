@@ -19,9 +19,7 @@ export const verifyIdToken = async (token: string): Promise<Object> => {
     return Promise.reject(err);
   }
 
-  
 };
-
 
 
 
@@ -29,7 +27,7 @@ export const verifyIdToken = async (token: string): Promise<Object> => {
  * gapiClientの作成
  */
 export const createGapiOAuth2Client = 
-    (redirectUrl: string, accessToken?: string, refreshToken?: string): any => {
+    (redirectUrl: string, accessToken?: string): any => {
 
   console.info(
     'try to create client:', 
@@ -45,10 +43,10 @@ export const createGapiOAuth2Client =
     env.GOOGLE_CLIENT_SECRET,
     redirectUrl
   );
-  if(accessToken || refreshToken) {
+  if(accessToken) {
     oauth2Client.setCredentials({
-      "access_token": accessToken,
-      "refresh_token": refreshToken
+      "access_token": accessToken
+      // "refresh_token": refreshToken
     });
   }
 
@@ -60,27 +58,27 @@ export const createGapiOAuth2Client =
  * accessTokenを明示的にrefresh
  * batchelor向け
  */
-export const refreshAccessTokenManually = 
-  async (redirectUrl: string, refreshToken: string): Promise<string> => {
-  console.info('try to refresh token.');
+// export const refreshAccessTokenManually = 
+//   async (redirectUrl: string, refreshToken: string): Promise<string> => {
+//   console.info('try to refresh token.');
 
-  return new Promise<string>((resolve, reject) => {
-    const client = createGapiOAuth2Client(redirectUrl, null, refreshToken);
-    client.refreshAccessToken((err, tokens) => {
-      err ? reject(err) : resolve(tokens.access_token);
-    });
-  });
-}
+//   return new Promise<string>((resolve, reject) => {
+//     const client = createGapiOAuth2Client(redirectUrl, null, refreshToken);
+//     client.refreshAccessToken((err, tokens) => {
+//       err ? reject(err) : resolve(tokens.access_token);
+//     });
+//   });
+// }
 
 /**
  * tokenの無効化
  */
-export const revokeTokens = 
-        async (redirectUrl: string, accessToken: string, refreshToken: string): Promise<any> => {
+export const revokeToken = 
+        async (redirectUrl: string, accessToken: string): Promise<any> => {
   console.info('try to revoke tokens:', accessToken.substr(-4));
 
   return new Promise((resolve, reject) => {
-    const client = createGapiOAuth2Client(redirectUrl, accessToken, refreshToken);
+    const client = createGapiOAuth2Client(redirectUrl, accessToken);
     client.revokeCredentials((err, res) => {
       if(err) {
         console.error(err);

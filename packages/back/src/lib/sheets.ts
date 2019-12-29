@@ -1,8 +1,8 @@
 import {Job} from '@common/types';
 
 import * as util from '@common/util';
-import * as env from ':common/env';
-import * as libAuth from ':common/auth';
+import * as env from './env';
+import * as libAuth from './auth';
 import {google} from 'googleapis';
 const sheets = google.sheets('v4');
 const SHEETS_DEF = require('./sheetsdef.json');
@@ -20,8 +20,9 @@ export const create = async (job: Job): Promise<string> => {
 
   const client = libAuth.createGapiOAuth2Client(
     env.GOOGLE_CALLBACK_URL_JOB,
-    job.tokens.jobAccessToken,
-    job.tokens.jobRefreshToken
+    job.accessToken
+    // job.tokens.jobAccessToken,
+    // job.tokens.jobRefreshToken
   );
 
   let spreadsheetId: string;
@@ -50,8 +51,9 @@ export const exists = async (job: Job): Promise<boolean> => {
   if(job.agent && job.agent.spreadsheetId) {
     const client = libAuth.createGapiOAuth2Client(
       env.GOOGLE_CALLBACK_URL_JOB,
-      job.tokens.jobAccessToken,
-      job.tokens.jobRefreshToken
+      job.accessToken
+      // job.tokens.jobAccessToken,
+      // job.tokens.jobRefreshToken
     );
 
     try {

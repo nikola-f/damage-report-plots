@@ -1,6 +1,6 @@
 import {PublishInput} from 'aws-sdk/clients/sns';
 import {Job, CreateJobMessage, QueueThreadsMessage,
-  Agent} from './types';
+  Agent} from '@common/types';
 
 import * as awsXRay from 'aws-xray-sdk';
 import * as awsPlain from 'aws-sdk';
@@ -22,13 +22,13 @@ const TOPIC_PREFIX = 'arn:aws:sns:' + env.ARN_REGION_ACCOUNT + ':';
 //   });
 // };
 
-export const createSheetsAsync = (job: Job): Promise<void> => {
-  return publish({
-    "Message": JSON.stringify(job),
-    "Subject": 'CreateSheets',
-    "TopicArn": TOPIC_PREFIX + 'drp-create-sheets'
-  });
-};
+// export const createSheetsAsync = (job: Job): Promise<void> => {
+//   return publish({
+//     "Message": JSON.stringify(job),
+//     "Subject": 'CreateSheets',
+//     "TopicArn": TOPIC_PREFIX + 'drp-create-sheets'
+//   });
+// };
 
 
 export const preExecuteJobAsync = (job: Job): Promise<void> => {
@@ -40,13 +40,13 @@ export const preExecuteJobAsync = (job: Job): Promise<void> => {
 };
 
 
-export const checkSheetsExistenceAsync = (job: Job): Promise<void> => {
-  return publish({
-    "Message": JSON.stringify(job),
-    "Subject": 'CheckSheetsExistence',
-    "TopicArn": TOPIC_PREFIX + 'drp-check-sheets-existence'
-  });
-};
+// export const checkSheetsExistenceAsync = (job: Job): Promise<void> => {
+//   return publish({
+//     "Message": JSON.stringify(job),
+//     "Subject": 'CheckSheetsExistence',
+//     "TopicArn": TOPIC_PREFIX + 'drp-check-sheets-existence'
+//   });
+// };
 
 // export const checkTableAsync = (job: Job): Promise<void> => {
 //   return publish({
@@ -67,40 +67,40 @@ export const putJobAsync = (job: Job): Promise<void> => {
 };
 
 
-export const finalizeJobAsync = (job: Job): Promise<void> => {
+export const postExecuteJobAsync = (job: Job): Promise<void> => {
   return publish({
     "Message": JSON.stringify(job),
-    "Subject": 'FinalizeJob',
-    "TopicArn": TOPIC_PREFIX + 'drp-finalize-job'
+    "Subject": 'PostExecuteJob',
+    "TopicArn": TOPIC_PREFIX + 'drp-post-execute-job'
   });
 };
 
 
-export const queueJobAsync = (job: Job): Promise<void> => {
-  return publish({
-    "Message": JSON.stringify(job),
-    "Subject": 'QueueJob',
-    "TopicArn": TOPIC_PREFIX + 'drp-queue-job'
-  });
-};
+// export const queueJobAsync = (job: Job): Promise<void> => {
+//   return publish({
+//     "Message": JSON.stringify(job),
+//     "Subject": 'QueueJob',
+//     "TopicArn": TOPIC_PREFIX + 'drp-queue-job'
+//   });
+// };
 
 
-export const createAgentQueueAsync = (job: Job): Promise<void> => {
-  return publish({
-    "Message": JSON.stringify(job),
-    "Subject": 'CreateAgentQueue',
-    "TopicArn": TOPIC_PREFIX + 'drp-create-agent-queue'
-  });
-};
+// export const createAgentQueueAsync = (job: Job): Promise<void> => {
+//   return publish({
+//     "Message": JSON.stringify(job),
+//     "Subject": 'CreateAgentQueue',
+//     "TopicArn": TOPIC_PREFIX + 'drp-create-agent-queue'
+//   });
+// };
 
 
-export const deleteAgentQueueAsync = (job: Job): Promise<void> => {
-  return publish({
-    "Message": JSON.stringify(job),
-    "Subject": 'DeleteAgentQueue',
-    "TopicArn": TOPIC_PREFIX + 'drp-delete-agent-queue'
-  });
-};
+// export const deleteAgentQueueAsync = (job: Job): Promise<void> => {
+//   return publish({
+//     "Message": JSON.stringify(job),
+//     "Subject": 'DeleteAgentQueue',
+//     "TopicArn": TOPIC_PREFIX + 'drp-delete-agent-queue'
+//   });
+// };
 
 
 export const putAgentAsync = (agent: Agent): Promise<void> => {
@@ -146,13 +146,13 @@ export const appendReportsToSheetsAsync = (job: Job): Promise<void> => {
 
 
 
-export const consumeTicketsAsync = (number: number): Promise<void> => {
-  return publish({
-    "Message": String(number),
-    "Subject": 'ConsumeTicket',
-    "TopicArn": TOPIC_PREFIX + 'drp-consume-ticket'
-  });
-};
+// export const consumeTicketsAsync = (number: number): Promise<void> => {
+//   return publish({
+//     "Message": String(number),
+//     "Subject": 'ConsumeTicket',
+//     "TopicArn": TOPIC_PREFIX + 'drp-consume-ticket'
+//   });
+// };
 
 
 const publish = async (input: PublishInput): Promise<void> => {

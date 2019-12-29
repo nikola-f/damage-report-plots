@@ -1,13 +1,71 @@
 // import {MessageList, Message} from 'aws-sdk/clients/sqs';
-import {OneMailMessage, Portal, EstimatedMailCount} from ':common/types';
+import {OneMailMessage, Portal, EstimatedMailCount, Range} from '@common/types';
 
-import * as util from ':common/util';
-import * as env from ':common/env';
-import * as gapi from 'googleapis';
+import * as util from '@common/util';
+import * as env from './env';
+// import * as gapi from 'googleapis';
 import * as Batchelor from 'batchelor';
 import * as base64 from 'urlsafe-base64';
 import * as cheerio from 'cheerio';
 import * as dateFormat from 'dateformat';
+
+
+/**
+ * estimate mail (NOT thread) count in each range
+ */
+export const filterRanges = async (accessToken: string, ranges: Range[]): Promise<Range[]> => {
+
+  const batchelor = new Batchelor({
+    "uri": 'https://www.googleapis.com/batch/gmail/v1',
+    "method": 'POST',
+    "auth": {
+      "bearer": accessToken
+    },
+   	"headers": {
+      "Content-Type": 'multipart/mixed'
+    }
+  });
+
+  for(let aRange of ranges) {
+    const after = dateFormat(new Date(aRange.fromTime), 'isoDate'),
+          before = dateFormat(new Date(aRange.toTime), 'isoDate');
+    
+    const params = {
+      "fields": 'resultSizeEstimate',
+      "maxResults": '1',
+      "q": '{from:ingress-support@google.com from:ingress-support@nianticlabs.com}' +
+        ' subject:"Ingress Damage Report: Entities attacked by"' +
+        ' smaller:200K' +
+        ` after:${after}` +
+        ` before:${before}`
+    };
+
+    batchelor.add({
+      "method": 'GET',
+      "path": 'https://www.googleapis.com/gmail/v1/users/me/messages?' +
+        (new URLSearchParams(params)).toString()
+    });
+  }
+  
+  const res = await new Promise((resolve, reject) => {
+    batchelor.run((err, res) => {
+      if(err) {
+        console.info(err);
+        reject(err);
+      }else{
+        resolve(res);
+      }
+    });
+  });
+  const messages = parseBatchResponse(res);
+  
+  console.log(messages);
+  
+  const filtered: Range[] = []; 
+
+  
+  return filtered;
+};
 
 
 
@@ -145,8 +203,9 @@ export const parseHtml = (html: string): Portal[] => {
 
 
 
-export const getMails = async (accessToken: string, threadIds: string[],
-  rangeFromTime: number, rangeToTime: number): Promise<OneMailMessage[]> => {
+// export const getMails = async (accessToken: string, threadIds: string[],
+//   rangeFromTime: number, rangeToTime: number): Promise<OneMailMessage[]> => {
+export const getMails = async (accessToken: string, threadIds: string[], range: Range): Promise<OneMailMessage[]> => {
   console.log('try to get mails.');
 
   const batchelor = new Batchelor({
@@ -197,8 +256,8 @@ export const getMails = async (accessToken: string, threadIds: string[],
     const mailMessages = parseBatchResponse(threadGetRes);
     for(let aMessage of mailMessages) {
       // 日時チェック/gmailAPIでフィルタできるのは日付まで
-      if(aMessage.internalDate < rangeFromTime ||
-          aMessage.internalDate >= rangeToTime) {
+      if(aMessage.internalDate < range.fromTime ||
+          aMessage.internalDate >= range.toTime) {
         continue;
       }
       if(util.isSet(() => aMessage.payload.parts[1].body.data)) {

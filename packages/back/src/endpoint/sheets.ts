@@ -2,16 +2,16 @@ import {SNSEvent, Handler, ProxyResult} from 'aws-lambda';
 import {MessageList, Message} from 'aws-sdk/clients/sqs';
 import {Agent, OneReportMessage, Job} from '@common/types';
 
-import * as crypto from 'crypto';
-import * as launcher from ':common/launcher';
+import * as launcher from '../lib/launcher';
 import * as util from '@common/util';
-import * as env from ':common/env';
-import * as libAuth from ':common/auth';
+import * as env from '../lib/env';
+import * as libAuth from '../lib/auth';
 import * as libQueue from '../lib/queue';
 import * as base64 from 'urlsafe-base64';
 import {google} from 'googleapis';
 const dateFormat = require('dateformat');
 const sheets = google.sheets('v4');
+import * as crypto from 'crypto';
 
 
 import * as awsXRay from 'aws-xray-sdk';
@@ -62,8 +62,9 @@ export const appendReportsToSheets = async (event: SNSEvent): Promise<void> => {
 
     const client = libAuth.createGapiOAuth2Client(
       env.GOOGLE_CALLBACK_URL_JOB,
-      job.tokens.jobAccessToken,
-      job.tokens.jobRefreshToken
+      job.accessToken
+      // job.tokens.jobAccessToken,
+      // job.tokens.jobRefreshToken
     );
 
 
@@ -95,7 +96,7 @@ export const appendReportsToSheets = async (event: SNSEvent): Promise<void> => {
       console.log(`${reportRemain} reports remaining, recurse.`);
       launcher.appendReportsToSheetsAsync(job);
     }else{
-      launcher.finalizeJobAsync(job);
+      launcher.postExecuteJobAsync(job);
     }
 
   }
