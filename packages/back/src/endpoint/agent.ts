@@ -8,12 +8,12 @@ import * as env from '../lib/env';
 import * as libAgent from '../lib/agent';
 import * as libAuth from '../lib/auth';
 
-import * as awsXRay from 'aws-xray-sdk';
-import * as awsPlain from 'aws-sdk';
-const AWS = awsXRay.captureAWS(awsPlain);
+// import * as awsXRay from 'aws-xray-sdk';
+import * as AWS from 'aws-sdk';
+// const AWS = awsXRay.captureAWS(awsPlain);
 const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
 
-const sqs: AWS.SQS = new AWS.SQS();
+// const sqs: AWS.SQS = new AWS.SQS();
 
 
 

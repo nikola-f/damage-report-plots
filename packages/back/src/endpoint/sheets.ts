@@ -14,9 +14,9 @@ const sheets = google.sheets('v4');
 import * as crypto from 'crypto';
 
 
-import * as awsXRay from 'aws-xray-sdk';
-import * as awsPlain from 'aws-sdk';
-const AWS = awsXRay.captureAWS(awsPlain);
+// import * as awsXRay from 'aws-xray-sdk';
+// import * as awsPlain from 'aws-sdk';
+// const AWS = awsXRay.captureAWS(awsPlain);
 
 
 /**
@@ -74,7 +74,7 @@ export const appendReportsToSheets = async (event: SNSEvent): Promise<void> => {
         "range": 'reports!A2:F2',
         "valueInputOption": 'USER_ENTERED',
         "insertDataOption": 'INSERT_ROWS',
-        "resource": {
+        "requestBody": {
           "range": 'reports!A2:F2',
           "values": reportRows
         },

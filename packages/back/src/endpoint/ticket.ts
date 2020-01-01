@@ -3,9 +3,9 @@ import {UpdateItemOutput} from 'aws-sdk/clients/dynamodb';
 
 
 // import * as queue from './lib/queue';
-import * as awsXRay from 'aws-xray-sdk';
-import * as awsPlain from 'aws-sdk';
-const AWS = awsXRay.captureAWS(awsPlain);
+// import * as awsXRay from 'aws-xray-sdk';
+import * as AWS from 'aws-sdk';
+// const AWS = awsXRay.captureAWS(awsPlain);
 const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient()
 ;
 

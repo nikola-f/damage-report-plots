@@ -3,9 +3,9 @@ import {CreateQueueRequest} from 'aws-sdk/clients/sqs';
 import {Job, JobStatus, Range} from '@common/types';
 
 import * as util from '@common/util';
-import * as awsXRay from 'aws-xray-sdk';
-import * as awsPlain from 'aws-sdk';
-const AWS = awsXRay.captureAWS(awsPlain);
+// import * as awsXRay from 'aws-xray-sdk';
+import * as AWS from 'aws-sdk';
+// const AWS = awsXRay.captureAWS(awsPlain);
 const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
 const sqs: AWS.SQS = new AWS.SQS();
 import * as dateFormat from 'dateformat';

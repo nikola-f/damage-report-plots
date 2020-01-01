@@ -2,9 +2,9 @@ import {PublishInput} from 'aws-sdk/clients/sns';
 import {Job, CreateJobMessage, QueueThreadsMessage,
   Agent} from '@common/types';
 
-import * as awsXRay from 'aws-xray-sdk';
-import * as awsPlain from 'aws-sdk';
-const AWS = awsXRay.captureAWS(awsPlain);
+// import * as awsXRay from 'aws-xray-sdk';
+import * as AWS from 'aws-sdk';
+// const AWS = awsXRay.captureAWS(awsPlain);
 
 import * as env from './env';
 

@@ -8,9 +8,9 @@ const sheets = google.sheets('v4');
 const SHEETS_DEF = require('./sheetsdef.json');
 
 
-import * as awsXRay from 'aws-xray-sdk';
-import * as awsPlain from 'aws-sdk';
-const AWS = awsXRay.captureAWS(awsPlain);
+// import * as awsXRay from 'aws-xray-sdk';
+// import * as awsPlain from 'aws-sdk';
+// const AWS = awsXRay.captureAWS(awsPlain);
 
 
 /**
@@ -28,7 +28,7 @@ export const create = async (job: Job): Promise<string> => {
   let spreadsheetId: string;
   try {
     const createRes = await sheets.spreadsheets.create({
-      "resource": SHEETS_DEF,
+      "requestBody": SHEETS_DEF,
       "auth": client
     });
     console.info('raw sheets created:', createRes.data);

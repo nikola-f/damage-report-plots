@@ -20,7 +20,7 @@ provider:
   region: us-west-2
   profile: ${self:custom.awsProfiles.${self:provider.stage}}
   timeout: 10
-  tracing: true
+  # tracing: false
 
 # TODO 一部commonに移す
   environment: 
@@ -62,16 +62,16 @@ provider:
           - - 'arn:aws:sns'
             - ${self:custom.arnRegionAccount}
             - '*'
-    - Effect: "Allow"
-      Action:
-        - "xray:PutTraceSegments"
-        - "xray:PutTelemetryRecords"
-      Resource:
-        - "*"
+    # - Effect: "Allow"
+    #   Action:
+    #     - "xray:PutTraceSegments"
+    #     - "xray:PutTelemetryRecords"
+    #   Resource:
+    #     - "*"
 
 plugins:
   - serverless-webpack
-  - serverless-plugin-tracing
+  # - serverless-plugin-tracing
 
 package:
   individually: false

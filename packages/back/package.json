@@ -13,29 +13,29 @@
 	"private": true,
 	"dependencies": {
 		"@damage-report-plots/common": "^0.0.1",
-		"aws-xray-sdk": "^1.2.0",
 		"batchelor": "^2.0.2",
 		"cheerio": "^1.0.0-rc.3",
-		"cookie": "^0.3.1",
 		"dateformat": "^3.0.3",
-		"google-auth-library": "^5.5.1",
-		"googleapis": "^29.0.0",
+		"google-auth-library": "^5.7.0",
+		"googleapis": "^46.0.0",
 		"ts-node": "^8.5.4",
 		"urlsafe-base64": "^1.0.0"
 	},
 	"devDependencies": {
-		"@types/aws-lambda": "8.10.34",
+		"@types/aws-lambda": "8.10.39",
 		"@types/node": "^10.0.0",
-		"aws-lambda": "^0.1.2",
-		"aws-sdk": "^2.556.0",
+		"aws-lambda": "^1.0.4",
+		"aws-sdk": "^2.596.0",
 		"eslint-import-resolver-webpack": "^0.11.1",
 		"hard-source-webpack-plugin": "^0.13.1",
-		"serverless-plugin-tracing": "^2.0.0",
-		"serverless-webpack": "^5.1.1",
+		"serverless-webpack": "^5.3.1",
 		"ts-loader": "^4.2.0",
-		"typescript": "^3.6.4",
-		"webpack": "^4.36.1",
-		"webpack-cli": "^3.3.6",
+		"typescript": "^3.7.4",
+		"webpack": "^4.41.5",
+		"webpack-cli": "^3.3.10",
 		"webpack-node-externals": "^1.7.2"
+	},
+	"bu": {
+		"cookie": "^0.3.1"
 	}
 }

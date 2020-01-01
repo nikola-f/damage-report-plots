@@ -11,9 +11,9 @@ import * as libSheets from '../lib/sheets';
 import * as launcher from '../lib/launcher';
 import * as libAuth from '../lib/auth';
 import * as util from '@common/util';
-import * as awsXRay from 'aws-xray-sdk';
-import * as awsPlain from 'aws-sdk';
-const AWS = awsXRay.captureAWS(awsPlain);
+// import * as awsXRay from 'aws-xray-sdk';
+import * as AWS from 'aws-sdk';
+// const AWS = awsXRay.captureAWS(awsPlain);
 const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
 
 
@@ -85,18 +85,24 @@ export const preExecuteJob = async (event: SNSEvent): Promise<void> => {
     libJob.createJobQueue(job);
 
     // check exists, create spreadsheets
-    if(await libSheets.exists(job)) {
+    if(!await libSheets.exists(job)) {
       job.agent.spreadsheetId = await libSheets.create(job);
       launcher.putAgentAsync(job.agent);
     }
 
     // get raw ranges
     const rawRanges: Range[] = libRange.getRawRanges(job.lastReportTime);
-    
+    if(rawRanges.length <= 0) {
+      console.info('no raw ranges.');
+      return;
+    }
+
     // filter ranges
     job.ranges = await libMail.filterRanges(job.accessToken, rawRanges);
-    
-
+    if(job.ranges.length <= 0) {
+      console.info('no fltered ranges.');
+      return;
+    }
     
     // go next, queue threads
   }

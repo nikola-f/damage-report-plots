@@ -25,6 +25,7 @@ export const filterRanges = async (accessToken: string, ranges: Range[]): Promis
       "Content-Type": 'multipart/mixed'
     }
   });
+  console.log('ranges:', ranges);
 
   for(let aRange of ranges) {
     const after = dateFormat(new Date(aRange.fromTime), 'isoDate'),
@@ -46,93 +47,102 @@ export const filterRanges = async (accessToken: string, ranges: Range[]): Promis
         (new URLSearchParams(params)).toString()
     });
   }
+  // console.log('batch:', batchelor);
   
-  const res = await new Promise((resolve, reject) => {
+  const res: any = await new Promise((resolve, reject) => {
     batchelor.run((err, res) => {
       if(err) {
-        console.info(err);
+        console.error('error:', err);
         reject(err);
       }else{
+        console.log('res:', res);
         resolve(res);
       }
     });
   });
-  const messages = parseBatchResponse(res);
   
-  console.log(messages);
-  
-  const filtered: Range[] = []; 
+  if(!res.parts) {
+    throw new Error('no message.');
+  }
 
-  
+  const filtered: Range[] = []; 
+  for(let i=0; i<ranges.length; i++) {
+    if(util.isSet(() => res.parts[i].body.resultSizeEstimate) &&
+        res.parts[i].body.resultSizeEstimate > 0) {
+      filtered.push(ranges[i]);
+    }
+  }
+
+  console.log(filtered);
   return filtered;
 };
 
 
 
-export const getEstimatedMailCountList = async (accessToken: string, startDate: number): Promise<EstimatedMailCount[]> => {
+// export const getEstimatedMailCountList = async (accessToken: string, startDate: number): Promise<EstimatedMailCount[]> => {
 
-  const NOW: number = Date.now();
-  const TIME_UNIT: number = 1000 * 3600 * 24 * 30; //30 days
-  const result: EstimatedMailCount[] = [];
+//   const NOW: number = Date.now();
+//   const TIME_UNIT: number = 1000 * 3600 * 24 * 30; //30 days
+//   const result: EstimatedMailCount[] = [];
 
 
-  const batchelor = new Batchelor({
-    "uri": 'https://www.googleapis.com/batch/gmail/v1',
-    "method": 'POST',
-    "auth": {
-      "bearer": accessToken
-    },
-   	"headers": {
-      "Content-Type": 'multipart/mixed'
-    }
-  });
+//   const batchelor = new Batchelor({
+//     "uri": 'https://www.googleapis.com/batch/gmail/v1',
+//     "method": 'POST',
+//     "auth": {
+//       "bearer": accessToken
+//     },
+//   	"headers": {
+//       "Content-Type": 'multipart/mixed'
+//     }
+//   });
   
-  let endDate: number = startDate;
-  let batchLength: number = 0;
-  do {
-    endDate += TIME_UNIT;
-    batchLength++;
+//   let endDate: number = startDate;
+//   let batchLength: number = 0;
+//   do {
+//     endDate += TIME_UNIT;
+//     batchLength++;
 
-    const after = dateFormat(new Date(startDate), 'isoDate'),
-          before = dateFormat(new Date(endDate), 'isoDate');
+//     const after = dateFormat(new Date(startDate), 'isoDate'),
+//           before = dateFormat(new Date(endDate), 'isoDate');
     
-    const params = {
-      "fields": 'resultSizeEstimate',
-      "maxResults": '1',
-      "q": '{from:ingress-support@google.com from:ingress-support@nianticlabs.com}' +
-        ' subject:"Ingress Damage Report: Entities attacked by"' +
-        ' smaller:200K' +
-        ` after:${after}` +
-        ` before:${before}`
-    };
+//     const params = {
+//       "fields": 'resultSizeEstimate',
+//       "maxResults": '1',
+//       "q": '{from:ingress-support@google.com from:ingress-support@nianticlabs.com}' +
+//         ' subject:"Ingress Damage Report: Entities attacked by"' +
+//         ' smaller:200K' +
+//         ` after:${after}` +
+//         ` before:${before}`
+//     };
 
-    batchelor.add({
-      "method": 'GET',
-      "path": 'https://www.googleapis.com/gmail/v1/users/me/messages?' +
-        (new URLSearchParams(params)).toString()
-    });
-  } while(endDate < NOW && batchLength < 100);
+//     batchelor.add({
+//       "method": 'GET',
+//       "path": 'https://www.googleapis.com/gmail/v1/users/me/messages?' +
+//         (new URLSearchParams(params)).toString()
+//     });
+//   } while(endDate < NOW && batchLength < 100);
   
   
-  const res = await new Promise((resolve, reject) => {
-    batchelor.run((err, res) => {
-      if(err) {
-        console.info(err);
-        reject(err);
-      }else{
-        resolve(res);
-      }
-    });
-  });
+//   const res = await new Promise((resolve, reject) => {
+//     batchelor.run((err, res) => {
+//       if(err) {
+//         console.info(err);
+//         reject(err);
+//       }else{
+//         resolve(res);
+//       }
+//     });
+//   });
   
-  const messages = parseBatchResponse(res);
-  for(let aMessage of messages) {
-    console.log(aMessage);
-  }
+//   const messages = parseBatchResponse(res);
+//   for(let aMessage of messages) {
+//     console.log(aMessage);
+//   }
   
-  batchelor.reset();
-  return result;
-};
+//   batchelor.reset();
+//   return result;
+// };
 
 
 
