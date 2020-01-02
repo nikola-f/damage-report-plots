@@ -33,9 +33,7 @@
 		"typescript": "^3.7.4",
 		"webpack": "^4.41.5",
 		"webpack-cli": "^3.3.10",
+		"serverless-export-env": "^1.2.0",
 		"webpack-node-externals": "^1.7.2"
-	},
-	"bu": {
-		"cookie": "^0.3.1"
 	}
 }

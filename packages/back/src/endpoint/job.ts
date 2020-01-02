@@ -1,6 +1,7 @@
 import {SNSEvent, APIGatewayProxyEvent, APIGatewayProxyResult} from 'aws-lambda';
 import {Job, JobStatus, CreateJobRequest, Range} from '@common/types';
 
+import * as util from '@common/util';
 import * as env from '../lib/env';
 import * as libTicket from '../lib/ticket';
 import * as libMail from '../lib/mail';
@@ -10,12 +11,8 @@ import * as libJob from '../lib/job';
 import * as libSheets from '../lib/sheets';
 import * as launcher from '../lib/launcher';
 import * as libAuth from '../lib/auth';
-import * as util from '@common/util';
-// import * as awsXRay from 'aws-xray-sdk';
 import * as AWS from 'aws-sdk';
-// const AWS = awsXRay.captureAWS(awsPlain);
 const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
-
 
 
 /**
@@ -41,6 +38,10 @@ export const createJob = async (event: APIGatewayProxyEvent): Promise<APIGateway
   // get agent
   const openId = payload['sub'];
   let agent = await libAgent.getAgent(openId);
+  if(!agent) {
+    console.error('agent not found.');
+    return util.BAD_REQUEST;
+  }
 
   // instantiate job
   const createTime = Date.now();
@@ -51,17 +52,14 @@ export const createJob = async (event: APIGatewayProxyEvent): Promise<APIGateway
     "status": JobStatus.Created,
     "lastAccessTime": createTime,
     "accessToken": req.accessToken,
-    // "tokens": {
-    //   "jobAccessToken": req.accessToken
-    // },
     "agent": agent
   }
 
-  // save db
-  launcher.putJobAsync(job);
-
   // preExecute
   launcher.preExecuteJobAsync(job);
+
+  // save db
+  launcher.putJobAsync(job);
 
   return util.OK;
 };
@@ -80,9 +78,15 @@ export const preExecuteJob = async (event: SNSEvent): Promise<void> => {
   for(let rec of event.Records) {
     let job: Job = JSON.parse(rec.Sns.Message);
     console.info('try to preExecute', job.openId);
+    job.status = JobStatus.Processing;
 
-    // create job queue
-    libJob.createJobQueue(job);
+    // get raw ranges
+    const rawRanges: Range[] = libRange.getRawRanges(job.lastReportTime);
+    if(!rawRanges || rawRanges.length <= 0) {
+      console.info('no raw ranges.');
+      libJob.cancel(job);
+      continue;
+    }
 
     // check exists, create spreadsheets
     if(!await libSheets.exists(job)) {
@@ -90,21 +94,25 @@ export const preExecuteJob = async (event: SNSEvent): Promise<void> => {
       launcher.putAgentAsync(job.agent);
     }
 
-    // get raw ranges
-    const rawRanges: Range[] = libRange.getRawRanges(job.lastReportTime);
-    if(rawRanges.length <= 0) {
-      console.info('no raw ranges.');
-      return;
-    }
-
     // filter ranges
     job.ranges = await libMail.filterRanges(job.accessToken, rawRanges);
-    if(job.ranges.length <= 0) {
+    if(!job.ranges || job.ranges.length <= 0) {
       console.info('no fltered ranges.');
-      return;
+      libJob.done(job);
+      continue;
     }
     
+    // create job queue
+    await libJob.createJobQueue(job);
+
     // go next, queue threads
+    await launcher.queueThreadsAsync({
+      "job": job,
+      "range": job.ranges[0]
+    });
+
+    // save job
+    await launcher.putJobAsync(job);
   }
   
 };
@@ -130,24 +138,21 @@ export const postExecuteJob = async (event: SNSEvent): Promise<void> => {
       job.status = JobStatus.Done;
     }catch(err){
       console.error(err);
-      job.status = JobStatus.Cancelled;
+      libJob.cancel(job);
+      continue;
     }
 
     // revoke
     libAuth.revokeToken(
       env.GOOGLE_CALLBACK_URL_JOB,
       job.accessToken
-      // job.tokens.jobAccessToken,
-      // job.tokens.jobRefreshToken
     );
     job.accessToken = null;
 
     // save db
     launcher.putJobAsync(job);
-
   }
-  
-  return;
+
 };
 
 

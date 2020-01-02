@@ -1,5 +1,5 @@
-export const AWS_REGION = process.env.AWS_REGION || '';
-export const ARN_REGION_ACCOUNT = process.env.ARN_REGION_ACCOUNT || '';
+export const AWS_REGION: string = process.env.AWS_REGION || '';
+export const ARN_REGION_ACCOUNT: string = process.env.ARN_REGION_ACCOUNT || '';
 
 export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';

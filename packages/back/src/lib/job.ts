@@ -3,15 +3,24 @@ import {CreateQueueRequest} from 'aws-sdk/clients/sqs';
 import {Job, JobStatus, Range} from '@common/types';
 
 import * as util from '@common/util';
-// import * as awsXRay from 'aws-xray-sdk';
+import * as launcher from '../lib/launcher';
 import * as AWS from 'aws-sdk';
-// const AWS = awsXRay.captureAWS(awsPlain);
 const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
 const sqs: AWS.SQS = new AWS.SQS();
 import * as dateFormat from 'dateformat';
 
 
 
+export const done = (job: Job): void => {
+  job.status = JobStatus.Done;
+  launcher.putJobAsync(job);
+};
+
+
+export const cancel = (job: Job): void => {
+  job.status = JobStatus.Cancelled;
+  launcher.putJobAsync(job);
+};
 
 
 /**

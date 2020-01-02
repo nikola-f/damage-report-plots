@@ -2,12 +2,9 @@ import {PublishInput} from 'aws-sdk/clients/sns';
 import {Job, CreateJobMessage, QueueThreadsMessage,
   Agent} from '@common/types';
 
-// import * as awsXRay from 'aws-xray-sdk';
-import * as AWS from 'aws-sdk';
-// const AWS = awsXRay.captureAWS(awsPlain);
-
 import * as env from './env';
 
+import * as AWS from 'aws-sdk';
 const sns: AWS.SNS = new AWS.SNS();
 
 
@@ -146,25 +143,22 @@ export const appendReportsToSheetsAsync = (job: Job): Promise<void> => {
 
 
 
-// export const consumeTicketsAsync = (number: number): Promise<void> => {
-//   return publish({
-//     "Message": String(number),
-//     "Subject": 'ConsumeTicket',
-//     "TopicArn": TOPIC_PREFIX + 'drp-consume-ticket'
-//   });
-// };
-
-
 const publish = async (input: PublishInput): Promise<void> => {
   if(env.SNS_NOP) {
     console.log('do publish provisionally:' + JSON.stringify(input));
     return Promise.resolve();
   }
-  console.log('do publish:' + JSON.stringify(input));
+  // console.log(typeof env.ARN_REGION_ACCOUNT);
+  // console.log(env.ARN_REGION_ACCOUNT);
+  // console.log(input.TopicArn);
+  // console.log(process.env.ARN_REGION_ACCOUNT);
   try {
     await sns.publish(input).promise();
+    console.log('published:' + JSON.stringify(input));
     return Promise.resolve();
   }catch(err){
-    return Promise.reject(err);
+    console.error(err);
+    throw err;
+    // return Promise.reject(err);
   }
 };

@@ -2,10 +2,10 @@ service: damage-report-plots-server-back
 
 custom:
   arnRegionAccount:
-      Fn::Join:
-        - ':'
-        - - ${self:provider.region}
-          - Ref: 'AWS::AccountId'
+    Fn::Join:
+      - ':'
+      - - ${self:provider.region}
+        - Ref: 'AWS::AccountId'
   webpack:
     includeModules: true
   defaultStage: dev
@@ -20,7 +20,6 @@ provider:
   region: us-west-2
   profile: ${self:custom.awsProfiles.${self:provider.stage}}
   timeout: 10
-  # tracing: false
 
 # TODO 一部commonに移す
   environment: 
@@ -62,16 +61,15 @@ provider:
           - - 'arn:aws:sns'
             - ${self:custom.arnRegionAccount}
             - '*'
-    # - Effect: "Allow"
-    #   Action:
-    #     - "xray:PutTraceSegments"
-    #     - "xray:PutTelemetryRecords"
-    #   Resource:
-    #     - "*"
+    - Effect: "Allow"
+      Action:
+        - "xray:PutTraceSegments"
+        - "xray:PutTelemetryRecords"
+      Resource:
+        - "*"
 
 plugins:
   - serverless-webpack
-  # - serverless-plugin-tracing
 
 package:
   individually: false
@@ -108,10 +106,10 @@ functions:
     events:
       - sns: drp-queue-reports
     environment:
-      THREAD_ARRAY_DEQUEUE_COUNT: 2 # sqsから読むスレッド配列の数
+      THREAD_ARRAY_DEQUEUE_COUNT: 10 # sqsから読むスレッド配列の数
       THREAD_FETCH_COUNT: 50 # 1度のバッチ実行でgmailから読む最大スレッド数
-    memorySize: 512
-    timeout: 30
+    memorySize: 1024
+    timeout: 60
 
   appendReportsToSheets:
     handler: handler.appendReportsToSheets
@@ -120,6 +118,7 @@ functions:
     environment:
       REPORTS_ARRAY_DEQUEUE_COUNT: 10 # sqsから読む最大メッセージ数
       REPORTS_BATCH_COUNT: 100 # 1度のリクエストでspreadsheetsへ書く最大メッセージ数
+    memorySize: 512
 
   postExecuteJob:
     handler: handler.postExecuteJob
@@ -130,13 +129,13 @@ functions:
     handler: handler.putJob
     events:
       - sns: drp-put-job
-    memorySize: 128
+    # memorySize: 128
 
   putAgent:
     handler: handler.putAgent
     events:
       - sns: drp-put-agent
-    memorySize: 128
+    # memorySize: 128
 
   signin:
     handler: handler.signin

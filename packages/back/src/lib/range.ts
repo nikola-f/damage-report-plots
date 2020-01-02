@@ -26,6 +26,18 @@ export const getRawRanges = (lastReportTime?: number): Range[] => {
 };
 
 
+// FIXME
+export const done = (ranges: Range[], current: Range) => {
+  for(let i=0; i<ranges.length; i++) {
+    if(ranges[i].fromTime === current.fromTime &&
+        ranges[i].toTime === current.toTime) {
+      ranges[i].done = true;
+      console.log('done:', ranges[i]);
+      return;
+    }
+  }
+}
+
 
 export const nextRange = (ranges: Range[]): Range => {
   
@@ -33,8 +45,9 @@ export const nextRange = (ranges: Range[]): Range => {
     if(ranges[i].done) {
       continue;
     }else{
-      ranges[i].done = true;
-      return ranges[i+1];
+      // ranges[i].done = true;
+      console.log('nextRange:', ranges[i]);
+      return ranges[i];
     }
   }
   return null; // unreachable
@@ -44,6 +57,7 @@ export const nextRange = (ranges: Range[]): Range => {
 export const hasMoreRange = (ranges: Range[]): boolean => {
   for(let aRange of ranges) {
     if(!aRange.done) {
+      console.log('hasMoreRange:', aRange);
       return true;
     }
   }

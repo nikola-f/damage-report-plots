@@ -10,9 +10,10 @@ import * as libAuth from '../lib/auth';
 import * as libQueue from '../lib/queue';
 import * as libRange from '../lib/range';
 import * as libMail from '../lib/mail';
+import * as libJob from '../lib/job';
+import * as dateFormat from 'dateformat';
 import {google} from 'googleapis';
 const gmail = google.gmail('v1');
-const dateFormat = require('dateformat');
 
 
 
@@ -51,8 +52,7 @@ export const queueReports = async (event: SNSEvent): Promise<void> => {
       const rawReportArray: OneReportMessage[] = [];
       // メール配列 -> メール
       for(let aMail of mailArray) {
-        // const html: string = libMail.decodeBase64(aMail.body);
-  
+
         // メール -> 重複ありレポート配列
         const portals: Portal[] = libMail.parseHtml(aMail.body);
         for(let aPortal of portals) {
@@ -83,6 +83,7 @@ export const queueReports = async (event: SNSEvent): Promise<void> => {
         console.info(`${filteredReportArray.length} reports queued.`);
       }else{
         console.info("no reports found.");
+        continue;
       }
       
 
@@ -148,16 +149,16 @@ export const queueReports = async (event: SNSEvent): Promise<void> => {
       await libQueue.getNumberOfMessages(job.thread.queueUrl);
     console.info(`${threadRemain} threadArray remain.`);
     if(threadRemain > 0) {
-      launcher.queueReportsAsync(job);
+      await launcher.queueReportsAsync(job);
     }else{
-      launcher.appendReportsToSheetsAsync(job);
+      await launcher.appendReportsToSheetsAsync(job);
     }
 
     // job保存
-    launcher.putJobAsync(job);
+    await launcher.putJobAsync(job);
 
   }
-  return;
+
 };
 
 
@@ -216,6 +217,7 @@ export const queueThreads = async (event: SNSEvent): Promise<void> => {
 
     }catch(err){
       console.error(err);
+      libJob.cancel(qtm.job);
       continue;
     }
     
@@ -291,29 +293,32 @@ export const queueThreads = async (event: SNSEvent): Promise<void> => {
 
     // has nextPageToken, threads remains => recurse
     if(util.isSet(() => res.data.nextPageToken)) {
-      console.info('go recurrsive:', res.data.nextPageToken);
-      launcher.queueThreadsAsync({
+      console.info('go next page:', res.data.nextPageToken);
+      await launcher.queueThreadsAsync({
         "job": qtm.job,
         "range": qtm.range,
         "nextPageToken": res.data.nextPageToken
       });
 
-    // no nextPageToken, has next range => recurse
-    }else if(libRange.hasMoreRange(qtm.job.ranges)) {
-      const nextRange: Range = libRange.nextRange(qtm.job.ranges);
-      console.info('go recurrsive:', nextRange);
-      launcher.queueThreadsAsync({
-        "job": qtm.job,
-        "range": nextRange,
-      });
-    
-    // no nextPageToken, no next range, => go queueReports
     }else{
-      launcher.queueReportsAsync(qtm.job);
+      libRange.done(qtm.job.ranges, qtm.range);
+      // no nextPageToken, has next range => recurse w/ nextRange
+      if(libRange.hasMoreRange(qtm.job.ranges)) {
+        const nextRange: Range = libRange.nextRange(qtm.job.ranges);
+        console.info('go next range:', nextRange);
+        await launcher.queueThreadsAsync({
+          "job": qtm.job,
+          "range": nextRange,
+        });
+      
+      // no nextPageToken, no next range, => go queueReports
+      }else{
+        await launcher.queueReportsAsync(qtm.job);
+      }
     }
 
     // save job
-    launcher.putJobAsync(qtm.job);
+    await launcher.putJobAsync(qtm.job);
 
   }
   return;
