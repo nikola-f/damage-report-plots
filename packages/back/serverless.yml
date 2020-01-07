@@ -91,6 +91,7 @@ functions:
     handler: handler.preExecuteJob
     events:
       - sns: drp-pre-execute-job
+    timeout: 30
 
   queueThreads:
     handler: handler.queueThreads
@@ -107,7 +108,7 @@ functions:
       - sns: drp-queue-reports
     environment:
       THREAD_ARRAY_DEQUEUE_COUNT: 10 # sqsから読むスレッド配列の数
-      THREAD_FETCH_COUNT: 50 # 1度のバッチ実行でgmailから読む最大スレッド数
+      THREAD_FETCH_COUNT: 100 # 1度のバッチ実行でgmailから読む最大スレッド数
     memorySize: 1024
     timeout: 60
 

@@ -1,0 +1,24 @@
+{
+  "requests": [{
+      "addProtectedRange": {
+        "protectedRange": {
+          "range": {
+            "sheetId": 100
+          },
+          "warningOnly": true
+        }
+      }
+    },
+    {
+      "addProtectedRange": {
+        "protectedRange": {
+          "range": {
+            "sheetId": 110
+          },
+          "warningOnly": true
+        }
+      }
+    }
+  ],
+  "responseIncludeGridData": false
+}

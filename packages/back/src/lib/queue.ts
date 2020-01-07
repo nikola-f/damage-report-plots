@@ -2,7 +2,7 @@ import {GetQueueAttributesRequest, GetQueueAttributesResult,
   SendMessageBatchRequestEntryList, SendMessageBatchRequest,
   ReceiveMessageResult, ReceiveMessageRequest,
   MessageList, DeleteMessageBatchRequest,
-  DeleteMessageBatchResult, DeleteMessageBatchRequestEntryList,
+  DeleteMessageBatchRequestEntryList,
   Message} from 'aws-sdk/clients/sqs';
 
 import * as util from '@common/util';
@@ -12,7 +12,6 @@ import * as AWS from 'aws-sdk';
 // const AWS = awsXRay.captureAWS(awsPlain);
 const sqs: AWS.SQS = new AWS.SQS();
 
-const THREAD_COUNT: number = Number(process.env.THREAD_COUNT);
 
 /**
  * キューに入っているメッセージの数を返す

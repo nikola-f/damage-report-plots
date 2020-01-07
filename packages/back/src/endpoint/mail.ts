@@ -30,13 +30,11 @@ export const queueReports = async (event: SNSEvent): Promise<void> => {
     let job: Job = JSON.parse(rec.Sns.Message);
     console.info('try to queue reports:', job.openId);
 
-    // threadキューからthreadを取得
+    // dequeue threads
     const sqsMessages: MessageList =
       await libQueue.receiveMessageBatch(job.thread.queueUrl, env.THREAD_ARRAY_DEQUEUE_COUNT);
-    // const threadIds: string[] = [];
     for(let anSqsMessage of sqsMessages) {
       const threadArrayMessage: ThreadArrayMessage = JSON.parse(anSqsMessage.Body);
-      // Array.prototype.push.apply(threadIds, JSON.parse(threadArrayMessage.ids));
 
       const mailArray: OneMailMessage[] =
         await libMail.getMails(job.accessToken, threadArrayMessage.ids, threadArrayMessage.range);
@@ -48,26 +46,26 @@ export const queueReports = async (event: SNSEvent): Promise<void> => {
         continue;
       }
 
-      // メール上のhtmlからポータル情報抽出
+      // extract portal info from mail html
       const rawReportArray: OneReportMessage[] = [];
-      // メール配列 -> メール
       for(let aMail of mailArray) {
 
-        // メール -> 重複ありレポート配列
+        // mail html -> portal array
         const portals: Portal[] = libMail.parseHtml(aMail.body);
         for(let aPortal of portals) {
           rawReportArray.push({
-            // 12時間単位に丸める
-            "mailDate": Math.floor(aMail.internalDate /(1000*3600*12)) *1000*3600*12,
+            // round down 12hrs
+            // "roundedDownMailDate": Math.floor(aMail.internalDate /(1000*3600*12)) *1000*3600*12,
+            "mailDate": aMail.internalDate,
             "portal": aPortal
           });
         }
       }
   
-      // 重複ありレポート配列 -> 重複なしレポート配列
-      const dedupedReportArray: OneReportMessage[] = util.dedupe(rawReportArray);
+      // dedupe
+      const dedupedReportArray: OneReportMessage[] = libMail.dedupe(rawReportArray);
       
-      // 要素が欠けているレポートをfilter out
+      // filter out portals w/ incomplete properties
       const filteredReportArray: OneReportMessage[] = dedupedReportArray.filter((aReport) => {
         return aReport.portal && aReport.mailDate && aReport.portal.name &&
           aReport.portal.name !== '' &&
@@ -76,7 +74,7 @@ export const queueReports = async (event: SNSEvent): Promise<void> => {
       });
 
 
-      // reportキューにキューイング
+      // queue for report
       if(filteredReportArray.length > 0) {
         await libQueue.sendMessageDivisioinBySize(job.report.queueUrl, filteredReportArray, 250*1024);
         job.report.queuedCount += filteredReportArray.length;
@@ -180,8 +178,6 @@ export const queueThreads = async (event: SNSEvent): Promise<void> => {
     const client = libAuth.createGapiOAuth2Client(
       env.GOOGLE_CALLBACK_URL_JOB,
       qtm.job.accessToken
-      // qtm.job.tokens.jobAccessToken,
-      // qtm.job.tokens.jobRefreshToken
     );
     
     // yyyy-mm-ddに変換

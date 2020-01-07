@@ -5,7 +5,8 @@ import * as env from './env';
 import * as libAuth from './auth';
 import {google} from 'googleapis';
 const sheets = google.sheets('v4');
-const SHEETS_DEF = require('./sheetsdef.json');
+const SHEETS_DEF = require('./sheetsDef.json');
+const SHEETS_PROTECT = require('./sheetsProtect.json');
 
 
 // import * as awsXRay from 'aws-xray-sdk';
@@ -21,8 +22,6 @@ export const create = async (job: Job): Promise<string> => {
   const client = libAuth.createGapiOAuth2Client(
     env.GOOGLE_CALLBACK_URL_JOB,
     job.accessToken
-    // job.tokens.jobAccessToken,
-    // job.tokens.jobRefreshToken
   );
 
   let spreadsheetId: string;
@@ -34,9 +33,15 @@ export const create = async (job: Job): Promise<string> => {
     console.info('raw sheets created:', createRes.data);
     spreadsheetId = createRes.data.spreadsheetId;
     
+    const protectRes = await sheets.spreadsheets.batchUpdate({
+      "spreadsheetId": spreadsheetId,
+      "requestBody": SHEETS_PROTECT,
+      "auth": client
+    });
+    
     return spreadsheetId;
   }catch(err){
-    console.error(err);
+    console.error('raw sheets cannot create:', err);
     throw err;
   }
 

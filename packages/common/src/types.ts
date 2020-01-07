@@ -87,14 +87,13 @@ export interface OneThreadMessage {
 
 export interface OneMailMessage {
   id: string,
-  internalDate: number;
+  internalDate: number,
   body: string
 }
 
 
 export interface OneReportMessage {
-  // mailId: string,
-  mailDate: number;
+  mailDate: number,
   portal: Portal
 }
 

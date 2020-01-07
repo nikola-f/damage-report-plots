@@ -82,7 +82,7 @@
         "rowData": [{
           "values": [{
             "userEnteredValue": {
-              "formulaValue": "=query(reports!A:E, \"select max(B), max(C), max(D), count(D), max(E) where A is not null group by A\")"
+              "formulaValue": "=query(reports!A:E, \"select max(B), max(C), max(D), count(D), max(E) where A is not null group by A order by max(E) desc\")"
             }
           }]
         }]

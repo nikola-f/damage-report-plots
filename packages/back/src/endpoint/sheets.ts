@@ -1,6 +1,6 @@
-import {SNSEvent, Handler, ProxyResult} from 'aws-lambda';
-import {MessageList, Message} from 'aws-sdk/clients/sqs';
-import {Agent, OneReportMessage, Job} from '@common/types';
+import {SNSEvent} from 'aws-lambda';
+import {MessageList} from 'aws-sdk/clients/sqs';
+import {OneReportMessage, Job} from '@common/types';
 
 import * as util from '@common/util';
 import * as launcher from '../lib/launcher';
@@ -13,8 +13,6 @@ import * as dateFormat from 'dateformat';
 import {google} from 'googleapis';
 const sheets = google.sheets('v4');
 import * as crypto from 'crypto';
-
-
 
 
 /**
@@ -58,25 +56,28 @@ export const appendReportsToSheets = async (event: SNSEvent): Promise<void> => {
       }
     }
 
-    const client = libAuth.createGapiOAuth2Client(
-      env.GOOGLE_CALLBACK_URL_JOB,
-      job.accessToken
-    );
-
 
     try {
-      const appendRes = await sheets.spreadsheets.values.append({
-        "spreadsheetId": job.agent.spreadsheetId,
-        "range": 'reports!A2:F2',
-        "valueInputOption": 'USER_ENTERED',
-        "insertDataOption": 'INSERT_ROWS',
-        "requestBody": {
+      if(reportRows.length > 0) {
+        const client = libAuth.createGapiOAuth2Client(
+          env.GOOGLE_CALLBACK_URL_JOB,
+          job.accessToken
+        );
+  
+        console.log(`try to append ${reportRows.length} reports.`);
+        const appendRes = await sheets.spreadsheets.values.append({
+          "spreadsheetId": job.agent.spreadsheetId,
           "range": 'reports!A2:F2',
-          "values": reportRows
-        },
-        "auth": client
-      });
-      console.info('reports appended:', appendRes.data);
+          "valueInputOption": 'USER_ENTERED',
+          "insertDataOption": 'INSERT_ROWS',
+          "requestBody": {
+            "range": 'reports!A2:F2',
+            "values": reportRows
+          },
+          "auth": client
+        });
+        console.info('reports appended:', appendRes.data);
+      }
 
     }catch(err){
       console.error(err);
@@ -89,7 +90,7 @@ export const appendReportsToSheets = async (event: SNSEvent): Promise<void> => {
     // no remains, go postExecute
     const reportRemain: number =
       await libQueue.getNumberOfMessages(job.report.queueUrl);
-    if(reportRemain > 0) {
+    if(reportRemain > 0 && reportRows.length > 0) {
       console.log(`${reportRemain} reports remaining, recurse.`);
       await launcher.appendReportsToSheetsAsync(job);
     }else{
@@ -97,7 +98,6 @@ export const appendReportsToSheets = async (event: SNSEvent): Promise<void> => {
     }
 
   }
-  return;
 };
 
 

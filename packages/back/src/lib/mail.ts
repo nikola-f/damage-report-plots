@@ -1,13 +1,55 @@
 // import {MessageList, Message} from 'aws-sdk/clients/sqs';
-import {OneMailMessage, Portal, EstimatedMailCount, Range} from '@common/types';
+import {OneMailMessage, Portal, Range, OneReportMessage} from '@common/types';
 
 import * as util from '@common/util';
 import * as env from './env';
-// import * as gapi from 'googleapis';
 import * as Batchelor from 'batchelor';
 import * as base64 from 'urlsafe-base64';
 import * as cheerio from 'cheerio';
 import * as dateFormat from 'dateformat';
+
+
+
+/**
+ * dedupe report
+ */
+export const dedupe = (rawArray: OneReportMessage[]): OneReportMessage[] => {
+  
+  // mapにPortalとroundedDateをstringifyしたものをkeyとしてput
+  // maxDate or UPCを更新できるなら上書きput
+  // 更新できなくて既存ならスルー
+  
+  const dedupedMap = new Map();
+  for(let aMessage of rawArray) {
+    const key = JSON.stringify({
+      "lat": aMessage.portal.latitude,
+      "lng": aMessage.portal.longitude,
+      "rounded": Math.floor(aMessage.mailDate /(1000*3600*12)) *1000*3600*12
+    });
+    
+    if(dedupedMap.has(key)) {
+      const value: OneReportMessage = dedupedMap.get(key);
+      if(aMessage.portal.owned && !value.portal.owned ||
+            aMessage.mailDate > value.mailDate) {
+        // overwrite
+        dedupedMap.set(key, {
+          "mailDate": aMessage.mailDate > value.mailDate ? aMessage.mailDate : value.mailDate,
+          "portal": {
+            "name": value.portal.name,
+            "latitude": value.portal.latitude,
+            "longitude": value.portal.longitude,
+            "owned": aMessage.portal.owned || value.portal.owned
+          }
+        });
+      }
+
+    }else{
+      dedupedMap.set(key, aMessage);
+    }
+  };
+
+  return Array.from(dedupedMap.values());
+};
 
 
 /**

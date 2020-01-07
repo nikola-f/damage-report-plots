@@ -1,6 +1,5 @@
 import {PublishInput} from 'aws-sdk/clients/sns';
-import {Job, CreateJobMessage, QueueThreadsMessage,
-  Agent} from '@common/types';
+import {Job, QueueThreadsMessage, Agent} from '@common/types';
 
 import * as env from './env';
 
@@ -11,22 +10,6 @@ const sns: AWS.SNS = new AWS.SNS();
 const TOPIC_PREFIX = 'arn:aws:sns:' + env.ARN_REGION_ACCOUNT + ':';
 
 
-// export const createTableAsync = (job: Job): Promise<void> => {
-//   return publish({
-//     "Message": JSON.stringify(job),
-//     "Subject": 'CreateTable',
-//     "TopicArn": CREATE_TABLE_TOPIC
-//   });
-// };
-
-// export const createSheetsAsync = (job: Job): Promise<void> => {
-//   return publish({
-//     "Message": JSON.stringify(job),
-//     "Subject": 'CreateSheets',
-//     "TopicArn": TOPIC_PREFIX + 'drp-create-sheets'
-//   });
-// };
-
 
 export const preExecuteJobAsync = (job: Job): Promise<void> => {
   return publish({
@@ -36,25 +19,6 @@ export const preExecuteJobAsync = (job: Job): Promise<void> => {
   });
 };
 
-
-// export const checkSheetsExistenceAsync = (job: Job): Promise<void> => {
-//   return publish({
-//     "Message": JSON.stringify(job),
-//     "Subject": 'CheckSheetsExistence',
-//     "TopicArn": TOPIC_PREFIX + 'drp-check-sheets-existence'
-//   });
-// };
-
-// export const checkTableAsync = (job: Job): Promise<void> => {
-//   return publish({
-//     "Message": JSON.stringify(job),
-//     "Subject": 'CheckTable',
-//     "TopicArn": CHECK_TABLE_TOPIC
-//   });
-// };
-
-
-
 export const putJobAsync = (job: Job): Promise<void> => {
   return publish({
     "Message": JSON.stringify(job),
@@ -62,7 +26,6 @@ export const putJobAsync = (job: Job): Promise<void> => {
     "TopicArn": TOPIC_PREFIX + 'drp-put-job'
   });
 };
-
 
 export const postExecuteJobAsync = (job: Job): Promise<void> => {
   return publish({
@@ -72,34 +35,6 @@ export const postExecuteJobAsync = (job: Job): Promise<void> => {
   });
 };
 
-
-// export const queueJobAsync = (job: Job): Promise<void> => {
-//   return publish({
-//     "Message": JSON.stringify(job),
-//     "Subject": 'QueueJob',
-//     "TopicArn": TOPIC_PREFIX + 'drp-queue-job'
-//   });
-// };
-
-
-// export const createAgentQueueAsync = (job: Job): Promise<void> => {
-//   return publish({
-//     "Message": JSON.stringify(job),
-//     "Subject": 'CreateAgentQueue',
-//     "TopicArn": TOPIC_PREFIX + 'drp-create-agent-queue'
-//   });
-// };
-
-
-// export const deleteAgentQueueAsync = (job: Job): Promise<void> => {
-//   return publish({
-//     "Message": JSON.stringify(job),
-//     "Subject": 'DeleteAgentQueue',
-//     "TopicArn": TOPIC_PREFIX + 'drp-delete-agent-queue'
-//   });
-// };
-
-
 export const putAgentAsync = (agent: Agent): Promise<void> => {
   return publish({
     "Message": JSON.stringify(agent),
@@ -108,7 +43,6 @@ export const putAgentAsync = (agent: Agent): Promise<void> => {
   });
 };
 
-
 export const queueThreadsAsync = (qtm: QueueThreadsMessage): Promise<void> => {
   return publish({
     "Message": JSON.stringify(qtm),
@@ -116,14 +50,6 @@ export const queueThreadsAsync = (qtm: QueueThreadsMessage): Promise<void> => {
     "TopicArn": TOPIC_PREFIX + 'drp-queue-threads'
   });
 };
-
-// export const queueMailsAsync = (job: Job): Promise<void> => {
-//   return publish({
-//     "Message": JSON.stringify(job),
-//     "Subject": 'QueueMails',
-//     "TopicArn": TOPIC_PREFIX + 'drp-queue-mails'
-//   });
-// };
 
 export const queueReportsAsync = (job: Job): Promise<void> => {
   return publish({
@@ -148,10 +74,6 @@ const publish = async (input: PublishInput): Promise<void> => {
     console.log('do publish provisionally:' + JSON.stringify(input));
     return Promise.resolve();
   }
-  // console.log(typeof env.ARN_REGION_ACCOUNT);
-  // console.log(env.ARN_REGION_ACCOUNT);
-  // console.log(input.TopicArn);
-  // console.log(process.env.ARN_REGION_ACCOUNT);
   try {
     await sns.publish(input).promise();
     console.log('published:' + JSON.stringify(input));
