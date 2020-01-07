@@ -24,7 +24,7 @@ export const dedupe = (rawArray: OneReportMessage[]): OneReportMessage[] => {
     const key = JSON.stringify({
       "lat": aMessage.portal.latitude,
       "lng": aMessage.portal.longitude,
-      "rounded": Math.floor(aMessage.mailDate /(1000*3600*12)) *1000*3600*12
+      "rounded": Math.floor(aMessage.mailDate /(1000*3600*12)) *1000*3600*12 // round down 12hrs
     });
     
     if(dedupedMap.has(key)) {
