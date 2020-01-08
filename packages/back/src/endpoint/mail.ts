@@ -54,8 +54,6 @@ export const queueReports = async (event: SNSEvent): Promise<void> => {
         const portals: Portal[] = libMail.parseHtml(aMail.body);
         for(let aPortal of portals) {
           rawReportArray.push({
-            // round down 12hrs
-            // "roundedDownMailDate": Math.floor(aMail.internalDate /(1000*3600*12)) *1000*3600*12,
             "mailDate": aMail.internalDate,
             "portal": aPortal
           });
