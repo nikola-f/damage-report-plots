@@ -60,7 +60,7 @@ export const appendReportsToSheets = async (event: SNSEvent): Promise<void> => {
     try {
       if(reportRows.length > 0) {
         const client = libAuth.createGapiOAuth2Client(
-          env.GOOGLE_CALLBACK_URL_JOB,
+          env.GOOGLE_CALLBACK_URL,
           job.accessToken
         );
   

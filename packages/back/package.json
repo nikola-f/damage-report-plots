@@ -28,12 +28,12 @@
 		"aws-sdk": "^2.596.0",
 		"eslint-import-resolver-webpack": "^0.11.1",
 		"hard-source-webpack-plugin": "^0.13.1",
+		"serverless-jetpack": "^0.7.0",
 		"serverless-webpack": "^5.3.1",
 		"ts-loader": "^4.2.0",
 		"typescript": "^3.7.4",
 		"webpack": "^4.41.5",
 		"webpack-cli": "^3.3.10",
-		"serverless-export-env": "^1.2.0",
 		"webpack-node-externals": "^1.7.2"
 	}
 }

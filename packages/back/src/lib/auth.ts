@@ -1,5 +1,5 @@
-const env = require('./env');
-const {google} = require('googleapis');
+import * as env from '../lib/env';
+import {google} from 'googleapis';
 
 import {OAuth2Client} from 'google-auth-library';
 const authClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);

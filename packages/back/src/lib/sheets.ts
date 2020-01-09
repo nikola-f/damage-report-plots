@@ -20,7 +20,7 @@ const SHEETS_PROTECT = require('./sheetsProtect.json');
 export const create = async (job: Job): Promise<string> => {
 
   const client = libAuth.createGapiOAuth2Client(
-    env.GOOGLE_CALLBACK_URL_JOB,
+    env.GOOGLE_CALLBACK_URL,
     job.accessToken
   );
 
@@ -55,10 +55,8 @@ export const exists = async (job: Job): Promise<boolean> => {
 
   if(job.agent && job.agent.spreadsheetId) {
     const client = libAuth.createGapiOAuth2Client(
-      env.GOOGLE_CALLBACK_URL_JOB,
+      env.GOOGLE_CALLBACK_URL,
       job.accessToken
-      // job.tokens.jobAccessToken,
-      // job.tokens.jobRefreshToken
     );
 
     try {

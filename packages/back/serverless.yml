@@ -29,8 +29,8 @@ provider:
     
     GOOGLE_CLIENT_ID: ${file(.cred.${self:provider.stage}.yml):googleClientId}
     GOOGLE_CLIENT_SECRET: ${file(.cred.${self:provider.stage}.yml):googleClientSecret}
-    GOOGLE_CALLBACK_URL_ME: ${file(env.${self:provider.stage}.yml):googleCallbackUrlMe}
-    GOOGLE_CALLBACK_URL_JOB: ${file(env.${self:provider.stage}.yml):googleCallbackUrlJob}
+    # GOOGLE_CALLBACK_URL_ME: ${file(env.${self:provider.stage}.yml):googleCallbackUrlMe}
+    GOOGLE_CALLBACK_URL: ${file(env.${self:provider.stage}.yml):googleCallbackUrl}
 
   iamRoleStatements:
     - Effect: "Allow"
@@ -61,19 +61,18 @@ provider:
           - - 'arn:aws:sns'
             - ${self:custom.arnRegionAccount}
             - '*'
-    - Effect: "Allow"
-      Action:
-        - "xray:PutTraceSegments"
-        - "xray:PutTelemetryRecords"
-      Resource:
-        - "*"
+    # - Effect: "Allow"
+    #   Action:
+    #     - "xray:PutTraceSegments"
+    #     - "xray:PutTelemetryRecords"
+    #   Resource:
+    #     - "*"
 
 plugins:
   - serverless-webpack
 
 package:
   individually: false
-
 
 functions:
 
@@ -117,8 +116,7 @@ functions:
     events:
       - sns: drp-append-reports-to-sheets
     environment:
-      REPORTS_ARRAY_DEQUEUE_COUNT: 10 # sqsから読む最大メッセージ数
-      REPORTS_BATCH_COUNT: 100 # 1度のリクエストでspreadsheetsへ書く最大メッセージ数
+      REPORTS_ARRAY_DEQUEUE_COUNT: 50 # sqsから読む最大メッセージ数
     memorySize: 512
 
   postExecuteJob:

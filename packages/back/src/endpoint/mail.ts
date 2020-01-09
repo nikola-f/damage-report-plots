@@ -85,59 +85,6 @@ export const queueReports = async (event: SNSEvent): Promise<void> => {
 
     }
 
-    // if(threadIds.length === 0) {
-    //   console.info('no threads queued.');
-    // }
-
-    // access_token 再作成
-    // const accessToken = 
-    //   await libAuth.refreshAccessTokenManually(env.GOOGLE_CALLBACK_URL_JOB, job.tokens.jobRefreshToken);
-    // threadの詳細(mail付き)取得
-    // const mailArray: OneMailMessage[] =
-    //   await libMail.getMails(job.accessToken, threadIds, job.rangeFromTime, job.rangeToTime);
-    // if(mailArray && mailArray.length > 0) {
-    //   console.info(`${mailArray.length} mails found.`);
-    // }else{
-    //   console.info('no mails found.');
-    // }
-    
-    // // メール上のhtmlからポータル情報抽出
-    // const rawReportArray: OneReportMessage[] = [];
-    // // メール配列 -> メール
-    // for(let aMail of mailArray) {
-    //   // const html: string = libMail.decodeBase64(aMail.body);
-
-    //   // メール -> 重複ありレポート配列
-    //   const portals: Portal[] = libMail.parseHtml(aMail.body);
-    //   for(let aPortal of portals) {
-    //     rawReportArray.push({
-    //       // 6時間単位に丸める
-    //       "mailDate": Math.floor(aMail.internalDate /(1000*3600*6)) *1000*3600*6,
-    //       "portal": aPortal
-    //     });
-    //   }
-    // }
-
-    // // 重複ありレポート配列 -> 重複なしレポート配列
-    // const dedupedReportArray: OneReportMessage[] = util.dedupe(rawReportArray);
-    
-    // // 要素が欠けているレポートをfilter out
-    // const filteredReportArray: OneReportMessage[] = dedupedReportArray.filter((aReport) => {
-    //   return aReport.portal && aReport.mailDate && aReport.portal.name &&
-    //     aReport.portal.name !== '' &&
-    //     aReport.portal.latitude && aReport.portal.longitude &&
-    //     aReport.portal.owned !== null;
-    // });
-
-    // reportキューにキューイング
-    // if(filteredReportArray.length > 0) {
-    //   await libQueue.sendMessageDivisioinBySize(job.report.queueUrl, filteredReportArray, 250*1024);
-    //   job.report.queuedCount += filteredReportArray.length;
-    //   console.info(`${filteredReportArray.length} reports queued.`);
-    // }else{
-    //   console.info("no reports found.");
-    // }
-
 
     // threadキューに残があれば再帰
     // なければappendReportsを起動
@@ -174,7 +121,7 @@ export const queueThreads = async (event: SNSEvent): Promise<void> => {
     console.info('try to queue threads:', qtm.job.openId);
 
     const client = libAuth.createGapiOAuth2Client(
-      env.GOOGLE_CALLBACK_URL_JOB,
+      env.GOOGLE_CALLBACK_URL,
       qtm.job.accessToken
     );
     
@@ -252,36 +199,6 @@ export const queueThreads = async (event: SNSEvent): Promise<void> => {
       }
     }
     
-    
-    
-
-    //配列サイズごとにSQSメッセージを作成
-    // for(let aThread of threads) {
-    //   ids.push(aThread.id);
-    //   if(ids.length >= env.THREAD_QUEUE_ARRAY_SIZE) {
-    //     const threadArrayMessage: ThreadArrayMessage = {
-    //       "range": qtm.range,
-    //       "ids": ids
-    //     }
-    //     messages.push({
-    //       "MessageId": ids[0],
-    //       "Body": JSON.stringify(threadArrayMessage)
-    //     });
-    //     qtm.job.thread.queuedCount += ids.length;
-    //     ids.length = 0;
-    //   }
-    // }
-    // if(ids.length > 0) {
-    //   const threadArrayMessage: ThreadArrayMessage = {
-    //     "range": qtm.range,
-    //     "ids": ids
-    //   }
-    //   messages.push({
-    //     "MessageId": ids[0],
-    //     "Body": JSON.stringify(threadArrayMessage)
-    //   });
-    //   qtm.job.thread.queuedCount += ids.length;
-    // }
     libQueue.sendMessageBatch(qtm.job.thread.queueUrl, sqsMessages);
 
 

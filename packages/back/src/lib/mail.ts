@@ -15,16 +15,12 @@ import * as dateFormat from 'dateformat';
  */
 export const dedupe = (rawArray: OneReportMessage[]): OneReportMessage[] => {
   
-  // mapにPortalとroundedDateをstringifyしたものをkeyとしてput
-  // maxDate or UPCを更新できるなら上書きput
-  // 更新できなくて既存ならスルー
-  
   const dedupedMap = new Map();
   for(let aMessage of rawArray) {
     const key = JSON.stringify({
       "lat": aMessage.portal.latitude,
       "lng": aMessage.portal.longitude,
-      "rounded": Math.floor(aMessage.mailDate /(1000*3600*12)) *1000*3600*12 // round down 12hrs
+      "rounded": Math.floor(aMessage.mailDate /(1000*3600*24)) // round down 24hrs
     });
     
     if(dedupedMap.has(key)) {

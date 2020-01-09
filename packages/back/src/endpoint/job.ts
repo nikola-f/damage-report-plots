@@ -144,7 +144,7 @@ export const postExecuteJob = async (event: SNSEvent): Promise<void> => {
 
     // revoke
     libAuth.revokeToken(
-      env.GOOGLE_CALLBACK_URL_JOB,
+      env.GOOGLE_CALLBACK_URL,
       job.accessToken
     );
     job.accessToken = null;
