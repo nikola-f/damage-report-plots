@@ -76,5 +76,15 @@
         }]
       }]
     }
-  ]
+  ],
+  "namedRanges": [{
+    "name": "lastReportTime",
+    "range": {
+      "sheetId": 110,
+      "startRowIndex": 1,
+      "endRowIndex": 2,
+      "startColumnIndex": 4,
+      "endColumnIndex": 5
+    }
+  }]
 }

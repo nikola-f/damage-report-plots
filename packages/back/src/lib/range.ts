@@ -8,7 +8,7 @@ const INGRESS_EPOCH: number = Date.UTC(2012, 10, 15, 0, 0, 0, 0);
 
 export const getRawRanges = (lastReportTime?: number): Range[] => {
 
-  let fromTime: number = lastReportTime ? lastReportTime : INGRESS_EPOCH;
+  let fromTime: number = lastReportTime ? lastReportTime+1 : INGRESS_EPOCH;
   const ranges: Range[] = [];
   const now: number = Date.now();
   const oneRange = 1000*3600*24*30; // 30 days

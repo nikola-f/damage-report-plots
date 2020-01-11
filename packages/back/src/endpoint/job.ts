@@ -1,5 +1,6 @@
 import {SNSEvent, APIGatewayProxyEvent, APIGatewayProxyResult} from 'aws-lambda';
 import {Job, JobStatus, CreateJobRequest, Range} from '@common/types';
+import {OAuth2Client} from 'google-auth-library';
 
 import * as util from '@common/util';
 import * as env from '../lib/env';
@@ -80,18 +81,24 @@ export const preExecuteJob = async (event: SNSEvent): Promise<void> => {
     console.info('try to preExecute', job.openId);
     job.status = JobStatus.Processing;
 
+    // check exists, create spreadsheets
+    const client: OAuth2Client = libAuth.createGapiOAuth2Client(
+      env.GOOGLE_CALLBACK_URL,
+      job.accessToken
+    );
+    if(!await libSheets.exists(job, client)) {
+      job.agent.spreadsheetId = await libSheets.create(client);
+      launcher.putAgentAsync(job.agent);
+    }else{
+      job.lastReportTime = await libSheets.getLastReportTime(job, client);
+    }
+
     // get raw ranges
     const rawRanges: Range[] = libRange.getRawRanges(job.lastReportTime);
     if(!rawRanges || rawRanges.length <= 0) {
       console.info('no raw ranges.');
       libJob.cancel(job);
       continue;
-    }
-
-    // check exists, create spreadsheets
-    if(!await libSheets.exists(job)) {
-      job.agent.spreadsheetId = await libSheets.create(job);
-      launcher.putAgentAsync(job.agent);
     }
 
     // filter ranges

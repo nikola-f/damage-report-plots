@@ -27,7 +27,7 @@ export const verifyIdToken = async (token: string): Promise<Object> => {
  * gapiClientの作成
  */
 export const createGapiOAuth2Client = 
-    (redirectUrl: string, accessToken?: string): any => {
+    (redirectUrl: string, accessToken?: string): OAuth2Client => {
 
   console.info(
     'try to create client:', 
@@ -38,7 +38,7 @@ export const createGapiOAuth2Client =
     throw(new Error('google credential ENV not set.'))
   }
   
-  const oauth2Client = new google.auth.OAuth2(
+  const oauth2Client: OAuth2Client = new google.auth.OAuth2(
     env.GOOGLE_CLIENT_ID,
     env.GOOGLE_CLIENT_SECRET,
     redirectUrl

@@ -4,25 +4,48 @@ import * as util from '@common/util';
 import * as env from './env';
 import * as libAuth from './auth';
 import {google} from 'googleapis';
+import {OAuth2Client} from 'google-auth-library';
 const sheets = google.sheets('v4');
 const SHEETS_DEF = require('./sheetsDef.json');
 const SHEETS_PROTECT = require('./sheetsProtect.json');
 
 
-// import * as awsXRay from 'aws-xray-sdk';
-// import * as awsPlain from 'aws-sdk';
-// const AWS = awsXRay.captureAWS(awsPlain);
+
+
+/**
+ * get lastReportTime from spreadsheets
+ */
+export const getLastReportTime = async (job: Job, client: OAuth2Client): Promise<number> => {
+
+  try {
+    const res = await sheets.spreadsheets.values.get({
+      "spreadsheetId": job.agent.spreadsheetId,
+      "range": 'lastReportTime',
+      "auth": client
+    });
+    
+    console.log('lastReportTime:', res.data.values[0][0].split(',')[0]);
+
+    if(util.isSet(() => res.data.values[0][0]) &&
+       res.data.values[0][0].match(/,/) &&
+       !isNaN(res.data.values[0][0].split(',')[0])) {
+      return Number(res.data.values[0][0].split(',')[0]);
+    }else{
+      return 0;
+    }
+    
+  }catch(err){
+    console.error(err);
+    throw err;
+  }
+
+};
 
 
 /**
  * create spreadsheets
  */
-export const create = async (job: Job): Promise<string> => {
-
-  const client = libAuth.createGapiOAuth2Client(
-    env.GOOGLE_CALLBACK_URL,
-    job.accessToken
-  );
+export const create = async (client: OAuth2Client): Promise<string> => {
 
   let spreadsheetId: string;
   try {
@@ -51,13 +74,9 @@ export const create = async (job: Job): Promise<string> => {
 /**
  * check exists spreadsheets
  */
-export const exists = async (job: Job): Promise<boolean> => {
+export const exists = async (job: Job, client: OAuth2Client): Promise<boolean> => {
 
   if(job.agent && job.agent.spreadsheetId) {
-    const client = libAuth.createGapiOAuth2Client(
-      env.GOOGLE_CALLBACK_URL,
-      job.accessToken
-    );
 
     try {
       const res: any = await sheets.spreadsheets.get({
