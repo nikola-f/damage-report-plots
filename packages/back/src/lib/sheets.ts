@@ -24,11 +24,11 @@ export const getLastReportTime = async (job: Job, client: OAuth2Client): Promise
       "auth": client
     });
     
-    console.log('lastReportTime:', res.data.values[0][0].split(',')[0]);
 
     if(util.isSet(() => res.data.values[0][0]) &&
        res.data.values[0][0].match(/,/) &&
        !isNaN(res.data.values[0][0].split(',')[0])) {
+      console.log('lastReportTime:', res.data.values[0][0].split(',')[0]);
       return Number(res.data.values[0][0].split(',')[0]);
     }else{
       return 0;

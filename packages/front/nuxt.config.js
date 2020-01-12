@@ -20,7 +20,7 @@ export default {
   /*
    ** Customize the progress-bar color
    */
-  loading: { color: '#fff' },
+  loading: { color: '#000' },
   /*
    ** Global CSS
    */
@@ -40,6 +40,9 @@ export default {
    ** Nuxt.js dev-modules
    */
   buildModules: [
+    ['@nuxtjs/dotenv',
+      { filename: process.env.NODE_ENV !== 'production' ? "./env.dev" : "./env.prod" }
+    ],
     '@nuxtjs/vuetify',
     '@nuxt/typescript-build'
   ],
