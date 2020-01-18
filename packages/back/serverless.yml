@@ -108,7 +108,7 @@ functions:
     environment:
       THREAD_ARRAY_DEQUEUE_COUNT: 10 # sqsから読むスレッド配列の数
       THREAD_FETCH_COUNT: 100 # 1度のバッチ実行でgmailから読む最大スレッド数
-    memorySize: 1024
+    memorySize: 768
     timeout: 60
 
   appendReportsToSheets:
@@ -116,8 +116,9 @@ functions:
     events:
       - sns: drp-append-reports-to-sheets
     environment:
-      REPORTS_ARRAY_DEQUEUE_COUNT: 50 # sqsから読む最大メッセージ数
+      REPORTS_ARRAY_DEQUEUE_COUNT: 100 # sqsから読む最大メッセージ数
     memorySize: 512
+    timeout: 20
 
   postExecuteJob:
     handler: handler.postExecuteJob

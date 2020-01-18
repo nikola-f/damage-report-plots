@@ -27,7 +27,7 @@ export const dedupe = (rawArray: OneReportMessage[]): OneReportMessage[] => {
       const value: OneReportMessage = dedupedMap.get(key);
       if(aMessage.portal.owned && !value.portal.owned ||
             aMessage.mailDate > value.mailDate) {
-        // overwrite
+        // overwrite when newer mailDate or owned changes true
         dedupedMap.set(key, {
           "mailDate": aMessage.mailDate > value.mailDate ? aMessage.mailDate : value.mailDate,
           "portal": {
@@ -142,23 +142,20 @@ export const parseHtml = (html: string): Portal[] => {
                                         .children('span').eq(1).text();
 
   const portals: Portal[] = [];
-  let portal: Portal = {
-    "name": '',
-    "latitude": 0,
-    "longitude": 0,
-    "owned": null
-  };
   $('a[href]').each((i, element) => {
+    
+    // destroy link, maybe
+    if(!$(element).parent().is('div')) {
+      return true;
+    }
+
     const intelUrl = $(element).attr('href');
     // console.log(intelUrl);
     const latlong = url2latlong(intelUrl);
-    portal.latitude = latlong.lat;
-    portal.longitude = latlong.long;
 
-    portal.name = $(element).parent().prev().text();
-    // link destroyは無視
-    if(!portal.name || portal.name === '') {
-      console.log('name not found:', portal);
+    const name = $(element).parent().prev().text().replace(/\r?\n/g, '');
+    if(!name || name === '') {
+      console.log('name not found:', html);
       return true;
     }
 
@@ -168,13 +165,17 @@ export const parseHtml = (html: string): Portal[] => {
                         .find('span');
 
     // console.log($(owner).html());
+    let owned = false;
     if(owner) {
-      portal.owned = agentName === $(owner).text();
-    }else{
-      portal.owned = false;
+      owned = agentName === $(owner).text();
     }
 
-    portals.push(portal);
+    portals.push({
+      "name": name,
+      "latitude": latlong.lat,
+      "longitude": latlong.long,
+      "owned": owned
+    });
   });
 
   return portals;
@@ -273,7 +274,7 @@ const parseBatchResponse = (response: any): any => {
     console.error('batch response contains no message part.');
   }
 
-  console.log(`parse batch res:${messages.length} messages found.`);
+  // console.log(`parse batch res:${messages.length} messages found.`);
   return messages;
 };
 

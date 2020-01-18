@@ -51,6 +51,7 @@
         try {
           await this.$auth2.signIn();
           const idToken = this.$auth2.currentUser.get().getAuthResponse()['id_token'];
+          console.log(this.$auth2.currentUser.get().getAuthResponse());
           const res = await this.$repositoryFactory.get('agent').signin(idToken);
           console.log('res:', res);
 

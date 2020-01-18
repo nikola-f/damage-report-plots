@@ -43,6 +43,7 @@ export interface Job {
   // rangeToTime?: number,
   // tokens: Tokens,
   accessToken: string,
+  expiredAt: number,
   agent: Agent,
   ranges?: Range[],
   thread?: {
@@ -115,7 +116,8 @@ export interface EstimatedMailCount {
 
 export interface CreateJobRequest {
   jwt: string,
-  accessToken: string
+  accessToken: string,
+  expiredAt: number
 }
 
 

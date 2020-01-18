@@ -6,6 +6,9 @@ const authClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
 
 
 
+/**
+ * validate jwt
+ */
 export const verifyIdToken = async (token: string): Promise<Object> => {
   
   try {
@@ -24,7 +27,7 @@ export const verifyIdToken = async (token: string): Promise<Object> => {
 
 
 /**
- * gapiClientの作成
+ * create gapiClient
  */
 export const createGapiOAuth2Client = 
     (redirectUrl: string, accessToken?: string): OAuth2Client => {
@@ -54,24 +57,9 @@ export const createGapiOAuth2Client =
 };
 
 
-/**
- * accessTokenを明示的にrefresh
- * batchelor向け
- */
-// export const refreshAccessTokenManually = 
-//   async (redirectUrl: string, refreshToken: string): Promise<string> => {
-//   console.info('try to refresh token.');
-
-//   return new Promise<string>((resolve, reject) => {
-//     const client = createGapiOAuth2Client(redirectUrl, null, refreshToken);
-//     client.refreshAccessToken((err, tokens) => {
-//       err ? reject(err) : resolve(tokens.access_token);
-//     });
-//   });
-// }
 
 /**
- * tokenの無効化
+ * revoke
  */
 export const revokeToken = 
         async (redirectUrl: string, accessToken: string): Promise<any> => {

@@ -5,6 +5,7 @@
     id="plots-ryqyh7ci1hf96eeb"
   >
     <AnalyzeDialog ref="analyzeDialog" />
+    <JobLogic ref="jobLogic" />
   </v-container>
 </template>
 
@@ -12,11 +13,13 @@
   import L from 'leaflet';
   import 'leaflet.tilelayer.colorfilter/src/leaflet-tilelayer-colorfilter.js';
   import AnalyzeDialog from './AnalyzeDialog';
+  import JobLogic from './JobLogic';
 
   export default {
 
     components: {
-      AnalyzeDialog
+      AnalyzeDialog,
+      JobLogic
     },
 
     methods: {
@@ -56,19 +59,16 @@
         .on('zoomend', this.zoomend)
         .on('moveend', this.moveend);
 
+      // plot them
       if (this.$store.state.agent.spreadsheetId) {
 
       }
+      // start job
       else if (await this.$refs.analyzeDialog.open()) {
-        const user = this.$auth2.currentUser.get();
-        const res = await user.grant({
-          "scope": 'https://www.googleapis.com/auth/spreadsheets' +
-            ' ' +
-            'https://www.googleapis.com/auth/gmail.readonly'
-        });
-        console.table(res);
+        this.$refs.jobLogic.create();
 
       }
+      // nop
       else {
         console.log('no go');
       }

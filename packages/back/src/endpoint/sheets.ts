@@ -28,9 +28,16 @@ export const appendReportsToSheets = async (event: SNSEvent): Promise<void> => {
     const job: Job = JSON.parse(rec.Sns.Message);
     console.log('try to append reports:', job.openId);
     
-    // reportキューからreportを取得
-    const reportArrayMessages: MessageList =
-      await libQueue.receiveMessageBatch(job.report.queueUrl, env.REPORTS_ARRAY_DEQUEUE_COUNT);
+    // dequeue reports
+    let reportArrayMessages: MessageList = null;
+    try {
+      reportArrayMessages = await libQueue.receiveMessageBatch(job.report.queueUrl, env.REPORTS_ARRAY_DEQUEUE_COUNT);
+    }catch(err){
+      console.error(err);
+      continue;
+    }
+
+
     if(reportArrayMessages.length <= 0) {
       console.log('no reports queued.');
     }
@@ -68,7 +75,8 @@ export const appendReportsToSheets = async (event: SNSEvent): Promise<void> => {
         const appendRes = await sheets.spreadsheets.values.append({
           "spreadsheetId": job.agent.spreadsheetId,
           "range": 'reports!A2:F2',
-          "valueInputOption": 'USER_ENTERED',
+          "valueInputOption": 'RAW',
+          // "valueInputOption": 'USER_ENTERED',
           "insertDataOption": 'INSERT_ROWS',
           "requestBody": {
             "range": 'reports!A2:F2',

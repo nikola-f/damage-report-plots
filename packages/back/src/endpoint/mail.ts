@@ -18,7 +18,7 @@ const gmail = google.gmail('v1');
 
 
 /**
- * mailの詳細取得,解析,reportのキューイング
+ * get mail detail, analyze, queue for sheets
  * @next putJob, queueReports, appendReportsToSheets
  */
 export const queueReports = async (event: SNSEvent): Promise<void> => {
@@ -29,10 +29,16 @@ export const queueReports = async (event: SNSEvent): Promise<void> => {
   for(let rec of event.Records) {
     let job: Job = JSON.parse(rec.Sns.Message);
     console.info('try to queue reports:', job.openId);
-
+    
     // dequeue threads
-    const sqsMessages: MessageList =
-      await libQueue.receiveMessageBatch(job.thread.queueUrl, env.THREAD_ARRAY_DEQUEUE_COUNT);
+    let sqsMessages: MessageList = null;
+    try {
+      sqsMessages = await libQueue.receiveMessageBatch(job.thread.queueUrl, env.THREAD_ARRAY_DEQUEUE_COUNT);
+    }catch(err){
+      console.error(err);
+      continue;
+    }
+
     for(let anSqsMessage of sqsMessages) {
       const threadArrayMessage: ThreadArrayMessage = JSON.parse(anSqsMessage.Body);
 
@@ -59,6 +65,7 @@ export const queueReports = async (event: SNSEvent): Promise<void> => {
           });
         }
       }
+      console.info(`${rawReportArray.length} portals parsed.`);
   
       // dedupe
       const dedupedReportArray: OneReportMessage[] = libMail.dedupe(rawReportArray);
@@ -71,7 +78,6 @@ export const queueReports = async (event: SNSEvent): Promise<void> => {
           aReport.portal.owned !== null;
       });
 
-
       // queue for report
       if(filteredReportArray.length > 0) {
         await libQueue.sendMessageDivisioinBySize(job.report.queueUrl, filteredReportArray, 250*1024);
@@ -81,23 +87,22 @@ export const queueReports = async (event: SNSEvent): Promise<void> => {
         console.info("no reports found.");
         continue;
       }
-      
 
     }
 
+    // threads remain, recurse
+    // no threads or expire soon, go next;appendReports
+    const threadRemain = await libQueue.getNumberOfMessages(job.thread.queueUrl);
+    const runtimeRemain = job.expiredAt - 5 * 60 * 1000 - Date.now(); // 5min.
+    console.info(`${threadRemain} threadArray & ${runtimeRemain} runtime remain.`);
 
-    // threadキューに残があれば再帰
-    // なければappendReportsを起動
-    const threadRemain: number =
-      await libQueue.getNumberOfMessages(job.thread.queueUrl);
-    console.info(`${threadRemain} threadArray remain.`);
-    if(threadRemain > 0) {
+    if(threadRemain > 0 && runtimeRemain > 0) {
       await launcher.queueReportsAsync(job);
     }else{
       await launcher.appendReportsToSheetsAsync(job);
     }
 
-    // job保存
+    // save job
     await launcher.putJobAsync(job);
 
   }
@@ -107,7 +112,7 @@ export const queueReports = async (event: SNSEvent): Promise<void> => {
 
 
 /**
- * threadのid取得およびキューイング
+ * list thread ids, then queue
  * @next putJob, queueThreads, queueReports
  */
 export const queueThreads = async (event: SNSEvent): Promise<void> => {
@@ -125,11 +130,11 @@ export const queueThreads = async (event: SNSEvent): Promise<void> => {
       qtm.job.accessToken
     );
     
-    // yyyy-mm-ddに変換
+    // yyyy-mm-dd
     const after = dateFormat(new Date(qtm.range.fromTime), 'isoDate'),
           before = dateFormat(new Date(qtm.range.toTime), 'isoDate');
 
-    // gapiでthread一覧の取得
+    // list threads
     let req = {
       "auth": client,
       "userId": 'me',

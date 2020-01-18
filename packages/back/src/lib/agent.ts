@@ -1,12 +1,8 @@
 import {GetItemOutput} from 'aws-sdk/clients/dynamodb';
 import {Agent} from '@common/types';
 
-
-// import * as awsXRay from 'aws-xray-sdk';
 import * as AWS from 'aws-sdk';
-// const AWS = awsXRay.captureAWS(awsPlain);
 const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
-
 
 
 export const getAgent = async (openId: string): Promise<Agent> => {

@@ -1,6 +1,7 @@
 import {SNSEvent, APIGatewayProxyEvent, APIGatewayProxyResult} from 'aws-lambda';
 import {Job, JobStatus, CreateJobRequest, Range} from '@common/types';
 import {OAuth2Client} from 'google-auth-library';
+// import {AuthResponse} from 'gapi.auth2';
 
 import * as util from '@common/util';
 import * as env from '../lib/env';
@@ -25,12 +26,13 @@ export const createJob = async (event: APIGatewayProxyEvent): Promise<APIGateway
     return util.BAD_REQUEST;
   }
 
-  const req: CreateJobRequest = JSON.parse(event.body);
+  // const auth: AuthResponse = JSON.parse(event.body);
+  const auth = JSON.parse(event.body);
 
   // validate jwt
   let payload;
   try {
-    payload = await libAuth.verifyIdToken(req.jwt);
+    payload = await libAuth.verifyIdToken(auth.id_token);
   }catch(err){
     console.error(err);
     return util.BAD_REQUEST;
@@ -52,17 +54,25 @@ export const createJob = async (event: APIGatewayProxyEvent): Promise<APIGateway
     
     "status": JobStatus.Created,
     "lastAccessTime": createTime,
-    "accessToken": req.accessToken,
+    "accessToken": auth.access_token,
+    "expiredAt": auth.expired_at,
     "agent": agent
-  }
+  };
 
   // preExecute
-  launcher.preExecuteJobAsync(job);
+  await launcher.preExecuteJobAsync(job);
 
   // save db
-  launcher.putJobAsync(job);
+  await launcher.putJobAsync(job);
 
-  return util.OK;
+
+  return {
+    "statusCode": 200,
+    "headers": {
+      "Access-Control-Allow-Origin": env.CLIENT_ORIGIN
+    },
+    "body": String(createTime)
+  };
 };
 
 
@@ -150,14 +160,14 @@ export const postExecuteJob = async (event: SNSEvent): Promise<void> => {
     }
 
     // revoke
-    libAuth.revokeToken(
+    await libAuth.revokeToken(
       env.GOOGLE_CALLBACK_URL,
       job.accessToken
     );
     job.accessToken = null;
 
     // save db
-    launcher.putJobAsync(job);
+    await launcher.putJobAsync(job);
   }
 
 };
@@ -182,7 +192,7 @@ export const putJob = async (event: SNSEvent): Promise<void> => {
     job.accessToken = null;
     job.agent = null;
 
-    dynamo.put({
+    await dynamo.put({
       "TableName": "job",
       "Item": job
     }).promise()

@@ -2,11 +2,11 @@ import Repository from './repository';
 
 export default {
 
-  signin(payload: Object) {
-    return Repository.post('/api/signin', payload);
+  signin(idToken: string) {
+    return Repository.post('/api/signin', idToken);
   },
   
-  signup(payload: Object) {
-    return Repository.post('/api/signup', payload);
+  signup(idToken: Object) {
+    return Repository.post('/api/signup', idToken);
   }
 };

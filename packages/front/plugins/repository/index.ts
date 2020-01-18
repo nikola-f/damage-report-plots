@@ -1,10 +1,12 @@
 import AgentRepository from './agentRepository';
+import JobRepository from './jobRepository';
 import Vue from 'vue';
 
 
 
 const repositories = {
-  agent: AgentRepository
+  agent: AgentRepository,
+  job: JobRepository
 };
 
 export const RepositoryFactory = {
