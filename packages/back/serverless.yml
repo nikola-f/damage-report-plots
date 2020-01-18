@@ -29,7 +29,6 @@ provider:
     
     GOOGLE_CLIENT_ID: ${file(.cred.${self:provider.stage}.yml):googleClientId}
     GOOGLE_CLIENT_SECRET: ${file(.cred.${self:provider.stage}.yml):googleClientSecret}
-    # GOOGLE_CALLBACK_URL_ME: ${file(env.${self:provider.stage}.yml):googleCallbackUrlMe}
     GOOGLE_CALLBACK_URL: ${file(env.${self:provider.stage}.yml):googleCallbackUrl}
 
   iamRoleStatements:
@@ -61,12 +60,6 @@ provider:
           - - 'arn:aws:sns'
             - ${self:custom.arnRegionAccount}
             - '*'
-    # - Effect: "Allow"
-    #   Action:
-    #     - "xray:PutTraceSegments"
-    #     - "xray:PutTelemetryRecords"
-    #   Resource:
-    #     - "*"
 
 plugins:
   - serverless-webpack
@@ -83,7 +76,7 @@ functions:
           rate: rate(10 minutes)
           enabled: false
     environment:
-      TICKET_GENERATE_UNIT: 20
+      TICKET_GENERATE_UNIT: 1200
     memorySize: 128
 
   preExecuteJob:
@@ -97,8 +90,8 @@ functions:
     events:
       - sns: drp-queue-threads
     environment:
-      THREAD_FETCH_COUNT: 500  # gmailから読む最大スレッド数
-      THREAD_QUEUE_ARRAY_SIZE: 50  # sqsメッセージ1件に含める最大スレッド数
+      THREAD_FETCH_COUNT: 500  # max thread count get from gmail once
+      THREAD_QUEUE_ARRAY_SIZE: 50  # max thread count in 1 sqs message
     memorySize: 512
 
   queueReports:
@@ -106,8 +99,8 @@ functions:
     events:
       - sns: drp-queue-reports
     environment:
-      THREAD_ARRAY_DEQUEUE_COUNT: 10 # sqsから読むスレッド配列の数
-      THREAD_FETCH_COUNT: 100 # 1度のバッチ実行でgmailから読む最大スレッド数
+      THREAD_ARRAY_DEQUEUE_COUNT: 10 # max thread array count dequeue for sqs once
+      THREAD_FETCH_COUNT: 100 # max thread count get from 1 gmail batch
     memorySize: 768
     timeout: 60
 
@@ -116,7 +109,7 @@ functions:
     events:
       - sns: drp-append-reports-to-sheets
     environment:
-      REPORTS_ARRAY_DEQUEUE_COUNT: 100 # sqsから読む最大メッセージ数
+      REPORTS_ARRAY_DEQUEUE_COUNT: 100 # max report count dequeue for sqs once
     memorySize: 512
     timeout: 20
 
@@ -129,13 +122,11 @@ functions:
     handler: handler.putJob
     events:
       - sns: drp-put-job
-    # memorySize: 128
 
   putAgent:
     handler: handler.putAgent
     events:
       - sns: drp-put-agent
-    # memorySize: 128
 
   signin:
     handler: handler.signin
@@ -159,6 +150,22 @@ functions:
       - http:
           path: api/job
           method: post
+          cors: true
+
+  listJob:
+    handler: handler.listJob
+    events:
+      - http:
+          path: api/jobs
+          method: get
+          cors: true
+
+  canCreateJob:
+    handler: handler.canCreateJob
+    events:
+      - http:
+          path: api/job
+          method: get
           cors: true
 
 

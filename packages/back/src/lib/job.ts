@@ -89,55 +89,73 @@ export const createJobQueue = async (job: Job): Promise<Job> => {
 
 
 
+/**
+ * get active list
+ */
+export const hasHotJob = async (openId: string): Promise<boolean> => {
 
-// jobテーブルから降順で10件取得
-// export const getJobList = async (openId: string): Promise<Job[]> => {
+  const rawList = await getJobList(openId);
+  for(const rawJob of rawList) {
+    if(rawJob.lastAccessTime + 4 * 3600 * 1000 > Date.now()) { // 4hr
+      return true;
+    }
+  }
+  return false;
+
+};
+
+
+
+/**
+ * get list
+ */
+export const getJobList = async (openId: string): Promise<Job[]> => {
   
-//   let jobs: Job[] = [];
-//   let qo: QueryOutput;
-//   try {
-//     qo = await dynamo.query({
-//       "TableName": 'job',
-//       "ScanIndexForward": false,
-//       "KeyConditionExpression": 'openId = :o',
-//       "ExpressionAttributeValues": {
-//         ":o": openId
-//       },
-//       "Limit": 10
-//     }).promise();
+  let jobs: Job[] = [];
+  let qo: QueryOutput;
+  try {
+    qo = await dynamo.query({
+      "TableName": 'job',
+      "ScanIndexForward": false,
+      "KeyConditionExpression": 'openId = :o',
+      "ExpressionAttributeValues": {
+        ":o": openId
+      },
+      // "Limit": 10
+    }).promise();
     
-//     if(qo.Items) {
-//       for(let item of qo.Items as any) {
-//         console.log('item:', item);
-//         jobs.push({
-//           "openId": 'me',
-//           "createTime": Number(item.createTime),
-//           "status": JobStatus[JobStatus[Number(item.status)]],
-//           "lastAccessTime": Number(item.lastAccessTime),
-//           "lastReportTime": Number(item.lastReportTime),
-//           // "rangeToTime": Number(item.rangeToTime),
-//           "thread": {
-//             "queueUrl": '',
-//             "queuedCount": util.isSet(() => item.thread.queuedCount) ?
-//               Number(item.thread.queuedCount) : 0
-//           },
-//           "report": {
-//             "queueUrl": '',
-//             "queuedCount": util.isSet(() => item.report.queuedCount) ?
-//               Number(item.report.queuedCount) : 0
-//           },
-//           "accessToken": null,
-//           "agent": null
-//         });
-//       }
-//     }
+    if(qo.Items) {
+      for(let item of qo.Items as any) {
+        console.log('item:', item);
+        jobs.push({
+          "openId": 'me',
+          "createTime": Number(item.createTime),
+          "status": JobStatus[JobStatus[Number(item.status)]],
+          "lastAccessTime": Number(item.lastAccessTime),
+          "lastReportTime": Number(item.lastReportTime),
+          "accessToken": null,
+          "expiredAt": item.expiredAt,
+          "agent": null,
+          "thread": {
+            "queueUrl": null,
+            "queuedCount": util.isSet(() => item.thread.queuedCount) ?
+              Number(item.thread.queuedCount) : 0
+          },
+          "report": {
+            "queueUrl": null,
+            "queuedCount": util.isSet(() => item.report.queuedCount) ?
+              Number(item.report.queuedCount) : 0
+          },
+        });
+      }
+    }
 
-//   }catch(err){
-//     console.error('getJobList:', err);
-//   }finally{
-//     return Promise.resolve(jobs);
-//   }
+  }catch(err){
+    console.error('getJobList:', err);
+  }finally{
+    return Promise.resolve(jobs);
+  }
 
-// };
+};
 
 

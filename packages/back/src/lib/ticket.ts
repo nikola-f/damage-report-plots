@@ -10,7 +10,7 @@ const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient()
 
 export const consume = async (job: Job): Promise<void> => {
   
-  const count = 1; // TODO computeAmount
+  const count = Math.ceil(job.report.queuedCount / 50);
   
   let res: UpdateItemOutput;
   try {

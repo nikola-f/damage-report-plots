@@ -114,11 +114,11 @@ export interface EstimatedMailCount {
 }
 
 
-export interface CreateJobRequest {
-  jwt: string,
-  accessToken: string,
-  expiredAt: number
-}
+// export interface CreateJobRequest {
+//   jwt: string,
+//   accessToken: string,
+//   expiredAt: number
+// }
 
 
 // export as namespace DamageReportPlots;

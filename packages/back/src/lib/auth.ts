@@ -9,21 +9,41 @@ const authClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
 /**
  * validate jwt
  */
-export const verifyIdToken = async (token: string): Promise<Object> => {
+export const getPayload = async (token: string): Promise<Object> => {
   
   try {
     const ticket = await authClient.verifyIdToken({
       "idToken": token,
       "audience": env.GOOGLE_CLIENT_ID
     });
-    const payload = ticket.getPayload();
-    return Promise.resolve(payload);
+    // const payload = ticket.getPayload();
+    return ticket.getPayload();
   }catch(err){
-    return Promise.reject(err);
+    console.error(err);
+    return null;
   }
 
 };
 
+
+/**
+ * parse jwt
+ */
+// export const getOpenid = async (token: string): Promise<string> => {
+  
+//   try {
+//     const ticket = await authClient.verifyIdToken({
+//       "idToken": token,
+//       "audience": env.GOOGLE_CLIENT_ID
+//     });
+//     const payload = ticket.getPayload();
+//     return payload['sub'];
+//   }catch(err){
+//     console.error(err);
+//     return null;
+//   }
+
+// };
 
 
 /**

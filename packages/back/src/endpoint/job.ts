@@ -1,5 +1,5 @@
 import {SNSEvent, APIGatewayProxyEvent, APIGatewayProxyResult} from 'aws-lambda';
-import {Job, JobStatus, CreateJobRequest, Range} from '@common/types';
+import {Job, JobStatus, Range} from '@common/types';
 import {OAuth2Client} from 'google-auth-library';
 // import {AuthResponse} from 'gapi.auth2';
 
@@ -18,6 +18,70 @@ const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
 
 
 /**
+ * list job for specified user
+ */
+export const listJob = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  if(!util.isValidAPIGatewayProxyEvent(event)) {
+    return util.BAD_REQUEST;
+  }
+
+  const auth = JSON.parse(event.body);
+  // validate jwt & get openid
+  const payload = await libAuth.getPayload(auth.id_token);
+  if(!payload) {
+    return util.BAD_REQUEST;
+  }
+
+  // get list
+  const jobs = await libJob.getJobList(payload['sub']);
+  
+  let statusCode, body = null;
+  if(jobs && jobs.length > 0) {
+    statusCode = 200;
+    body = JSON.stringify(jobs);
+  }else{
+    statusCode = 404;
+  }
+  return {
+    "statusCode": statusCode,
+    "headers": {
+      "Access-Control-Allow-Origin": env.CLIENT_ORIGIN
+    },
+    "body": body
+  };
+};
+
+
+
+/**
+ * check state can create job
+ */
+export const canCreateJob = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  if(!util.isValidAPIGatewayProxyEvent(event)) {
+    return util.BAD_REQUEST;
+  }
+
+  const auth = JSON.parse(event.body);
+  const payload = await libAuth.getPayload(auth.id_token);
+  if(!payload) {
+    return util.BAD_REQUEST;
+  }
+  
+  const openId = payload['sub'];
+  const canCreate: boolean = !await libJob.hasHotJob(openId) && await libTicket.hasAvailable();
+    
+  return {
+    "statusCode": 200,
+    "headers": {
+      "Access-Control-Allow-Origin": env.CLIENT_ORIGIN
+    },
+    "body": String(canCreate)
+  };
+
+};
+
+
+/**
  * create job and go
  * @next preExecuteJob, putJob
  */
@@ -30,11 +94,17 @@ export const createJob = async (event: APIGatewayProxyEvent): Promise<APIGateway
   const auth = JSON.parse(event.body);
 
   // validate jwt
-  let payload;
-  try {
-    payload = await libAuth.verifyIdToken(auth.id_token);
-  }catch(err){
-    console.error(err);
+  // let payload;
+  // try {
+  //   payload = await libAuth.verifyIdToken(auth.id_token);
+  // }catch(err){
+  //   console.error(err);
+  //   return util.BAD_REQUEST;
+  // }
+
+  // validate jwt & get openid
+  const payload = await libAuth.getPayload(auth.id_token);
+  if(!payload) {
     return util.BAD_REQUEST;
   }
 
@@ -45,6 +115,7 @@ export const createJob = async (event: APIGatewayProxyEvent): Promise<APIGateway
     console.error('agent not found.');
     return util.BAD_REQUEST;
   }
+  
 
   // instantiate job
   const createTime = Date.now();

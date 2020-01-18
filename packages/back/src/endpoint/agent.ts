@@ -1,5 +1,5 @@
 import {SNSEvent, APIGatewayProxyEvent, APIGatewayProxyResult} from 'aws-lambda';
-import {Agent, Job} from '@common/types';
+import {Agent} from '@common/types';
 
 import * as util from '@common/util';
 import * as launcher from '../lib/launcher';
@@ -22,13 +22,16 @@ export const signup = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   }
 
   // validate token
-  let payload;
-  try {
-    payload = await libAuth.verifyIdToken(event.body);
-  }catch(err){
-    console.error(err);
+  // let payload;
+  // try {
+  const payload = await libAuth.getPayload(event.body);
+  if(!payload) {
     return util.BAD_REQUEST;
   }
+  // }catch(err){
+  //   console.error(err);
+  //   return util.BAD_REQUEST;
+  // }
 
   // load from db
   const openId = payload['sub'];
@@ -72,12 +75,16 @@ export const signin = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   }
 
   // validate token
-  let payload;
-  try {
-    payload = await libAuth.verifyIdToken(event.body);
-    console.log('payload:', payload);
-  }catch(err){
-    console.error(err);
+  // let payload;
+  // try {
+  //   payload = await libAuth.verifyIdToken(event.body);
+  //   console.log('payload:', payload);
+  // }catch(err){
+  //   console.error(err);
+  //   return util.BAD_REQUEST;
+  // }
+  const payload = await libAuth.getPayload(event.body);
+  if(!payload) {
     return util.BAD_REQUEST;
   }
 
