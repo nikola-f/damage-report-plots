@@ -164,7 +164,7 @@ functions:
     handler: handler.canCreateJob
     events:
       - http:
-          path: api/job
+          path: api/system
           method: get
           cors: true
 

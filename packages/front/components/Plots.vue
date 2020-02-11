@@ -48,7 +48,11 @@
       this.map = L.map('plots-ryqyh7ci1hf96eeb', {
           "center": center,
           "zoom": zoom,
-          "minZoom": 2
+          "minZoom": 3,
+          "maxBounds": [
+            [-90, -18000],
+            [90, 18000]
+          ]
         })
         .addLayer(L.tileLayer.colorFilter('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
           "attribution": '&copy; ' +
@@ -57,9 +61,10 @@
           "filter": inverseFilter
         }))
         .on('zoomend', this.zoomend)
-        .on('moveend', this.moveend);
+        .on('moveend', this.moveend)
+        .addControl(L.control.scale());
 
-      // plot them
+      // plot all
       if (this.$store.state.agent.spreadsheetId) {
 
       }

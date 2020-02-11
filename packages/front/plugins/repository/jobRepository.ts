@@ -6,12 +6,8 @@ export default {
     return Repository.post('/api/job', auth);
   },
 
-  list(auth: Object) {
+  getList(auth: Object) {
     return Repository.get('/api/jobs', auth);
-  },
-  
-  canCreate(auth: Object) {
-    return Repository.get('/api/job', auth);
-  },
+  }
   
 };

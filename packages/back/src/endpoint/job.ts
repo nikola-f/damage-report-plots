@@ -71,11 +71,11 @@ export const canCreateJob = async (event: APIGatewayProxyEvent): Promise<APIGate
   const canCreate: boolean = !await libJob.hasHotJob(openId) && await libTicket.hasAvailable();
     
   return {
-    "statusCode": 200,
+    "statusCode": canCreate ? 200 : 503,
     "headers": {
       "Access-Control-Allow-Origin": env.CLIENT_ORIGIN
     },
-    "body": String(canCreate)
+    "body": ''
   };
 
 };

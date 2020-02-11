@@ -30,7 +30,7 @@
     
 
     <v-content>
-      <v-container fluid style="height: 100%;">
+      <v-container fluid style="height: 100%;" class="ma-0 pa-0">
         <nuxt />
       </v-container>
     </v-content>

@@ -1,16 +1,14 @@
 import {GetItemOutput, UpdateItemOutput} from 'aws-sdk/clients/dynamodb';
 import {Job} from '@common/types';
 
-// import * as awsXRay from 'aws-xray-sdk';
 import * as AWS from 'aws-sdk';
-// const AWS = awsXRay.captureAWS(awsPlain);
 const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient()
 
 
 
 export const consume = async (job: Job): Promise<void> => {
   
-  const count = Math.ceil(job.report.queuedCount / 50);
+  const count = 1 + Math.ceil(job.report.queuedCount / 50);
   
   let res: UpdateItemOutput;
   try {
