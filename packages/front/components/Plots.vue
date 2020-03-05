@@ -65,7 +65,8 @@
         .addControl(L.control.scale());
 
       // plot all
-      if (this.$store.state.agent.spreadsheetId) {
+      if (this.$store.state.agent && this.$store.state.agent.spreadsheetId) {
+        // add auth
 
       }
       // start job

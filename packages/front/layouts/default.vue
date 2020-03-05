@@ -106,6 +106,9 @@
         }
 
       });
+
+      this.$store.commit('initialize');
+
     }
 
   };

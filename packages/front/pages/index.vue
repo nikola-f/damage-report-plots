@@ -1,6 +1,6 @@
 <template>
 
-  <Plots v-if="isSignedIn"/>
+  <Plots v-if="isSignedIn" />
   <Jumbotron v-else />
 
 </template>

@@ -1,14 +1,22 @@
+import Vue from 'vue';
+
 export const state = () => ({
-  isSignedIn: null,
-  isWaiting: null,
-  agent: null,
-  center: null,
+  isSignedIn: false,
+  isWaiting: false,
+  agent: {},
+  center: { "lat": 0, "lng": 0 },
   zoom: 2
 });
 
 
 
 export const mutations = {
+
+  initialize(state) {
+    state.isSignedIn = Vue.prototype.$auth2.isSignedIn.get();
+
+  },
+
 
   mapMoved(state, center) {
     state.center = center;
@@ -25,7 +33,7 @@ export const mutations = {
 
   signout(state) {
     state.isSignedIn = false;
-    state.agent = null;
+    // state.agent = {};
   },
 
   startWaiting(state) {

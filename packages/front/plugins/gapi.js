@@ -5,6 +5,7 @@ import Vue from 'vue';
 /* global gapi */
 
 
+
 scriptjs('https://apis.google.com/js/platform.js', function() {
 
   gapi.load('auth2', () => {
@@ -14,6 +15,7 @@ scriptjs('https://apis.google.com/js/platform.js', function() {
         client_id: authConfig.google.client_id,
         scope: 'openid',
       });
+
     }
   });
 
