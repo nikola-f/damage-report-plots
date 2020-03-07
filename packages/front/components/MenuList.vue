@@ -53,7 +53,6 @@
 
     computed: {
       isSignedIn() {
-        console.log('isSignedIn@MenuList called');
         return this.$store.state.isSignedIn;
       },
 
@@ -84,6 +83,10 @@
 
       }
     },
+
+    mounted() {
+      console.log('mounted@MenuList', this.$store.state);
+    }
 
 
   };

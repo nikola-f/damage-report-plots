@@ -13,8 +13,12 @@ export const state = () => ({
 export const mutations = {
 
   initialize(state) {
-    state.isSignedIn = Vue.prototype.$auth2.isSignedIn.get();
-
+    if (Vue.prototype.$auth2) {
+      state.isSignedIn = Vue.prototype.$auth2.isSignedIn.get();
+    }
+    else {
+      state.isSignedIn = false;
+    }
   },
 
 

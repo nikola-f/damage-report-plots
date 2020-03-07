@@ -47,6 +47,8 @@
           }
           else {
             console.log('signup cancelled.');
+            this.$auth2.signOut();
+            this.$store.commit('signout');
           }
         }
         catch (err) {
@@ -60,6 +62,8 @@
       getAgent: async function(user) {
         const idToken = user.getAuthResponse()['id_token'];
         const res = await this.$repositoryFactory.get('agent').signin(idToken);
+
+        console.log('res@getAgent:', res);
 
         let agent = {};
         if (!res.status || res.status > 204) {
