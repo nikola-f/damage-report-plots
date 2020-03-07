@@ -2,6 +2,10 @@
 </template>
 
 <script>
+  const SCOPE_JOB =
+    'https://www.googleapis.com/auth/spreadsheets ' +
+    'https://www.googleapis.com/auth/gmail.readonly';
+
   export default {
 
     components: {},
@@ -12,8 +16,7 @@
         try {
           const user = this.$auth2.currentUser.get();
           const grantRes = await user.grant({
-            "scope": 'https://www.googleapis.com/auth/spreadsheets' + ' ' +
-              'https://www.googleapis.com/auth/gmail.readonly'
+            "scope": SCOPE_JOB
           });
           console.log('grant res:', grantRes);
           if (grantRes) {

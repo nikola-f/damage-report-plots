@@ -1,7 +1,7 @@
 <template>
 
   <Plots v-if="isSignedIn" />
-  <Jumbotron v-else />
+  <Jumbotron v-else  />
 
 </template>
 

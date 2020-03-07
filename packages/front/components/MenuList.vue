@@ -84,10 +84,10 @@
       }
     },
 
-    mounted() {
-      console.log('mounted@MenuList', this.$store.state);
-    }
-
+    // mounted() {
+    //   console.log('mounted@MenuList', this.$store.state);
+    // }
+        
 
   };
 </script>

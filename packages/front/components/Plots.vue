@@ -15,11 +15,14 @@
   import AnalyzeDialog from './AnalyzeDialog';
   import JobLogic from './JobLogic';
 
+  // const SCOPE_READ_PLOTS = 'https://www.googleapis.com/auth/spreadsheets.readonly';
+
+
   export default {
 
     components: {
       AnalyzeDialog,
-      JobLogic
+      JobLogic,
     },
 
     methods: {
@@ -37,7 +40,8 @@
       };
     },
 
-    async mounted() {
+    mounted() {
+
       const center = this.$store.state.center || { "lat": 0, "lng": 0 };
       const zoom = this.$store.state.zoom || 3;
       const inverseFilter = [
@@ -63,21 +67,6 @@
         .on('zoomend', this.zoomend)
         .on('moveend', this.moveend)
         .addControl(L.control.scale());
-
-      // plot all
-      if (this.$store.state.agent && this.$store.state.agent.spreadsheetId) {
-        // add auth
-
-      }
-      // start job
-      else if (await this.$refs.analyzeDialog.open()) {
-        this.$refs.jobLogic.create();
-
-      }
-      // nop
-      else {
-        console.log('no go');
-      }
 
     }
 

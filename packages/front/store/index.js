@@ -35,6 +35,11 @@ export const mutations = {
     state.agent = agent;
   },
 
+  // resignin(state, agent) {
+  //   state.isSignedIn = true;
+  //   state.agent = agent;
+  // },
+  
   signout(state) {
     state.isSignedIn = false;
     // state.agent = {};

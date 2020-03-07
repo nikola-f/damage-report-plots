@@ -36,6 +36,7 @@
     </v-content>
 
     <SigninLogic ref="signinLogic" />
+    <PlotLogic ref="plotLogic" />
 
     <v-footer
       app
@@ -61,6 +62,7 @@
 <script>
   import MenuList from '../components/MenuList';
   import SigninLogic from '../components/SigninLogic';
+  import PlotLogic from '../components/PlotLogic';
 
 
   export default {
@@ -75,7 +77,8 @@
 
     components: {
       MenuList,
-      SigninLogic
+      SigninLogic,
+      PlotLogic
     },
 
     methods: {
@@ -115,13 +118,13 @@
         this.$store.commit('initialize');
 
         // reload agent what if signed in
-        console.log('isSignedIn@default.vue', this.$store.state.isSignedIn);
+        // console.log('isSignedIn@default.vue', this.$store.state.isSignedIn);
         if (this.$store.state.isSignedIn) {
           const user = this.$auth2.currentUser.get();
           const res = await this.$refs.signinLogic.getAgent(user);
-          console.log('res@default.vue/getAgent:', res);
+          // console.log('res@default.vue/getAgent:', res);
           if (res.status === 200) {
-            console.log('user re-signed in.')
+            console.log('user re-signed in.');
             this.$store.commit('signin', res.agent);
           }
           else {
