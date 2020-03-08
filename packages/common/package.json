@@ -10,9 +10,9 @@
   "license": "Apache License 2.0",
   "private": true,
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.30",
+    "@types/aws-lambda": "^8.10.46",
     "@types/node": "^10.0.0",
-    "aws-lambda": "^0.1.2",
+    "aws-lambda": "^1.0.5",
     "aws-sdk": "^2.104.0",
     "eslint-import-resolver-webpack": "^0.11.1",
     "ts-loader": "^4.2.0",
@@ -22,8 +22,6 @@
     "webpack-node-externals": "^1.7.2"
   },
   "dependencies": {
-    "aws-xray-sdk": "^1.2.0",
-    "googleapis": "^29.0.0",
     "make-unique": "^1.0.4"
   }
 }
