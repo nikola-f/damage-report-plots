@@ -6,17 +6,25 @@ import Vue from 'vue';
 
 
 
-scriptjs('https://apis.google.com/js/platform.js', function() {
+scriptjs('https://apis.google.com/js/api.js', () => {
 
-  gapi.load('auth2', () => {
+  gapi.load('client:auth2', () => {
     console.log('gapi loaded');
-    if (!Vue.prototype.$auth2) {
-      Vue.prototype.$auth2 = gapi.auth2.init({
+    gapi.client.init({
         client_id: authConfig.google.client_id,
         scope: 'openid',
+        discoveryDocs: [
+          'https://sheets.googleapis.com/$discovery/rest?version=v4'
+        ]
+      })
+      .then(() => {
+        // console.log('gapi.client:', gapi.client);
+        Vue.prototype.$auth2 = gapi.auth2.getAuthInstance();
+        Vue.prototype.$gapi = {
+          "client": gapi.client
+        };
       });
 
-    }
   });
 
 });
