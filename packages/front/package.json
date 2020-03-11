@@ -20,7 +20,7 @@
     "nuxt": "^2.10.1",
     "nuxt-property-decorator": "^2.4.0",
     "nuxt-webfontloader": "^1.1.0",
-    "scriptjs": "^2.5.9",
+    "loadjs": "^4.2.0",
     "vue-property-decorator": "^8.3.0",
     "vue2-leaflet": "^2.2.1",
     "vuex-persistedstate": "^2.7.0"
