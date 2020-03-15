@@ -87,7 +87,7 @@
     // mounted() {
     //   console.log('mounted@MenuList', this.$store.state);
     // }
-        
+
 
   };
 </script>

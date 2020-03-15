@@ -4,6 +4,10 @@ export const state = () => ({
   isSignedIn: false,
   isWaiting: false,
   agent: {},
+  plots: [],
+  stats: [],
+
+  // persistent
   center: { "lat": 0, "lng": 0 },
   zoom: 2
 });
@@ -46,6 +50,10 @@ export const mutations = {
 
   endWaiting(state) {
     state.isWaiting = false;
+  },
+
+  plotsLoaded(state, plots) {
+    state.plots = plots;
   },
 
   toggleDrawer(state) {},

@@ -12,10 +12,15 @@
 <script>
   import L from 'leaflet';
   import 'leaflet.tilelayer.colorfilter/src/leaflet-tilelayer-colorfilter.js';
+  import 'leaflet.markercluster';
   import AnalyzeDialog from './AnalyzeDialog';
   import JobLogic from './JobLogic';
 
-  // const SCOPE_READ_PLOTS = 'https://www.googleapis.com/auth/spreadsheets.readonly';
+  const TIME_RECENT = Date.now() - 24 * 3600 * 1000 * 150;
+  const TIME_FORMER = Date.now() - 24 * 3600 * 1000 * 360;
+  const COLOR_RECENT = "#49ebc3";
+  const COLOR_MID = "#b68bff";
+  const COLOR_FORMER = "#f781ff";
 
 
   export default {
@@ -36,8 +41,14 @@
 
     data() {
       return {
-        map: null
+        map: null,
+        clusters: null,
+        unsubscribe: null
       };
+    },
+
+    beforeDestroy() {
+      this.unsubscribe();
     },
 
     mounted() {
@@ -54,9 +65,10 @@
           "zoom": zoom,
           "minZoom": 3,
           "maxBounds": [
-            [-90, -18000],
-            [90, 18000]
-          ]
+            [-90, -190],
+            [90, 190]
+          ],
+          "preferCanvas": true
         })
         .addLayer(L.tileLayer.colorFilter('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
           "attribution": '&copy; ' +
@@ -66,7 +78,47 @@
         }))
         .on('zoomend', this.zoomend)
         .on('moveend', this.moveend)
-        .addControl(L.control.scale());
+        .addControl(L.control.scale())
+        .addLayer((() => {
+          this.clusters = L.markerClusterGroup({
+            "maxClusterRadius": 60,
+            "spiderfyOnMaxZoom": false,
+            "disableClusteringAtZoom": 17,
+            "polygonOptions": {
+              "color": COLOR_RECENT
+            }
+          });
+          return this.clusters;
+        })());
+
+      this.unsubscribe = this.$store.subscribe((mutation, state) => {
+        if (mutation.type !== 'plotsLoaded') {
+          return;
+        }
+
+        console.log('try to plot');
+        console.log('plots@Plots.vue:', this.$store.state.plots);
+
+        for (const plot of this.$store.state.plots) {
+          let color = "";
+          if (plot[4] < TIME_FORMER) {
+            color = COLOR_FORMER;
+          }
+          else if (plot[4] > TIME_RECENT) {
+            color = COLOR_RECENT;
+          }
+          else {
+            color = COLOR_MID;
+          }
+          const marker = L.circleMarker([plot[0], plot[1]], {
+            "color": color,
+            "fillOpacity": plot[2] ? 0.8 : 0.2,
+          });
+          marker.bindPopup(plot[5]);
+          this.clusters.addLayer(marker);
+        }
+
+      });
 
     }
 
