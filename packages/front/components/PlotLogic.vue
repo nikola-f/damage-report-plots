@@ -2,9 +2,6 @@
 </template>
 
 <script>
-  import Vue from 'vue';
-  // import google from 'googleapis';
-  // const sheets = google.sheets('v4');
   const SCOPE_READ_PLOTS = 'https://www.googleapis.com/auth/spreadsheets.readonly';
   const TIME_RECENT = Date.now() - 24 * 3600 * 1000 * 150;
   const TIME_FORMER = Date.now() - 24 * 3600 * 1000 * 360;

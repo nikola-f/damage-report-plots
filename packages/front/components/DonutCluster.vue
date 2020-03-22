@@ -22,8 +22,8 @@
 
   const CLUSTER_OPTION = {
     "chunkedLoading": true,
-    "chunkInterval": 6000,
-    "maxClusterRadius": 60,
+    "chunkInterval": 3000,
+    "maxClusterRadius": 75,
     "spiderfyOnMaxZoom": false,
     "disableClusteringAtZoom": 16,
     "polygonOptions": {
@@ -347,7 +347,7 @@
     return {
       size: size,
       weight: weight,
-      fill: "#333333"
+      fill: "#111111"
     };
   };
 </script>

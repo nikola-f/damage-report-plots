@@ -10,18 +10,26 @@
   </v-container>
 </template>
 
+<style>
+  .leaflet-popup-content {
+    color: white !important;
+    font-weight: normal;
+    font-family: 'Exo', sans-serif;
+  }
+
+  .leaflet-popup-content-wrapper {
+    background: #3b1e5f;
+    border-style: none;
+    opacity: 0.9;
+  }
+</style>
 <script>
   import L from 'leaflet';
   import 'leaflet.tilelayer.colorfilter/src/leaflet-tilelayer-colorfilter.js';
-  // import 'leaflet.markercluster';
-  // import '../plugins/leaflet/Leaflet.DonutCluster';
-  // import '../plugins/leaflet/Leaflet.DonutCluster.css';
   import AnalyzeDialog from './AnalyzeDialog';
   import JobLogic from './JobLogic';
   import DonutCluster from './DonutCluster';
 
-  // const TIME_RECENT = Date.now() - 24 * 3600 * 1000 * 150;
-  // const TIME_FORMER = Date.now() - 24 * 3600 * 1000 * 360;
   const COLOR_C = "#49ebc3";
   const COLOR_R = "#b68bff";
   const COLOR_VR = "#f781ff";
@@ -75,7 +83,7 @@
             [-90, -190],
             [90, 190]
           ],
-          "preferCanvas": true
+          // "preferCanvas": true
         })
         .addLayer(L.tileLayer.colorFilter('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
           "attribution": '&copy; ' +
@@ -92,9 +100,6 @@
         if (mutation.type !== 'plotsLoaded') {
           return;
         }
-
-        // console.log('try to plot');
-        // console.log('stats@Plots.vue:', this.$store.state.stats);
 
         const markers = [];
         for (const plot of this.$store.state.plots) {
@@ -128,7 +133,6 @@
           });
           marker.bindPopup(plot[5]);
           markers.push(marker);
-          // this.clusters.addLayer(marker);
         }
 
         L.layerGroup(markers).addTo(this.clusters);
