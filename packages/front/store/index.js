@@ -5,7 +5,12 @@ export const state = () => ({
   isWaiting: false,
   agent: {},
   plots: [],
-  stats: [],
+  stats: {
+    "mostReportedCount": 1000000,
+    "capturedCount": 0,
+    "lastReportTime": 0,
+    "firstReportTime": 0
+  },
 
   // persistent
   center: { "lat": 0, "lng": 0 },
@@ -52,8 +57,10 @@ export const mutations = {
     state.isWaiting = false;
   },
 
-  plotsLoaded(state, plots) {
-    state.plots = plots;
+  plotsLoaded(state, payload) {
+    state.plots = payload.plots;
+    state.stats = payload.stats;
+    console.log('stats@plotsLoaded', state.stats);
   },
 
   toggleDrawer(state) {},

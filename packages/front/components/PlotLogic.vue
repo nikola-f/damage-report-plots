@@ -6,6 +6,8 @@
   // import google from 'googleapis';
   // const sheets = google.sheets('v4');
   const SCOPE_READ_PLOTS = 'https://www.googleapis.com/auth/spreadsheets.readonly';
+  const TIME_RECENT = Date.now() - 24 * 3600 * 1000 * 150;
+  const TIME_FORMER = Date.now() - 24 * 3600 * 1000 * 360;
 
 
   export default {
@@ -72,24 +74,62 @@
         // console.log(res);
 
         if (res.result && res.result.values) {
+          const values = res.result.values;
           const plots = [];
-          for (let i = 1; i < res.result.values.length; i++) { // skip 1st row
+          const reportedCountArray = [];
+          let upc = 0;
+          for (let i = 1; i < values.length; i++) { // skip 1st row
+            const lastReported = Number(
+              values[i][4].slice(0, values[i][4].indexOf(','))
+            ); // last reported at
+
+            let elapsed;
+            if (lastReported < TIME_FORMER) {
+              elapsed = "VR";
+            }
+            else if (lastReported >= TIME_RECENT) {
+              elapsed = "C";
+            }
+            else {
+              elapsed = "R";
+            }
+
             plots.push([
-              Number(res.result.values[i][0]), // lat
-              Number(res.result.values[i][1]), // long
-              res.result.values[i][2] === "1" ? true : false, // upc
-              Number(res.result.values[i][3]), // reported count
-              Number(
-                res.result.values[i][4]
-                .slice(0, res.result.values[i][4].indexOf(','))
-              ), // last reported at
-              res.result.values[i][4]
-              .slice(res.result.values[i][4].indexOf(',') + 1) // portal name
+              Number(values[i][0]), // lat
+              Number(values[i][1]), // long
+              values[i][2] === "1" ? true : false, // upc
+              Number(values[i][3]), // reported count
+              lastReported,
+              values[i][4]
+              .slice(values[i][4].indexOf(',') + 1), // portal name
+              elapsed
             ]);
+
+            if (values[i][2] === "1") {
+              upc++;
+            }
+            reportedCountArray.push(Number(values[i][3]));
           }
 
-          vue.$store.commit('plotsLoaded', plots);
-          // console.log(vue.$store.state.plots);
+          reportedCountArray.sort((a, b) => {
+            return b - a;
+          });
+
+          vue.$store.commit('plotsLoaded', {
+            "plots": plots,
+            "stats": {
+              "mostReportedCount": reportedCountArray[values.length / 200 | 0], //0.995 percentile
+              "capturedCount": upc,
+              "lastReportTime": Number(
+                values[1][4]
+                .slice(0, values[1][4].indexOf(','))
+              ),
+              "firstReportTime": Number(
+                values[values.length - 1][4]
+                .slice(0, values[values.length - 1][4].indexOf(','))
+              )
+            }
+          });
         }
 
       }

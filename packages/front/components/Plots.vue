@@ -6,21 +6,25 @@
   >
     <AnalyzeDialog ref="analyzeDialog" />
     <JobLogic ref="jobLogic" />
+    <DonutCluster ref="donutCluster" />
   </v-container>
 </template>
 
 <script>
   import L from 'leaflet';
   import 'leaflet.tilelayer.colorfilter/src/leaflet-tilelayer-colorfilter.js';
-  import 'leaflet.markercluster';
+  // import 'leaflet.markercluster';
+  // import '../plugins/leaflet/Leaflet.DonutCluster';
+  // import '../plugins/leaflet/Leaflet.DonutCluster.css';
   import AnalyzeDialog from './AnalyzeDialog';
   import JobLogic from './JobLogic';
+  import DonutCluster from './DonutCluster';
 
-  const TIME_RECENT = Date.now() - 24 * 3600 * 1000 * 150;
-  const TIME_FORMER = Date.now() - 24 * 3600 * 1000 * 360;
-  const COLOR_RECENT = "#49ebc3";
-  const COLOR_MID = "#b68bff";
-  const COLOR_FORMER = "#f781ff";
+  // const TIME_RECENT = Date.now() - 24 * 3600 * 1000 * 150;
+  // const TIME_FORMER = Date.now() - 24 * 3600 * 1000 * 360;
+  const COLOR_C = "#49ebc3";
+  const COLOR_R = "#b68bff";
+  const COLOR_VR = "#f781ff";
 
 
   export default {
@@ -28,6 +32,7 @@
     components: {
       AnalyzeDialog,
       JobLogic,
+      DonutCluster
     },
 
     methods: {
@@ -60,6 +65,8 @@
         'invert:100%',
         'saturate:40%'
       ];
+      this.clusters = this.$refs.donutCluster.getCluster();
+
       this.map = L.map('plots-ryqyh7ci1hf96eeb', {
           "center": center,
           "zoom": zoom,
@@ -79,44 +86,52 @@
         .on('zoomend', this.zoomend)
         .on('moveend', this.moveend)
         .addControl(L.control.scale())
-        .addLayer((() => {
-          this.clusters = L.markerClusterGroup({
-            "maxClusterRadius": 60,
-            "spiderfyOnMaxZoom": false,
-            "disableClusteringAtZoom": 17,
-            "polygonOptions": {
-              "color": COLOR_RECENT
-            }
-          });
-          return this.clusters;
-        })());
+        .addLayer(this.clusters);
 
       this.unsubscribe = this.$store.subscribe((mutation, state) => {
         if (mutation.type !== 'plotsLoaded') {
           return;
         }
 
-        console.log('try to plot');
-        console.log('plots@Plots.vue:', this.$store.state.plots);
+        // console.log('try to plot');
+        // console.log('stats@Plots.vue:', this.$store.state.stats);
 
+        const markers = [];
         for (const plot of this.$store.state.plots) {
+
           let color = "";
-          if (plot[4] < TIME_FORMER) {
-            color = COLOR_FORMER;
+          switch (plot[6]) {
+            case "C":
+              color = COLOR_C;
+              break;
+            case "R":
+              color = COLOR_R;
+              break;
+            case "VR":
+              color = COLOR_VR;
+              break;
           }
-          else if (plot[4] > TIME_RECENT) {
-            color = COLOR_RECENT;
+
+          let dashArray = null;
+          let dashOffset = null;
+          if (plot[3] >= this.$store.state.stats.mostReportedCount) { // top 0.5% most reported
+            dashArray = "16,5";
+            // dashOffset = "13.5";
           }
-          else {
-            color = COLOR_MID;
-          }
+
           const marker = L.circleMarker([plot[0], plot[1]], {
             "color": color,
             "fillOpacity": plot[2] ? 0.8 : 0.2,
+            "dashArray": dashArray,
+            // "dashOffset": dashOffset,
+            "elapsed": plot[6]
           });
           marker.bindPopup(plot[5]);
-          this.clusters.addLayer(marker);
+          markers.push(marker);
+          // this.clusters.addLayer(marker);
         }
+
+        L.layerGroup(markers).addTo(this.clusters);
 
       });
 
