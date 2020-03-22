@@ -1,5 +1,4 @@
 <template>
-  <span />
 </template>
 <style>
   .donut-text {
@@ -16,6 +15,8 @@
   }
 </style>
 <script>
+  // origin : https://github.com/akq/Leaflet.DonutCluster
+
   import L from 'leaflet';
   import 'leaflet.markercluster';
 
@@ -52,11 +53,8 @@
 
 
     mounted() {
-      console.log('mounted@DonutCluster:');
-
 
       CLUSTER_OPTION.iconCreateFunction = (cluster) => {
-        // console.log('iconCreate called:', cluster.getChildCount());
 
         const markers = cluster.getAllChildMarkers();
         const myDonut = createDonut(markers, DONUT_OPTION, (points) => {
@@ -96,8 +94,6 @@
       }
     },
   };
-
-
 
 
   let donutData = {},
