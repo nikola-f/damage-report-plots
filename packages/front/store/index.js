@@ -1,16 +1,18 @@
 import Vue from 'vue';
 
+const INIT_STATS = {
+  "mostReportedCount": 1000000,
+  "capturedCount": 0,
+  "lastReportTime": 0,
+  "firstReportTime": 0
+};
+
 export const state = () => ({
   isSignedIn: false,
   isWaiting: false,
   agent: {},
   plots: [],
-  stats: {
-    "mostReportedCount": 1000000,
-    "capturedCount": 0,
-    "lastReportTime": 0,
-    "firstReportTime": 0
-  },
+  stats: INIT_STATS,
 
   // persistent
   center: { "lat": 0, "lng": 0 },
@@ -61,6 +63,11 @@ export const mutations = {
     state.plots = payload.plots;
     state.stats = payload.stats;
     console.log('stats@plotsLoaded', state.stats);
+  },
+
+  plotsRemoved(state) {
+    state.plots = [];
+    state.stats = INIT_STATS;
   },
 
   toggleDrawer(state) {},

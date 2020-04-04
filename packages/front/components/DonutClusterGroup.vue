@@ -89,7 +89,7 @@
 
 
     methods: {
-      getCluster() {
+      getInstance() {
         return this.cluster;
       }
     },

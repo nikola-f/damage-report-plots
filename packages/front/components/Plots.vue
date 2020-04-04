@@ -6,7 +6,7 @@
   >
     <AnalyzeDialog ref="analyzeDialog" />
     <JobLogic ref="jobLogic" />
-    <DonutCluster ref="donutCluster" />
+    <DonutClusterGroup ref="donutClusterGroup" />
   </v-container>
 </template>
 
@@ -28,7 +28,7 @@
   import 'leaflet.tilelayer.colorfilter/src/leaflet-tilelayer-colorfilter.js';
   import AnalyzeDialog from './AnalyzeDialog';
   import JobLogic from './JobLogic';
-  import DonutCluster from './DonutCluster';
+  import DonutClusterGroup from './DonutClusterGroup';
 
   const COLOR_C = "#49ebc3";
   const COLOR_R = "#b68bff";
@@ -40,7 +40,7 @@
     components: {
       AnalyzeDialog,
       JobLogic,
-      DonutCluster
+      DonutClusterGroup
     },
 
     methods: {
@@ -55,12 +55,15 @@
     data() {
       return {
         map: null,
-        clusters: null,
+        clusterGroup: null,
         unsubscribe: null
       };
     },
 
     beforeDestroy() {
+      this.map.remove();
+      this.clusterGroup.remove();
+      this.$store.commit('plotsRemoved');
       this.unsubscribe();
     },
 
@@ -73,7 +76,7 @@
         'invert:100%',
         'saturate:40%'
       ];
-      this.clusters = this.$refs.donutCluster.getCluster();
+      this.clusterGroup = this.$refs.donutClusterGroup.getInstance();
 
       this.map = L.map('plots-ryqyh7ci1hf96eeb', {
           "center": center,
@@ -94,7 +97,7 @@
         .on('zoomend', this.zoomend)
         .on('moveend', this.moveend)
         .addControl(L.control.scale())
-        .addLayer(this.clusters);
+        .addLayer(this.clusterGroup);
 
       this.unsubscribe = this.$store.subscribe((mutation, state) => {
         if (mutation.type !== 'plotsLoaded') {
@@ -135,7 +138,7 @@
           markers.push(marker);
         }
 
-        L.layerGroup(markers).addTo(this.clusters);
+        L.layerGroup(markers).addTo(this.clusterGroup);
 
       });
 
