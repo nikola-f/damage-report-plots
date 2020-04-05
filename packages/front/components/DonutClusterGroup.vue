@@ -52,6 +52,7 @@
     },
 
 
+
     mounted() {
 
       CLUSTER_OPTION.iconCreateFunction = (cluster) => {

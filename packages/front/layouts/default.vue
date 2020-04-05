@@ -1,33 +1,54 @@
 <template>
   <v-app dark id="font-ek6sblj72q373bb1">
 
-    <v-navigation-drawer
-      app
+    <v-navigation-drawer app />
+    <!--</v-navigation-drawer>-->
+
+      <!--
       v-model="drawer"
       color="primary"
       right
-      temporary
       width="auto"
-    >
-
+      temporary
       <MenuList />
+      -->
 
-    </v-navigation-drawer>
 
     <v-app-bar
       app
       dense
-      elevation="0"
+      flat
       color="primary"
+      v-if="!isSignedIn"
     >
-      <div class="flex-grow-1"></div>
-      <v-app-bar-nav-icon @click.stop="toggleDrawer"></v-app-bar-nav-icon>
+
+      <v-spacer />
+
+      <v-menu left bottom>
+        <template v-slot:activator="{on}">
+          <v-btn icon v-on="on">
+            <v-icon>mdi-menu</v-icon>
+          </v-btn>
+        </template>
+
+        <MenuList />
+      </v-menu>
     </v-app-bar>
+
+    <v-menu left top v-if="isSignedIn">
+      <template v-slot:activator="{on}">
+        <v-btn fab top right fixed color="accent" v-on="on">
+          <v-icon>mdi-menu</v-icon>
+        </v-btn>
+      </template>
+
+      <MenuList />
+    </v-menu>
 
     <v-overlay v-model="overlay">
       <v-progress-circular indeterminate size="64"></v-progress-circular>
     </v-overlay>
-    
+
 
     <v-content>
       <v-container fluid style="height: 100%;" class="ma-0 pa-0">
@@ -38,18 +59,14 @@
     <SigninLogic ref="signinLogic" />
     <PlotLogic ref="plotLogic" />
 
-    <v-footer
-      app
-      absolute
-      color="primary"
-    >
+    <v-footer app absolute padless color="primary" v-if="!isSignedIn">
       <div class="flex-grow-1 text-center">
         <!--<span class="mx-1">&copy; 2019</span>-->
         <nuxt-link to="/privacy-policy" class="mx-2 grey--text text--lighten-2">Privacy Policy</nuxt-link>
         <nuxt-link to="/terms" class="mx-2 grey--text text--lighten-2">Terms</nuxt-link>
       </div>
     </v-footer>
-      
+
   </v-app>
 </template>
 
@@ -69,11 +86,16 @@
 
     data() {
       return {
-        drawer: null,
+        // drawer: null,
         overlay: null
       };
     },
 
+    computed: {
+      isSignedIn() {
+        return this.$store.state.isSignedIn;
+      }
+    },
 
     components: {
       MenuList,
@@ -81,11 +103,11 @@
       PlotLogic
     },
 
-    methods: {
-      toggleDrawer: function() {
-        this.$store.commit('toggleDrawer');
-      }
-    },
+    // methods: {
+    //   toggleDrawer: function() {
+    //     this.$store.commit('toggleDrawer');
+    //   }
+    // },
 
 
     mounted() {
@@ -105,13 +127,13 @@
               this.overlay = false;
               break;
 
-            case 'toggleDrawer':
-              this.drawer = !this.drawer;
-              break;
+            // case 'toggleDrawer':
+            //   this.drawer = !this.drawer;
+            //   break;
 
-            case 'hideDrawer':
-              this.drawer = false;
-              break;
+            // case 'hideDrawer':
+            //   this.drawer = false;
+            //   break;
           }
 
         });

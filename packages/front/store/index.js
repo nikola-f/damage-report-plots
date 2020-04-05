@@ -70,9 +70,9 @@ export const mutations = {
     state.stats = INIT_STATS;
   },
 
-  toggleDrawer(state) {},
+  // toggleDrawer(state) {},
 
-  hideDrawer(state) {}
+  // hideDrawer(state) {}
 
 
 };

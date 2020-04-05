@@ -86,17 +86,23 @@
             [-90, -190],
             [90, 190]
           ],
+          "attributionControl": false
           // "preferCanvas": true
         })
         .addLayer(L.tileLayer.colorFilter('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-          "attribution": '&copy; ' +
-            '<a href="https://www.openstreetmap.org/copyright">' +
-            'OpenStreetMap</a> contributors',
-          "filter": inverseFilter
+          "filter": inverseFilter,
         }))
         .on('zoomend', this.zoomend)
         .on('moveend', this.moveend)
-        .addControl(L.control.scale())
+        .addControl(L.control.attribution({
+          "position": 'bottomleft',
+          "prefix": '&copy; ' +
+            '<a href="https://www.openstreetmap.org/copyright">' +
+            'OpenStreetMap</a> contributors'
+        }))
+        .addControl(L.control.scale({
+          "position": 'bottomleft'
+        }))
         .addLayer(this.clusterGroup);
 
       this.unsubscribe = this.$store.subscribe((mutation, state) => {
@@ -121,7 +127,7 @@
           }
 
           let dashArray = null;
-          let dashOffset = null;
+          // let dashOffset = null;
           if (plot[3] >= this.$store.state.stats.mostReportedCount) { // top 0.5% most reported
             dashArray = "16,5";
             // dashOffset = "13.5";
