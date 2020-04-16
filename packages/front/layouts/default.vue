@@ -1,7 +1,8 @@
 <template>
   <v-app dark id="font-ek6sblj72q373bb1">
 
-    <v-navigation-drawer app />
+    <v-navigation-drawer app temporary />
+      
     <!--</v-navigation-drawer>-->
 
       <!--
@@ -37,7 +38,7 @@
 
     <v-menu left top v-if="isSignedIn">
       <template v-slot:activator="{on}">
-        <v-btn fab top right fixed color="accent" v-on="on">
+        <v-btn fab top right fixed color="accent" v-on="on" id='fab-Sg6FI4C3sj243pOC'>
           <v-icon>mdi-menu</v-icon>
         </v-btn>
       </template>
@@ -59,7 +60,7 @@
     <SigninLogic ref="signinLogic" />
     <PlotLogic ref="plotLogic" />
 
-    <v-footer app absolute padless color="primary" v-if="!isSignedIn">
+    <v-footer app absolute color="primary" v-if="!isSignedIn">
       <div class="flex-grow-1 text-center">
         <!--<span class="mx-1">&copy; 2019</span>-->
         <nuxt-link to="/privacy-policy" class="mx-2 grey--text text--lighten-2">Privacy Policy</nuxt-link>
@@ -73,6 +74,10 @@
 <style>
   #font-ek6sblj72q373bb1 {
     font-family: 'Exo', sans-serif;
+  }
+
+  #fab-Sg6FI4C3sj243pOC {
+    opacity: 0.9;
   }
 </style>
 

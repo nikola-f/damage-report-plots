@@ -1,12 +1,15 @@
 <template>
-  <v-container fluid
+  <v-container fluid fill-height
     class="ma-0 pa-0"
-    style="height: 100%; z-index: 1;"
-    id="plots-ryqyh7ci1hf96eeb"
+      style="z-index: 0"
+      id="plots-ryqyh7ci1hf96eeb"
   >
+
     <AnalyzeDialog ref="analyzeDialog" />
     <JobLogic ref="jobLogic" />
     <DonutClusterGroup ref="donutClusterGroup" />
+    <NavBarControl ref="navBarControl" />
+
   </v-container>
 </template>
 
@@ -29,6 +32,7 @@
   import AnalyzeDialog from './AnalyzeDialog';
   import JobLogic from './JobLogic';
   import DonutClusterGroup from './DonutClusterGroup';
+  import NavBarControl from './NavBarControl';
 
   const COLOR_C = "#49ebc3";
   const COLOR_R = "#b68bff";
@@ -40,7 +44,8 @@
     components: {
       AnalyzeDialog,
       JobLogic,
-      DonutClusterGroup
+      DonutClusterGroup,
+      NavBarControl
     },
 
     methods: {
@@ -86,7 +91,8 @@
             [-90, -190],
             [90, 190]
           ],
-          "attributionControl": false
+          "attributionControl": false,
+          "zoomControl": false
           // "preferCanvas": true
         })
         .addLayer(L.tileLayer.colorFilter('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
@@ -103,7 +109,17 @@
         .addControl(L.control.scale({
           "position": 'bottomleft'
         }))
+        // .addControl(L.control.zoom({
+        //   "position": 'bottomright'
+        // }))
+        // .addControl(this.$refs.navBarControl.getInstance())
         .addLayer(this.clusterGroup);
+        
+        console.log('navBarControl:', this.$refs.navBarControl.getInstance());
+        this.$refs.navBarControl.getInstance().addTo(this.map);
+        L.control.zoom({
+          "position": 'bottomright'
+        }).addTo(this.map);
 
       this.unsubscribe = this.$store.subscribe((mutation, state) => {
         if (mutation.type !== 'plotsLoaded') {

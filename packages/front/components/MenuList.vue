@@ -8,6 +8,8 @@
         <v-list-item-title v-html="agent.name"></v-list-item-title>
       </v-list-item-content>
     </v-list-item>
+    
+    <v-divider v-show="isSignedIn" />
 
     <v-list-item @click="home">
       <v-list-item-action>
@@ -79,7 +81,7 @@
 
       home: function() {
         this.$router.push('/');
-        this.$store.commit('hideDrawer');
+        // this.$store.commit('hideDrawer');
 
       }
     },
