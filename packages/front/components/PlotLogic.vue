@@ -63,7 +63,9 @@
       },
 
       getPlots: async(vue) => {
-        console.info('try to get plots data from spreadsheets:', vue.$store.state.agent.spreadsheetId);
+        // console.info('try to get plots data from spreadsheets:', vue.$store.state.agent.spreadsheetId);
+        // vue.$store.commit('showMessage', 'try to load plots data from spreadsheets...');
+
         const res = await vue.$gapi.client.sheets.spreadsheets.values.get({
           "spreadsheetId": vue.$store.state.agent.spreadsheetId,
           "range": 'aggregated!A:E',
@@ -127,6 +129,7 @@
               )
             }
           });
+          vue.$store.commit('showMessage', `${plots.length} plots data loaded.`);
         }
 
       }

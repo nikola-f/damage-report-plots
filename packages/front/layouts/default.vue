@@ -68,6 +68,8 @@
       </div>
     </v-footer>
 
+    <queued-snackbar />    
+
   </v-app>
 </template>
 
@@ -85,34 +87,33 @@
   import MenuList from '../components/MenuList';
   import SigninLogic from '../components/SigninLogic';
   import PlotLogic from '../components/PlotLogic';
+  import QueuedSnackbar from '../components/QueuedSnackbar';
+  
 
 
   export default {
 
     data() {
       return {
-        // drawer: null,
-        overlay: null
+        overlay: null,
       };
     },
 
     computed: {
       isSignedIn() {
         return this.$store.state.isSignedIn;
+      },
+      message() {
+        return this.$store.state.message;
       }
     },
 
     components: {
       MenuList,
       SigninLogic,
-      PlotLogic
+      PlotLogic,
+      'queued-snackbar': QueuedSnackbar
     },
-
-    // methods: {
-    //   toggleDrawer: function() {
-    //     this.$store.commit('toggleDrawer');
-    //   }
-    // },
 
 
     mounted() {
@@ -131,14 +132,7 @@
             case 'endWaiting':
               this.overlay = false;
               break;
-
-            // case 'toggleDrawer':
-            //   this.drawer = !this.drawer;
-            //   break;
-
-            // case 'hideDrawer':
-            //   this.drawer = false;
-            //   break;
+            
           }
 
         });
@@ -149,10 +143,10 @@
         if (this.$store.state.isSignedIn) {
           const user = this.$auth2.currentUser.get();
           const res = await this.$refs.signinLogic.getAgent(user);
-          // console.log('res@default.vue/getAgent:', res);
           if (res.status === 200) {
             console.log('user re-signed in.');
             this.$store.commit('signin', res.agent);
+            this.$store.commit('showMessage', `welcome back, agent ${res.agent.name}`);
           }
           else {
             console.log('user signed in, but new user');

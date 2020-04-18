@@ -109,13 +109,10 @@
         .addControl(L.control.scale({
           "position": 'bottomleft'
         }))
-        // .addControl(L.control.zoom({
-        //   "position": 'bottomright'
-        // }))
-        // .addControl(this.$refs.navBarControl.getInstance())
+
         .addLayer(this.clusterGroup);
         
-        console.log('navBarControl:', this.$refs.navBarControl.getInstance());
+        // console.log('navBarControl:', this.$refs.navBarControl.getInstance());
         this.$refs.navBarControl.getInstance().addTo(this.map);
         L.control.zoom({
           "position": 'bottomright'

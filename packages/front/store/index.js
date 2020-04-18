@@ -13,6 +13,7 @@ export const state = () => ({
   agent: {},
   plots: [],
   stats: INIT_STATS,
+  message: '',
 
   // persistent
   center: { "lat": 0, "lng": 0 },
@@ -70,9 +71,10 @@ export const mutations = {
     state.stats = INIT_STATS;
   },
 
-  // toggleDrawer(state) {},
+  showMessage(state, message) {
+    state.message = message;
+  },
 
-  // hideDrawer(state) {}
 
 
 };

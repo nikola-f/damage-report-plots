@@ -25,6 +25,7 @@
         }
         this.$store.commit('signout');
         console.info('signed out.');
+        this.$store.commit('showMessage', `you signed out`);
         this.$store.commit('endWaiting');
       },
 
@@ -42,6 +43,7 @@
               agent['idToken'] = idToken;
               agent['expiresAt'] = user.getAuthResponse()['expires_at'];
               this.$store.commit('signin', agent);
+              this.$store.commit('showMessage', `welcome, agent ${res.agent.name}`);
               console.info('signed up.');
             }
           }
@@ -99,6 +101,7 @@
           // saved user
           else if (res.status === 200) {
             this.$store.commit('signin', res.agent);
+            this.$store.commit('showMessage', `welcome back, agent ${res.agent.name}`);
             console.info('signed in:', res.agent);
           }
 
