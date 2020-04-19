@@ -84,10 +84,10 @@
 
             let elapsed;
             if (lastReported < TIME_FORMER) {
-              elapsed = "VR";
+              elapsed = "C";
             }
             else if (lastReported >= TIME_RECENT) {
-              elapsed = "C";
+              elapsed = "VR";
             }
             else {
               elapsed = "R";

@@ -38,7 +38,8 @@
       "R": "#b68bff",
       "VR": "#f781ff"
     },
-    "order": ["C", "R", "VR"],
+    // "order": ["C", "R", "VR"],
+    "order": ["VR", "R", "C"],
   };
 
 
@@ -341,9 +342,13 @@
       size = 60;
       weight = 12;
     }
-    else {
+    else if (count < 10000) {
       size = 70;
       weight = 14;
+    }
+    else {
+      size = 80;
+      weight = 16;
     }
     return {
       size: size,

@@ -16,7 +16,6 @@
 
       signout: async function() {
         this.$store.commit('startWaiting');
-        // this.$store.commit('hideDrawer');
         try {
           await this.$auth2.signOut();
         }
@@ -25,7 +24,7 @@
         }
         this.$store.commit('signout');
         console.info('signed out.');
-        this.$store.commit('showMessage', `you signed out`);
+        this.$store.commit('showMessage', `you've signed out.`);
         this.$store.commit('endWaiting');
       },
 
@@ -86,7 +85,6 @@
 
       signin: async function() {
         this.$store.commit('startWaiting');
-        // this.$store.commit('hideDrawer');
 
         try {
           const user = await this.$auth2.signIn();

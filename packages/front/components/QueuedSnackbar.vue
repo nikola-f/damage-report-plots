@@ -1,5 +1,5 @@
 <template>
-  <v-snackbar v-model="snackbar" :timeout="0" color="primary" vertical style="opacity: 0.9">
+  <v-snackbar v-model="snackbar" :timeout="0" vertical style="opacity: 0.9">
     <div v-for="text of this.texts">
       {{ text }}
     </div>
@@ -34,7 +34,7 @@
           }
 
           this.texts.push(mutation.payload);
-          this.show();
+          this.queue();
         });
       }, 0);
     },
@@ -42,18 +42,18 @@
 
     methods: {
       
-      show() {
+      queue() {
         if(!this.snackbar) {
           this.snackbar = true;
         }
 
         setTimeout(() => {
-          this.hide();
-        }, 5000);
+          this.dequeue();
+        }, 3000);
       },
       
       
-      hide() {
+      dequeue() {
         if(this.texts.length > 0) {
           this.texts.shift();
         }
@@ -61,8 +61,8 @@
           this.snackbar = false;
         }else{
           setTimeout(() => {
-            this.hide();
-          }, 5000);
+            this.dequeue();
+          }, 3000);
         }
       },
       
