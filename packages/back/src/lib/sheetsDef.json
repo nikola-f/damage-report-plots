@@ -1,6 +1,6 @@
 {
   "properties": {
-    "title": "damage report plots, aggregated",
+    "title": "damage report plots, found out",
     "locale": "en",
     "autoRecalc": "ON_CHANGE"
   },
@@ -70,7 +70,72 @@
         "rowData": [{
           "values": [{
             "userEnteredValue": {
-              "formulaValue": "=query(reports!A:E, \"select max(B), max(C), max(D), count(D), max(E) where A is not null group by A order by max(E) desc\")"
+              "formulaValue": "=QUERY(reports!A:E, \"select max(B), max(C), max(D), count(D), max(E) where A is not null group by A order by max(E) desc\")"
+            }
+          }]
+        }]
+      }]
+    },
+    {
+      "properties": {
+        "sheetId": 120,
+        "title": "stats",
+        "index": 3,
+        "sheetType": "GRID",
+        "gridProperties": {
+          "columnCount": 2,
+          "frozenRowCount": 0
+        }
+      },
+      "data": [{
+        "startRow": 0,
+        "startColumn": 0,
+        "rowData": [{
+          "values": [{
+            "userEnteredValue": {
+              "stringValue": "0.0.0-fb1a8657"
+            }
+          }]
+        },{
+          "values": [{
+            "userEnteredValue": {
+              "formulaValue": "=COUNTIF(aggregated!C:C, \"=1\")"
+            }
+          }]
+        },{
+          "values": [{
+            "userEnteredValue": {
+              "formulaValue": "=PERCENTILE(aggregated!D:D, 0.999)"
+            }
+          }]
+        },{
+          "values": [{
+            "userEnteredValue": {
+              "formulaValue": "=LEFT(B4,FIND(\",\", B4)-1)"
+            }
+          },{
+            "userEnteredValue": {
+              "formulaValue": "=SORTN(reports!E:E, 1, 0, 1, true)"
+            }
+          }]
+        },{
+          "values": [{
+            "userEnteredValue": {
+              "formulaValue": "=LEFT(B5,FIND(\",\", B5)-1)"
+            }
+          },{
+            "userEnteredValue": {
+              "formulaValue": "=INDIRECT(\"aggregated!\" & ADDRESS(COUNTA(aggregated!E:E), 5))"
+            }
+          }]
+        },{
+          "values": [{
+            "userEnteredValue": {
+              "formulaValue": "=LEFT(B6,FIND(\",\", B6)-1)"
+            }
+          },{
+            "userEnteredValue": {
+              "formulaValue": "=aggregated!E2"
             }
           }]
         }]
@@ -85,6 +150,15 @@
       "endRowIndex": 2,
       "startColumnIndex": 4,
       "endColumnIndex": 5
+    }
+  },{
+    "name": "stats",
+    "range": {
+      "sheetId": 120,
+      "startRowIndex": 0,
+      "endRowIndex": 6,
+      "startColumnIndex": 0,
+      "endColumnIndex": 1
     }
   }]
 }
