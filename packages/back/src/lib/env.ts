@@ -13,6 +13,9 @@ export const SNS_NOP: boolean = process.env.SNS_NOP === 'false' ? false : true;
 
 export const CLIENT_ORIGIN: string = process.env.CLIENT_ORIGIN || '';
 
+export const SESSION_TTL: number = 
+  process.env.SESSION_TTL ? Number(process.env.SESSION_TTL) : 3600;
+
 
 export const THREAD_FETCH_COUNT: number = 
   process.env.THREAD_FETCH_COUNT ? Number(process.env.THREAD_FETCH_COUNT) : undefined;

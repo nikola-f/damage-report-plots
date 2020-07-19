@@ -26,6 +26,7 @@ provider:
     ARN_REGION_ACCOUNT: ${self:custom.arnRegionAccount}
     SNS_NOP: ${file(env.${self:provider.stage}.yml):snsNop}
     CLIENT_ORIGIN: ${file(env.${self:provider.stage}.yml):clientOrigin}
+    SESSION_TTL: ${file(env.${self:provider.stage}.yml):sessionTtl}
     
     GOOGLE_CLIENT_ID: ${file(.cred.${self:provider.stage}.yml):googleClientId}
     GOOGLE_CLIENT_SECRET: ${file(.cred.${self:provider.stage}.yml):googleClientSecret}
@@ -168,6 +169,18 @@ functions:
           method: get
           cors: true
 
+  getStatus: # system & user
+    handler: handler.getStatus
+    events:
+      - http:
+          path: api/status
+          method: get
+          cors: true
+
+  authorize: # custom authorizer
+    handler: handler.authorize
+
+    
 
 
 resources:
@@ -224,6 +237,23 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+
+    SessionTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: session
+        AttributeDefinitions:
+          - AttributeName: sessionId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: sessionId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
 
 
     StaticResource:

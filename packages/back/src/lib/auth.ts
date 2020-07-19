@@ -1,13 +1,18 @@
 import * as env from '../lib/env';
+import {Session} from '@common/types';
+import * as cryptoRandomString from 'crypto-random-string';
 import {google} from 'googleapis';
 
 import {OAuth2Client} from 'google-auth-library';
+import * as AWS from 'aws-sdk';
+const dynamo: AWS.DynamoDB.DocumentClient =  new AWS.DynamoDB.DocumentClient();
+
 const authClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
 
 
 
 /**
- * validate jwt
+ * validate jwt and return payload
  */
 export const getPayload = async (token: string): Promise<Object> => {
   
@@ -26,24 +31,34 @@ export const getPayload = async (token: string): Promise<Object> => {
 };
 
 
-/**
- * parse jwt
+/** 
+ * create and store session
  */
-// export const getOpenid = async (token: string): Promise<string> => {
+export const createSession = async (openId: string): Promise<Session> => {
   
-//   try {
-//     const ticket = await authClient.verifyIdToken({
-//       "idToken": token,
-//       "audience": env.GOOGLE_CLIENT_ID
-//     });
-//     const payload = ticket.getPayload();
-//     return payload['sub'];
-//   }catch(err){
-//     console.error(err);
-//     return null;
-//   }
+  const session: Session = {
+    "sessionId": cryptoRandomString({length: 32, type: 'base64'}),
+    "openId": openId,
+    "createTime": Date.now(), //millisec
+    "ttl": Math.floor(Date.now() / 1000) + env.SESSION_TTL //sec
+  };
+  try {
+    await dynamo.put({
+      "TableName": "session",
+      "Item": session
+    }).promise();
+    console.log('done put session:' + JSON.stringify(session));
+    return session;    
+  }catch(err){
+    console.error(err);
+    return null;
+  }
+  
+};
 
-// };
+
+
+
 
 
 /**

@@ -1,5 +1,5 @@
 import {SNSEvent, APIGatewayProxyEvent, APIGatewayProxyResult} from 'aws-lambda';
-import {Agent} from '@common/types';
+import {Agent, Session} from '@common/types';
 
 import * as util from '@common/util';
 import * as launcher from '../lib/launcher';
@@ -75,14 +75,6 @@ export const signin = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   }
 
   // validate token
-  // let payload;
-  // try {
-  //   payload = await libAuth.verifyIdToken(event.body);
-  //   console.log('payload:', payload);
-  // }catch(err){
-  //   console.error(err);
-  //   return util.BAD_REQUEST;
-  // }
   const payload = await libAuth.getPayload(event.body);
   if(!payload) {
     return util.BAD_REQUEST;
@@ -110,10 +102,18 @@ export const signin = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
       "locale": payload['locale']
     });
   }
+  
+  // create session
+  const session: Session = await libAuth.createSession(openId);
+  const MAX_AGE = 3600*24*30; // maybe db session will be expired first.
+
   return {
     "statusCode": statusCode,
     "headers": {
-      "Access-Control-Allow-Origin": env.CLIENT_ORIGIN
+      "Access-Control-Allow-Origin": env.CLIENT_ORIGIN,
+      "Set-Cookie": `sessionId=${session.sessionId}; ` +
+                    `Max-Age=${MAX_AGE}; `+
+                    "Secure; HttpOnly;"
     },
     "body": body
   };
