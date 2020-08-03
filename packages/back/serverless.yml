@@ -27,6 +27,7 @@ provider:
     SNS_NOP: ${file(env.${self:provider.stage}.yml):snsNop}
     CLIENT_ORIGIN: ${file(env.${self:provider.stage}.yml):clientOrigin}
     SESSION_TTL: ${file(env.${self:provider.stage}.yml):sessionTtl}
+    SAME_SITE: ${file(env.${self:provider.stage}.yml):sameSite}
     
     GOOGLE_CLIENT_ID: ${file(.cred.${self:provider.stage}.yml):googleClientId}
     GOOGLE_CLIENT_SECRET: ${file(.cred.${self:provider.stage}.yml):googleClientSecret}
@@ -129,13 +130,28 @@ functions:
     events:
       - sns: drp-put-agent
 
+  getAgent:
+    handler: handler.getAgent
+    events:
+      - http:
+          path: api/me
+          method: get
+          authorizer:
+            name: authorize
+            type: request
+          cors:
+            origin: ${file(env.${self:provider.stage}.yml):clientOrigin}
+            allowCredentials: true
+
   signin:
     handler: handler.signin
     events:
       - http:
           path: api/signin
           method: post
-          cors: true
+          cors:
+            origin: ${file(env.${self:provider.stage}.yml):clientOrigin}
+            allowCredentials: true
 
   signup:
     handler: handler.signup
@@ -144,6 +160,16 @@ functions:
           path: api/signup
           method: post
           cors: true
+
+  signout:
+    handler: handler.signout
+    events:
+      - http:
+          path: api/signout
+          method: post
+          cors:
+            origin: ${file(env.${self:provider.stage}.yml):clientOrigin}
+            allowCredentials: true
 
   createJob:
     handler: handler.createJob
@@ -179,6 +205,7 @@ functions:
 
   authorize: # custom authorizer
     handler: handler.authorize
+    memorySize: 256
 
     
 

@@ -1,5 +1,6 @@
 import * as env from '../lib/env';
 import {Session} from '@common/types';
+import {GetItemOutput, DeleteItemOutput} from 'aws-sdk/clients/dynamodb';
 import * as cryptoRandomString from 'crypto-random-string';
 import {google} from 'googleapis';
 
@@ -30,15 +31,72 @@ export const getPayload = async (token: string): Promise<Object> => {
 
 };
 
+/**
+ * get session from db
+ */
+export const getSession = async (sessionId: string): Promise<Session> => {
+
+  try {
+    const res: GetItemOutput = await dynamo.get({
+      "TableName": "session",
+      "Key": {
+        "sessionId": sessionId
+      },
+      "ConsistentRead": false
+    }).promise();
+    console.log('get session:', res);
+
+    if(res.Item) {
+      return {
+        "sessionId": sessionId,
+        "openId": <string>res.Item.openId,
+        "accessToken": <string>res.Item.accessToken,
+        "createTime": <number>res.Item.createTime
+      };
+    }else{
+      return null;
+    }
+    
+  }catch(err){
+    console.error(err);
+    return null;
+  }
+};
+
+
+/**
+ * delete session from db
+ */
+export const deleteSession = async (sessionId: string): Promise<boolean> => {
+
+  try {
+    const res: DeleteItemOutput = await dynamo.delete({
+      "TableName": "session",
+      "Key": {
+        "sessionId": sessionId
+      },
+      "ReturnValues": "ALL_OLD"
+    }).promise();
+    console.log('delete session:', res);
+
+    return res.Attributes !== null;
+    
+  }catch(err){
+    console.error(err);
+    return false;
+  }
+};
+
 
 /** 
  * create and store session
  */
-export const createSession = async (openId: string): Promise<Session> => {
+export const createSession = async (openId: string, accessToken: string): Promise<Session> => {
   
   const session: Session = {
     "sessionId": cryptoRandomString({length: 32, type: 'base64'}),
     "openId": openId,
+    "accessToken": accessToken,
     "createTime": Date.now(), //millisec
     "ttl": Math.floor(Date.now() / 1000) + env.SESSION_TTL //sec
   };

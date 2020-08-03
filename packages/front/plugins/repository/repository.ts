@@ -6,7 +6,8 @@ const instance = axios.create({
   "baseURL": process.env.REPOSITORY_BASE_URL,
   "headers": {
     "Content-Type": 'application/json'
-  }
+  },
+  "withCredentials": true
 });
 
 export default instance;

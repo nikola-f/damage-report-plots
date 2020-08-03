@@ -51,7 +51,8 @@ export default {
    */
   modules: [
     '@nuxtjs/axios',
-    'nuxt-webfontloader'
+    'nuxt-webfontloader',
+    ['cookie-universal-nuxt', { parseJSON: false }]
   ],
 
 

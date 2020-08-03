@@ -7,6 +7,11 @@ export const BAD_REQUEST: APIGatewayProxyResult = {
   "body": 'bad request'
 };
 
+export const UNAUTHORIZED: APIGatewayProxyResult = {
+  "statusCode": 401,
+  "body": 'unauthorized'
+};
+
 export const OK: APIGatewayProxyResult = {
   "statusCode": 200,
   "body": 'ok'
@@ -23,7 +28,9 @@ export const isValidAPIGatewayProxyEvent = (event: APIGatewayProxyEvent): boolea
   if(event && event.headers && event.httpMethod) {
     switch(event.httpMethod) {
       case 'POST':
-        if(event.body) {
+        return true;
+      case 'GET':
+        if(!event.body) {
           return true;
         }
         break;

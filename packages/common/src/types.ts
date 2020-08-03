@@ -1,13 +1,12 @@
 
-// export interface Session {
-//   openId: string,
-
-//   createTime: number,
-//   lastAccessTime: number,
-//   // ttl: number,
-//   photoUrl?: string
-//   tokens: Tokens
-// }
+export interface Session {
+  sessionId: string,
+  
+  openId: string,
+  accessToken: string,
+  createTime: number,
+  ttl: number
+}
 
 // export interface Tokens {
 //   meAccessToken?: string,

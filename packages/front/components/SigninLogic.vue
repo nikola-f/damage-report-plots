@@ -18,6 +18,8 @@
         this.$store.commit('startWaiting');
         try {
           await this.$auth2.signOut();
+          const res = await this.$repositoryFactory.get('agent').signout();
+          console.log('res@signout:', res);
         }
         catch (err) {
           console.error(err);
