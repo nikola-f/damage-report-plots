@@ -50,7 +50,7 @@ export const getSession = async (sessionId: string): Promise<Session> => {
       return {
         "sessionId": sessionId,
         "openId": <string>res.Item.openId,
-        "accessToken": <string>res.Item.accessToken,
+        "idToken": <string>res.Item.idToken,
         "createTime": <number>res.Item.createTime
       };
     }else{
@@ -91,12 +91,12 @@ export const deleteSession = async (sessionId: string): Promise<boolean> => {
 /** 
  * create and store session
  */
-export const createSession = async (openId: string, accessToken: string): Promise<Session> => {
+export const createSession = async (openId: string, idToken: string): Promise<Session> => {
   
   const session: Session = {
     "sessionId": cryptoRandomString({length: 32, type: 'base64'}),
     "openId": openId,
-    "accessToken": accessToken,
+    "idToken": idToken,
     "createTime": Date.now(), //millisec
     "ttl": Math.floor(Date.now() / 1000) + env.SESSION_TTL //sec
   };

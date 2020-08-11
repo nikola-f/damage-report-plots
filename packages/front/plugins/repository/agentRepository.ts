@@ -10,6 +10,10 @@ export default {
     return Repository.post('/api/signout');
   },
   
+  getAgent() {
+    return Repository.get('/api/me');
+  },
+  
   signup(idToken: Object) {
     return Repository.post('/api/signup', idToken);
   }

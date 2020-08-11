@@ -30,6 +30,7 @@
         this.$store.commit('endWaiting');
       },
 
+
       signup: async function(user) {
         try {
 
@@ -41,10 +42,10 @@
             console.log(res);
             if (res && res.status === 200) {
               const agent = res.data;
-              agent['idToken'] = idToken;
-              agent['expiresAt'] = user.getAuthResponse()['expires_at'];
+              // agent['idToken'] = idToken;
+              // agent['expiresAt'] = user.getAuthResponse()['expires_at'];
               this.$store.commit('signin', agent);
-              this.$store.commit('showMessage', `welcome, agent ${res.agent.name}`);
+              this.$store.commit('showMessage', `welcome, agent ${agent.name}`);
               console.info('signed up.');
             }
           }
@@ -62,26 +63,38 @@
         }
       },
 
-      getAgent: async function(user) {
-        const idToken = user.getAuthResponse()['id_token'];
-        const res = await this.$repositoryFactory.get('agent').signin(idToken);
 
-        console.log('res@getAgent:', res);
+      getAgent: async function() {
+        const authRes = this.$auth2.currentUser.get().getAuthResponse();
+        const idToken = authRes['id_token'];
+        // const res = await this.$repositoryFactory.get('agent').signin(idToken);
 
-        let agent = {};
-        if (!res.status || res.status > 204) {
-          throw new Error(res.statusText || 'signin error');
+                
+        try {
+          const res = await this.$repositoryFactory.get('agent').getAgent();
+  
+          console.log('res@getAgent:', res);
+          
+          let agent = {};
+          if (!res.status || res.status > 200) {
+            console.info('no session@getAgent');
+            return null;
+            // throw new Error(res.statusText || 'signin error');
+          }
 
+          // else if (res.status === 200) {
+          else {
+            agent = res.data;
+            agent['idToken'] = idToken;
+            agent['expiresAt'] = authRes['expires_at'];
+            return agent;
+          }
+
+        }catch(err){
+          console.error(err);
+          return null;
         }
-        else if (res.status === 200) {
-          agent = res.data;
-          agent['idToken'] = idToken;
-          agent['expiresAt'] = this.$auth2.currentUser.get().getAuthResponse()['expires_at'];
-        }
-        return {
-          "status": res.status,
-          "agent": agent
-        };
+
       },
 
 
@@ -90,8 +103,10 @@
 
         try {
           const user = await this.$auth2.signIn();
-          const res = await this.getAgent(user);
-          console.log('res:', res);
+          const idToken = user.getAuthResponse()['id_token'];
+          // const res = await this.getAgent(user);
+          const res = await this.$repositoryFactory.get('agent').signin(idToken);
+          console.log('res@agent.signin:', res);
 
           // new user -> signup
           if (res.status === 204) {
@@ -100,9 +115,10 @@
 
           // saved user
           else if (res.status === 200) {
-            this.$store.commit('signin', res.agent);
-            this.$store.commit('showMessage', `welcome back, agent ${res.agent.name}`);
-            console.info('signed in:', res.agent);
+            const agent = res.data;
+            this.$store.commit('signin', agent);
+            this.$store.commit('showMessage', `welcome back, agent ${agent.name}`);
+            console.info('signed in:', agent);
           }
 
           this.$store.commit('endWaiting');

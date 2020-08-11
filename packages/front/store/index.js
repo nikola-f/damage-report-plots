@@ -8,7 +8,7 @@ const INIT_STATS = {
 };
 
 export const state = () => ({
-  isSignedIn: false,
+  isSignedIn: false, // status of google account (not drp)
   isWaiting: false,
   agent: {},
   plots: [],

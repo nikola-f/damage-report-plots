@@ -3,7 +3,7 @@ export interface Session {
   sessionId: string,
   
   openId: string,
-  accessToken: string,
+  idToken: string,
   createTime: number,
   ttl: number
 }
@@ -20,11 +20,10 @@ export interface Agent {
 
   createTime: number,
   lastAccessTime: number,
-  // reportTableId?: string,
   spreadsheetId?: string,
-
-  // mUpv?: number,
-  // mUpc?: number
+  name?: string,
+  picture?: string,
+  locale?: string
 
 }
 

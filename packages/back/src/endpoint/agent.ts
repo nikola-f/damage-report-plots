@@ -20,12 +20,17 @@ export const authorize = async (event: CustomAuthorizerEvent): Promise<CustomAut
 
   console.log('authEvent:', event);
   
+  if(!event.headers.Cookie) {
+    console.log('cookie not sent');
+    return DENY_POLICY;
+  }
+  
   const cookies = cookie.parse(event.headers.Cookie);
   if(!cookies.sessionId) {
     console.log('session not sent');
     return DENY_POLICY;
   }
-  const session = await libAuth.getSession(cookies.sessionId);
+  const session: Session = await libAuth.getSession(cookies.sessionId);
   if(!session) {
     console.log('session not found');
     return DENY_POLICY;
@@ -42,6 +47,9 @@ export const authorize = async (event: CustomAuthorizerEvent): Promise<CustomAut
           "Resource": event.methodArn
         }
       ]
+    },
+    "context": {
+      "idToken": session.idToken
     }
   };
   console.log('session found:', result);
@@ -92,18 +100,31 @@ export const getAgent = async (event: APIGatewayProxyEvent): Promise<APIGatewayP
     return util.BAD_REQUEST;
   }
   
-  // get token from session
-  const cookies = cookie.parse(event.headers.Cookie);
-  if(!cookies.sessionId) {
-    console.log('session not sent');
-    return util.UNAUTHORIZED;
-  }
-  const session = await libAuth.getSession(cookies.sessionId);
-  if(!session) {
-    console.log('session not found');
-    return util.UNAUTHORIZED;
+  const idToken = event.requestContext.authorizer.idToken;
+  if(!idToken) {
+    console.error('idToken not found.');
+    return util.BAD_REQUEST;
   }
 
+  const payload = await libAuth.getPayload(idToken);
+  const openId = payload['sub'];
+  if(!payload || !openId) {
+    console.error('cannot verify idToken.');
+    return util.BAD_REQUEST;
+  }
+  
+  const agent = await libAgent.getAgent(openId);
+  agent.name = payload['name'];
+  agent.picture = payload['picture'];
+  agent.locale = payload['locale'];
+
+  return {
+    "statusCode": 200,
+    "headers": {
+      "Access-Control-Allow-Origin": env.CLIENT_ORIGIN
+    },
+    "body": JSON.stringify(agent)
+  };
 
 };
 
@@ -116,11 +137,13 @@ export const signup = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   if(!util.isValidAPIGatewayProxyEvent(event)) {
     return util.BAD_REQUEST;
   }
+  
+  const idToken = event.body;
 
   // validate token
   // let payload;
   // try {
-  const payload = await libAuth.getPayload(event.body);
+  const payload = await libAuth.getPayload(idToken);
   if(!payload) {
     return util.BAD_REQUEST;
   }
@@ -131,25 +154,37 @@ export const signup = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   // load from db
   const openId = payload['sub'];
-  let agent = await libAgent.getAgent(openId);
+  let agent: Agent = await libAgent.getAgent(openId);
 
   // not exists, create
   if(!agent || Object.keys(agent).length === 0) {
-    launcher.putAgentAsync({
+    
+    agent = {
       "openId": openId,
       "createTime": Date.now(),
-      "lastAccessTime": Date.now()
-    });
+      "lastAccessTime": Date.now(),
+      "name": payload['name'],
+      "picture": payload['picture'],
+      "locale": payload['locale']
+    }    
+    
+    launcher.putAgentAsync(agent);
+
+    // create session
+    const session: Session = await libAuth.createSession(openId, idToken);
+    const MAX_AGE = 3600*24*30; // maybe db session will be expired first.
+
     return {
       "statusCode": 200,
       "headers": {
-        "Access-Control-Allow-Origin": env.CLIENT_ORIGIN
+        "Access-Control-Allow-Origin": env.CLIENT_ORIGIN,
+        "Access-Control-Allow-Credentials": 'true',
+        "Set-Cookie": `sessionId=${session.sessionId}; ` +
+                      `Max-Age=${MAX_AGE}; `+
+                      `SameSite=${env.SAME_SITE}; `+
+                      "Path=/; Secure; HttpOnly"
       },
-      "body": JSON.stringify({
-        "name": payload['name'],
-        "picture": payload['picture'],
-        "locale": payload['locale']
-      })
+      "body": JSON.stringify(agent)
     };
 
   // already exists, 400
@@ -171,15 +206,15 @@ export const signin = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   }
 
   // validate token
-  const accessToken = event.body;
-  const payload = await libAuth.getPayload(accessToken);
+  const idToken = event.body;
+  const payload = await libAuth.getPayload(idToken);
   if(!payload) {
     return util.BAD_REQUEST;
   }
 
   // load from db
   const openId = payload['sub'];
-  let agent = await libAgent.getAgent(openId);
+  const agent = await libAgent.getAgent(openId);
 
   let statusCode: number;
   let headers = {};
@@ -188,13 +223,17 @@ export const signin = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   // not exists, 204
   if(!agent || Object.keys(agent).length === 0) {
     statusCode = 204;
+    headers = {
+      "Access-Control-Allow-Origin": env.CLIENT_ORIGIN,
+      "Access-Control-Allow-Credentials": 'true'
+    };
 
   // already exists, 200 
   }else{
     statusCode = 200;
 
     // create session
-    const session: Session = await libAuth.createSession(openId, accessToken);
+    const session: Session = await libAuth.createSession(openId, idToken);
     const MAX_AGE = 3600*24*30; // maybe db session will be expired first.
     headers = {
       "Access-Control-Allow-Origin": env.CLIENT_ORIGIN,
@@ -205,13 +244,11 @@ export const signin = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
                     "Path=/; Secure; HttpOnly"
     };
 
-    const spreadsheetId = agent && agent.spreadsheetId ? agent.spreadsheetId : null;
-    body = JSON.stringify({
-      "spreadsheetId": spreadsheetId,
-      "name": payload['name'],
-      "picture": payload['picture'],
-      "locale": payload['locale']
-    });
+    agent.spreadsheetId = agent && agent.spreadsheetId ? agent.spreadsheetId : null;
+    agent.name = payload['name'];
+    agent.picture = payload['picture'];
+    agent.locale = payload['locale'];
+    body = JSON.stringify(agent);
   }
   
   return {

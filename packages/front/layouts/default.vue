@@ -141,15 +141,15 @@
         // reload agent what if signed in
         // console.log('isSignedIn@default.vue', this.$store.state.isSignedIn);
         if (this.$store.state.isSignedIn) {
-          const user = this.$auth2.currentUser.get();
-          const res = await this.$refs.signinLogic.getAgent(user);
-          if (res.status === 200) {
+          // const user = this.$auth2.currentUser.get();
+          const agent = await this.$refs.signinLogic.getAgent();
+          if (agent) {
             console.log('user re-signed in.');
-            this.$store.commit('signin', res.agent);
-            this.$store.commit('showMessage', `welcome back, agent ${res.agent.name}`);
+            this.$store.commit('signin', agent);
+            this.$store.commit('showMessage', `welcome back, agent ${agent.name}`);
           }
           else {
-            console.log('user signed in, but new user');
+            console.log('user signed in google, but no drp session detected.');
             this.$auth2.signOut();
             this.$store.commit('signout');
           }

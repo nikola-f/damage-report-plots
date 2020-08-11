@@ -159,7 +159,9 @@ functions:
       - http:
           path: api/signup
           method: post
-          cors: true
+          cors:
+            origin: ${file(env.${self:provider.stage}.yml):clientOrigin}
+            allowCredentials: true
 
   signout:
     handler: handler.signout
@@ -290,3 +292,27 @@ resources:
         WebsiteConfiguration:
           IndexDocument: index.html
 
+
+    GatewayResponseDefault4XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'${file(env.${self:provider.stage}.yml):clientOrigin}'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Credentials: "'true'"
+
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+
+    GatewayResponse500:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'${file(env.${self:provider.stage}.yml):clientOrigin}'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Credentials: "'true'"
+        ResponseType: AUTHORIZER_FAILURE
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+        StatusCode: '500'
