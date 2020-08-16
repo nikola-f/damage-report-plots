@@ -121,7 +121,8 @@ export const getAgent = async (event: APIGatewayProxyEvent): Promise<APIGatewayP
   return {
     "statusCode": 200,
     "headers": {
-      "Access-Control-Allow-Origin": env.CLIENT_ORIGIN
+      "Access-Control-Allow-Origin": env.CLIENT_ORIGIN,
+      "Access-Control-Allow-Credentials": 'true',
     },
     "body": JSON.stringify(agent)
   };
@@ -162,13 +163,14 @@ export const signup = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     agent = {
       "openId": openId,
       "createTime": Date.now(),
-      "lastAccessTime": Date.now(),
-      "name": payload['name'],
-      "picture": payload['picture'],
-      "locale": payload['locale']
-    }    
-    
+      "lastAccessTime": Date.now()
+    }; // persist only openId
     launcher.putAgentAsync(agent);
+    
+    agent.name = payload['name'];
+    agent.picture = payload['picture'];
+    agent.locale = payload['locale'];
+
 
     // create session
     const session: Session = await libAuth.createSession(openId, idToken);
@@ -274,6 +276,11 @@ export const putAgent = async (event: SNSEvent): Promise<void> => {
     const agent: Agent = JSON.parse(rec.Sns.Message);
 
     agent.lastAccessTime = Date.now();
+
+    // erase properties not to save
+    agent.name = null;
+    agent.picture = null;
+    agent.locale = null;
 
     try {
       await dynamo.put({
