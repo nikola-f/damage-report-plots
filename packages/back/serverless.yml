@@ -179,7 +179,12 @@ functions:
       - http:
           path: api/job
           method: post
-          cors: true
+          authorizer:
+            name: authorize
+            type: request
+          cors:
+            origin: ${file(env.${self:provider.stage}.yml):clientOrigin}
+            allowCredentials: true
 
   listJob:
     handler: handler.listJob

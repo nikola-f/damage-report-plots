@@ -59,6 +59,7 @@
 
     <SigninLogic ref="signinLogic" />
     <PlotLogic ref="plotLogic" />
+    <!--<StartJobDialog ref="startJobDialog" />-->
 
     <v-footer app absolute color="primary" v-if="!isSignedIn">
       <div class="flex-grow-1 text-center">
@@ -88,6 +89,7 @@
   import SigninLogic from '../components/SigninLogic';
   import PlotLogic from '../components/PlotLogic';
   import QueuedSnackbar from '../components/QueuedSnackbar';
+  // import StartJobDialog from '../components/StartJobDialog';
   
 
 
@@ -112,6 +114,7 @@
       MenuList,
       SigninLogic,
       PlotLogic,
+      // StartJobDialog,
       'queued-snackbar': QueuedSnackbar
     },
 
@@ -120,7 +123,7 @@
 
       setTimeout(async() => {
         // init vuex
-        this.$store.subscribe((mutation, state) => {
+        this.$store.subscribe(async (mutation, state) => {
           switch (mutation.type) {
             case 'startWaiting':
               this.overlay = true;
@@ -132,7 +135,12 @@
             case 'endWaiting':
               this.overlay = false;
               break;
-            
+              
+            // case 'showStartJobDialog':
+            //   if (await this.$refs.startJobDialog.open()) {
+            //     console.log('go!');
+            //   }           
+            //   break;
           }
 
         });

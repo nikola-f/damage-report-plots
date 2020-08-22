@@ -11,7 +11,7 @@
     components: {},
 
     methods: {
-      create: async function() {
+      create: async (rangeToTime) => {
 
         try {
           const user = this.$auth2.currentUser.get();
@@ -22,7 +22,11 @@
           if (grantRes) {
             console.log('try to create');
             const auth = user.getAuthResponse();
-            const res = await this.$repositoryFactory.get('job').create(auth);
+            const res = await this.$repositoryFactory.get('job').create({
+              "auth": auth,
+              "rangeToTime": rangeToTime
+            });
+            console.log('res@job.create', res);
           }
 
         }

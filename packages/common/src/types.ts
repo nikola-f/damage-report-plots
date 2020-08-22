@@ -38,7 +38,7 @@ export interface Job {
   status: JobStatus,
   lastAccessTime: number,
   lastReportTime?: number,
-  // rangeToTime?: number,
+  rangeToTime?: number,
   // tokens: Tokens,
   accessToken: string,
   expiredAt: number,
@@ -62,8 +62,11 @@ export interface Range {
 
 
 export interface CreateJobMessage {
-  rangeFromTime: number,
+  accessToken: string,
+  expiredAt: number,
   rangeToTime: number,
+  // rangeFromTime: number,
+  // rangeToTime: number,
 }
 
 

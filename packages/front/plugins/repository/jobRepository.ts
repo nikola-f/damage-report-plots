@@ -2,8 +2,16 @@ import Repository from './repository';
 
 export default {
 
-  create(auth: Object) {
-    return Repository.post('/api/job', auth);
+  create(auth: any, rangeToTime: number) {
+    return Repository.post('/api/job', {
+      "accessToken": auth.access_token,
+      "expiredAt": auth.expired_at,
+      "rangeToTime": rangeToTime
+    }, {
+      "headers": {
+        "Authorization": auth.id_token
+      },
+    });
   },
 
   getList(auth: Object) {

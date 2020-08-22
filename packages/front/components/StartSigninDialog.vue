@@ -1,40 +1,48 @@
 <template>
   <v-dialog
-    v-model="dialog" persistent 
-    max-width="80%" max-height="80%" @keydown.esc="cancel"
+    v-model="dialog"
+    max-width="80%" max-height="90%" @keydown.esc="cancel"
   >
 
     <v-card color="grey darken-3" style="opacity: 0.92;">
       <v-toolbar color="primary" dense>
         <v-toolbar-title>
           <v-icon class="mx-2">
-            mdi-email-search
+            mdi-run
           </v-icon>
-          Plot portals
+          Start
         </v-toolbar-title>
       </v-toolbar>
 
       <v-card-text class="my-4" style="height: 300px;">
         <h2>Lorem</h2>
-        <p>Ipsum</p>
+        <p>Lorem</p>
       </v-card-text>
 
       <v-card-actions>
         <v-spacer />
         <v-btn color="primary" @click="cancel">CANCEL</v-btn>
-        <v-btn color="accent" @click="goNext">GO NEXT; PLOT PORTALS</v-btn>
+        <v-btn color="accent" @click="signin">SIGN IN</v-btn>
       </v-card-actions>
     </v-card>
+    
+    <SigninLogic ref="signinLogic" />
 
   </v-dialog>
 </template>
 
 <script>
+  import SigninLogic from './SigninLogic';
+
   export default {
+
+    components: {
+      SigninLogic
+    },
+
     data() {
       return {
         dialog: false,
-        consent: false,
         resolve: null,
         reject: null,
       };
@@ -49,9 +57,10 @@
         });
       },
 
-      goNext() {
+      signin() {
         this.resolve(true);
         this.dialog = false;
+        this.$refs.signinLogic.signin();
       },
 
       cancel() {

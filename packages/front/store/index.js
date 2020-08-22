@@ -74,6 +74,9 @@ export const mutations = {
   showMessage(state, message) {
     state.message = message;
   },
+  
+  showStartJobDialog(state) {
+  }
 
 
 

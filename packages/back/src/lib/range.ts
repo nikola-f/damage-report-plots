@@ -6,11 +6,12 @@ const INGRESS_EPOCH: number = Date.UTC(2012, 10, 15, 0, 0, 0, 0);
 
 
 
-export const getRawRanges = (lastReportTime?: number): Range[] => {
+export const getRawRanges = (lastReportTime?: number, rangeToTime?: number): Range[] => {
 
   let fromTime: number = lastReportTime ? lastReportTime+1 : INGRESS_EPOCH;
+  const toTime: number = rangeToTime ? rangeToTime : Date.now();
   const ranges: Range[] = [];
-  const now: number = Date.now();
+  // const now: number = Date.now();
   const oneRange = 1000*3600*24*30; // 30 days
   
   do {
@@ -20,7 +21,8 @@ export const getRawRanges = (lastReportTime?: number): Range[] => {
       "done": false
     });
     fromTime += oneRange;
-  }while(fromTime < now && ranges.length < 100);
+  }while(fromTime < toTime && ranges.length < 100);
+  // }while(fromTime < now && ranges.length < 100);
   
   return ranges;
 };

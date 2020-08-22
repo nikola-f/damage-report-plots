@@ -139,7 +139,7 @@ export const signup = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     return util.BAD_REQUEST;
   }
   
-  const idToken = event.body;
+  const idToken = event.headers.Authorization;
 
   // validate token
   // let payload;
@@ -208,7 +208,8 @@ export const signin = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   }
 
   // validate token
-  const idToken = event.body;
+  // const idToken = event.body;
+  const idToken = event.headers.Authorization;
   const payload = await libAuth.getPayload(idToken);
   if(!payload) {
     return util.BAD_REQUEST;

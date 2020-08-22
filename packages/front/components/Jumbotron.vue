@@ -17,7 +17,7 @@
       </v-container>
     </v-overlay>
     
-    <StartDialog ref="startDialog"/>
+    <StartSigninDialog ref="startSigninDialog"/>
   </v-parallax>
 
 </template>
@@ -26,11 +26,11 @@
 
 <script>
   import image from "~/assets/.jumbotron.jpg";
-  import StartDialog from "./StartDialog";
+  import StartSigninDialog from "./StartSigninDialog";
 
   export default {
     components: {
-      StartDialog
+      StartSigninDialog
     },
 
     computed: {
@@ -41,7 +41,7 @@
 
     methods: {
       start: async function() {
-        await this.$refs.startDialog.open();
+        await this.$refs.startSigninDialog.open();
       }
     }
 

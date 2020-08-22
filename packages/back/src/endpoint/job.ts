@@ -1,5 +1,5 @@
 import {SNSEvent, APIGatewayProxyEvent, APIGatewayProxyResult} from 'aws-lambda';
-import {Job, JobStatus, Range} from '@common/types';
+import {Job, JobStatus, Range, CreateJobMessage} from '@common/types';
 import {OAuth2Client} from 'google-auth-library';
 // import {AuthResponse} from 'gapi.auth2';
 
@@ -91,7 +91,8 @@ export const createJob = async (event: APIGatewayProxyEvent): Promise<APIGateway
   }
 
   // const auth: AuthResponse = JSON.parse(event.body);
-  const auth = JSON.parse(event.body);
+  const cjm: CreateJobMessage = JSON.parse(event.body);
+  // const auth = cjm.auth;
 
   // validate jwt
   // let payload;
@@ -103,14 +104,28 @@ export const createJob = async (event: APIGatewayProxyEvent): Promise<APIGateway
   // }
 
   // validate jwt & get openid
-  const payload = await libAuth.getPayload(auth.id_token);
-  if(!payload) {
+  const idTokenSession = event.requestContext.authorizer.idToken;
+  if(!idTokenSession) {
+    console.error('idTokenSession not found.');
+    return util.BAD_REQUEST;
+  }
+  const payloadSession = await libAuth.getPayload(idTokenSession);
+
+
+  // const payloadRequest = await libAuth.getPayload(auth.id_token);
+  const payloadRequest = await libAuth.getPayload(event.headers.Authorization);
+  if(!payloadRequest) {
     return util.BAD_REQUEST;
   }
 
+  if(payloadSession['sub'] !== payloadRequest['sub']) {
+    console.error('openId@session & openId@request are different.');
+    return util.BAD_REQUEST;
+  }
+
+
   // get agent
-  const openId = payload['sub'];
-  let agent = await libAgent.getAgent(openId);
+  let agent = await libAgent.getAgent(payloadRequest['sub']);
   if(!agent) {
     console.error('agent not found.');
     return util.BAD_REQUEST;
@@ -120,13 +135,14 @@ export const createJob = async (event: APIGatewayProxyEvent): Promise<APIGateway
   // instantiate job
   const createTime = Date.now();
   const job: Job = {
-    "openId": openId,
+    "openId": payloadRequest['sub'],
     "createTime": createTime,
     
     "status": JobStatus.Created,
     "lastAccessTime": createTime,
-    "accessToken": auth.access_token,
-    "expiredAt": auth.expired_at,
+    "rangeToTime": cjm.rangeToTime,
+    "accessToken": cjm.accessToken,
+    "expiredAt": cjm.expiredAt,
     "agent": agent
   };
 
@@ -175,7 +191,7 @@ export const preExecuteJob = async (event: SNSEvent): Promise<void> => {
     }
 
     // get raw ranges
-    const rawRanges: Range[] = libRange.getRawRanges(job.lastReportTime);
+    const rawRanges: Range[] = libRange.getRawRanges(job.lastReportTime, job.rangeToTime);
     if(!rawRanges || rawRanges.length <= 0) {
       console.info('no raw ranges.');
       libJob.cancel(job);

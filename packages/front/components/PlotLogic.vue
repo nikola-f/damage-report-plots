@@ -1,13 +1,19 @@
 <template>
+  <StartJobDialog ref="startJobDialog" />
 </template>
 
 <script>
+  import StartJobDialog from './StartJobDialog';
   const SCOPE_READ_PLOTS = 'https://www.googleapis.com/auth/spreadsheets.readonly';
   const TIME_RECENT = Date.now() - 24 * 3600 * 1000 * 150;
   const TIME_FORMER = Date.now() - 24 * 3600 * 1000 * 360;
 
 
   export default {
+
+    components: {
+      StartJobDialog,
+    },
 
     data() {
       return {
@@ -22,25 +28,46 @@
     mounted() {
       // after signin
       this.unsubscribe = this.$store.subscribe(async(mutation, state) => {
-        if (mutation.type !== 'signin') {
-          return;
-        }
+        switch(mutation.type) {
+          case 'signin':
 
-        // plot
-        if (state.agent && state.agent.spreadsheetId &&
-          await this.grant(this)) {
-          this.getPlots(this);
-        }
+            // plot w/ spreadsheetId
+            if (state.agent && state.agent.spreadsheetId &&
+              await this.grant(this)) {
+              this.getPlots(this);
 
-        // start job w/ dialog
-        else if (await this.$refs.analyzeDialog.open()) {
-          this.$refs.jobLogic.create();
-        }
+            }else{
+              this.$store.commit('showStartJobDialog');
+            }
 
-        else {
-          console.log('no go');
-
+            break;
+            
+            
+          case 'showStartJobDialog':
+            // start job w/ dialog
+            if (await this.$refs.startJobDialog.open()) {
+              this.$refs.jobLogic.create();
+            }
+            break;
         }
+        // if (mutation.type === 'signin') {
+        //   // plot
+        //   if (state.agent && state.agent.spreadsheetId &&
+        //     await this.grant(this)) {
+        //     this.getPlots(this);
+        //   }
+        // }
+
+
+        // // start job w/ dialog
+        // else if (await this.$refs.doJobDialog.open()) {
+        //   this.$refs.jobLogic.create();
+        // }
+
+        // else {
+        //   console.log('no go');
+
+        // }
 
       });
     },

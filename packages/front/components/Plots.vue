@@ -5,7 +5,7 @@
       id="plots-ryqyh7ci1hf96eeb"
   >
 
-    <AnalyzeDialog ref="analyzeDialog" />
+    <!--<AnalyzeDialog ref="analyzeDialog" />-->
     <JobLogic ref="jobLogic" />
     <DonutClusterGroup ref="donutClusterGroup" />
     <NavBarControl ref="navBarControl" />
@@ -29,7 +29,7 @@
 <script>
   import L from 'leaflet';
   import 'leaflet.tilelayer.colorfilter/src/leaflet-tilelayer-colorfilter.js';
-  import AnalyzeDialog from './AnalyzeDialog';
+  // import AnalyzeDialog from './AnalyzeDialog';
   import JobLogic from './JobLogic';
   import DonutClusterGroup from './DonutClusterGroup';
   import NavBarControl from './NavBarControl';
@@ -42,7 +42,7 @@
   export default {
 
     components: {
-      AnalyzeDialog,
+      // AnalyzeDialog,
       JobLogic,
       DonutClusterGroup,
       NavBarControl

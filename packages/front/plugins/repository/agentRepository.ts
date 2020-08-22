@@ -3,7 +3,11 @@ import Repository from './repository';
 export default {
 
   signin(idToken: string) {
-    return Repository.post('/api/signin', idToken);
+    return Repository.post('/api/signin', {}, {
+      "headers": {
+        "Authorization": idToken
+      },
+    });
   },
   
   signout() {
@@ -15,6 +19,10 @@ export default {
   },
   
   signup(idToken: Object) {
-    return Repository.post('/api/signup', idToken);
+    return Repository.post('/api/signup', {}, {
+      "headers": {
+        "Authorization": idToken
+      },
+    });
   }
 };

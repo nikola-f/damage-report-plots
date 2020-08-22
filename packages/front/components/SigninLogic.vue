@@ -65,8 +65,8 @@
 
 
       getAgent: async function() {
-        const authRes = this.$auth2.currentUser.get().getAuthResponse();
-        const idToken = authRes['id_token'];
+        // const authRes = this.$auth2.currentUser.get().getAuthResponse();
+        // const idToken = authRes['id_token'];
         // const res = await this.$repositoryFactory.get('agent').signin(idToken);
 
                 
@@ -85,8 +85,8 @@
           // else if (res.status === 200) {
           else {
             agent = res.data;
-            agent['idToken'] = idToken;
-            agent['expiresAt'] = authRes['expires_at'];
+            // agent['idToken'] = idToken;
+            // agent['expiresAt'] = authRes['expires_at'];
             return agent;
           }
 

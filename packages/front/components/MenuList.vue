@@ -20,6 +20,15 @@
       </v-list-item-content>
     </v-list-item>
 
+    <v-list-item v-show="isSignedIn" @click="addPlots" :disabled="inProgress">
+      <v-list-item-action>
+        <v-icon>mdi-map-marker-plus</v-icon>
+      </v-list-item-action>
+      <v-list-item-content>
+        <v-list-item-title>Add plots</v-list-item-title>
+      </v-list-item-content>
+    </v-list-item>
+
     <v-list-item v-show="isSignedIn" @click="signout" :disabled="inProgress">
       <v-list-item-action>
         <v-icon>mdi-logout</v-icon>
@@ -77,6 +86,11 @@
 
       signin: async function() {
         this.$refs.signinLogic.signin();
+      },
+
+      addPlots: async function() {
+        this.$store.commit('showStartJobDialog');
+        // await this.$refs.startJobDialog.open();
       },
 
       home: function() {
