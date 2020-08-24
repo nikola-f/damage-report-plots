@@ -11,6 +11,7 @@
         </v-row>
         <v-row justify="center">
           <v-btn color="accent" @click="start" large>
+            <v-icon left>mdi-run</v-icon>
             START
           </v-btn>
         </v-row>

@@ -19,11 +19,11 @@
 
       <v-stepper v-model="e1" class="grey darken-3">
         <v-stepper-header >
-          <v-stepper-step :complete="e1 > 1" step="1" editable>Description</v-stepper-step>
+          <v-stepper-step :complete="e1 > 1" step="1">Description</v-stepper-step>
           <v-divider></v-divider>
-          <v-stepper-step :complete="e1 > 2" step="2" editable>Entering a range</v-stepper-step>
+          <v-stepper-step :complete="e1 > 2" step="2">Entering a range</v-stepper-step>
           <v-divider></v-divider>
-          <v-stepper-step step="3">Confirmation</v-stepper-step>
+          <v-stepper-step :complete="e1 > 3" step="3">Confirmation</v-stepper-step>
         </v-stepper-header>        
         
         <v-stepper-items>
@@ -69,7 +69,13 @@
                         v-on="on"
                       ></v-text-field>
                     </template>
-                    <v-date-picker v-model="dateTo" @input="menuTo = false" no-title scrollable></v-date-picker>
+                    <v-date-picker 
+                      v-model="dateTo"
+                      @input="menuTo = false"
+                      no-title
+                      scrollable
+                      locale="agent.locale">
+                    </v-date-picker>
                   </v-menu>
                   
                 </v-col>
@@ -85,7 +91,10 @@
       <v-card-actions>
         <v-spacer />
         <v-btn color="primary" @click="cancel">CANCEL</v-btn>
-        <v-btn color="accent" @click="goNext">CONTINUE</v-btn>
+        <v-btn color="accent" @click="goNext">
+          <v-icon left>{{goNextIcon}}</v-icon>
+          {{goNextText}}
+        </v-btn>
       </v-card-actions>
 
     </v-card>
@@ -101,18 +110,30 @@
     data() {
       return {
         dialog: false,
-        consent: false,
         resolve: null,
         reject: null,
-        e1:null,
+        e1: 1,
         menuFrom: false,
         dateFrom: INGRESS_EPOCH.toISOString().substr(0, 10),
         menuTo: false,
         dateTo: new Date().toISOString().substr(0, 10),
+        agent: this.$store.state.agent
       };
     },
 
+    
+    computed: {
+      goNextText() {
+        return this.e1 === 3 ? 'ADD PLOTS' : 'CONTINUE';
+      },
+      goNextIcon() {
+        return this.e1 === 3 ? 'mdi-map-marker-plus' : 'mdi-arrow-right-bold';
+      },
+    },
+
+
     methods: {
+
       open() {
         this.dialog = true;
         return new Promise((resolve, reject) => {
@@ -122,13 +143,30 @@
       },
 
       goNext() {
-        this.resolve(true);
-        this.dialog = false;
+        console.log('goNext:', this);
+        switch(this.e1) {
+          case 1:
+          case 2:
+            this.e1++;
+            break;
+
+          case 3:
+            this.resolve(true);
+            this.dialog = false;
+            this.e1 = 1;
+            break;
+            
+          default:
+            this.cancel();
+            break;
+        }
+
       },
 
       cancel() {
-        this.resolve(false);
         this.dialog = false;
+        this.resolve(false);
+        this.e1 = 1;
       },
     }
 

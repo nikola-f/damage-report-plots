@@ -22,7 +22,10 @@
       <v-card-actions>
         <v-spacer />
         <v-btn color="primary" @click="cancel">CANCEL</v-btn>
-        <v-btn color="accent" @click="signin">SIGN IN</v-btn>
+        <v-btn color="accent" @click="signin">
+          <v-icon left>mdi-login</v-icon>
+          SIGN IN
+        </v-btn>
       </v-card-actions>
     </v-card>
     
