@@ -12,9 +12,11 @@ export const getRawRanges = (lastReportTime?: number, rangeToTime?: number): Ran
   const toTime: number = rangeToTime ? rangeToTime : Date.now();
   const ranges: Range[] = [];
   // const now: number = Date.now();
-  const oneRange = 1000*3600*24*30; // 30 days
+  // const oneRange = 1000*3600*24*30; // 30 days
   
   do {
+    const oneRange = toTime - fromTime > 1000*3600*24*30 ?
+      1000*3600*24*30 : toTime - fromTime;
     ranges.push({
       "fromTime": fromTime,
       "toTime": fromTime + oneRange,
