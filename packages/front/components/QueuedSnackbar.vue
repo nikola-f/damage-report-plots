@@ -1,5 +1,5 @@
 <template>
-  <v-snackbar v-model="snackbar" :timeout="0" vertical style="opacity: 0.9">
+  <v-snackbar v-model="snackbar" :timeout="-1" vertical style="opacity: 0.9">
     <div v-for="text of this.texts">
       {{ text }}
     </div>

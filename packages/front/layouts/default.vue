@@ -51,11 +51,11 @@
     </v-overlay>
 
 
-    <v-content>
+    <v-main>
       <v-container fluid style="height: 100%;" class="ma-0 pa-0">
         <nuxt />
       </v-container>
-    </v-content>
+    </v-main>
 
     <SigninLogic ref="signinLogic" />
     <PlotLogic ref="plotLogic" />
