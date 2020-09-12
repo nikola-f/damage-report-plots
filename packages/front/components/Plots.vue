@@ -95,7 +95,7 @@
           "zoomControl": false
           // "preferCanvas": true
         })
-        .addLayer(L.tileLayer.colorFilter('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        .addLayer(L.tileLayer.colorFilter('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           "filter": inverseFilter,
         }))
         .on('zoomend', this.zoomend)
