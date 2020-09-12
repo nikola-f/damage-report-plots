@@ -46,7 +46,7 @@
           case 'showStartJobDialog':
             // start job w/ dialog
             if (await this.$refs.startJobDialog.open()) {
-              this.$refs.jobLogic.create();
+              // this.$refs.jobLogic.create();
             }
             break;
         }
@@ -81,10 +81,14 @@
           // console.log('already has grant');
         }
         else {
-          const res = await user.grant({
-            "scope": SCOPE_READ_PLOTS
-          });
-          result = res ? true : false;
+          try {
+            const res = await user.grant({
+              "scope": SCOPE_READ_PLOTS
+            });
+            result = res ? true : false;
+          }catch(err){
+            result = false;
+          }
         }
         return result;
       },
