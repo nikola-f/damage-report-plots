@@ -156,7 +156,8 @@ export const createJob = async (event: APIGatewayProxyEvent): Promise<APIGateway
   return {
     "statusCode": 200,
     "headers": {
-      "Access-Control-Allow-Origin": env.CLIENT_ORIGIN
+      "Access-Control-Allow-Origin": env.CLIENT_ORIGIN,
+      "Access-Control-Allow-Credentials": 'true',
     },
     "body": String(createTime)
   };
