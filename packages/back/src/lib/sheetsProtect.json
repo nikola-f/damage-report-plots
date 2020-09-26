@@ -28,6 +28,16 @@
           "warningOnly": true
         }
       }
+    },
+    {
+      "addProtectedRange": {
+        "protectedRange": {
+          "range": {
+            "sheetId": 130
+          },
+          "warningOnly": true
+        }
+      }
     }
   ],
   "responseIncludeGridData": false

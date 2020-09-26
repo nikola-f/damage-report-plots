@@ -60,7 +60,7 @@
         "index": 2,
         "sheetType": "GRID",
         "gridProperties": {
-          "columnCount": 5,
+          "columnCount": 6,
           "frozenRowCount": 1
         }
       },
@@ -70,7 +70,7 @@
         "rowData": [{
           "values": [{
             "userEnteredValue": {
-              "formulaValue": "=QUERY(reports!A:E, \"select max(B), max(C), max(D), count(D), max(E) where A is not null group by A order by max(E) desc\")"
+              "formulaValue": "=QUERY(reports!A:E, \"select max(B), max(C), max(D), count(D), max(E), min(E) where A is not null group by A\")"
             }
           }]
         }]
@@ -79,11 +79,58 @@
     {
       "properties": {
         "sheetId": 120,
-        "title": "stats",
+        "title": "plots",
         "index": 3,
         "sheetType": "GRID",
         "gridProperties": {
-          "columnCount": 2,
+          "columnCount": 7,
+          "frozenRowCount": 0
+        }
+      },
+      "data": [{
+        "startRow": 0,
+        "startColumn": 0,
+        "rowData": [{
+          "values": [{
+            "userEnteredValue": {
+              "formulaValue": "=ARRAYFORMULA(aggregated!A2:A)"
+            }
+          },{
+            "userEnteredValue": {
+              "formulaValue": "=ARRAYFORMULA(aggregated!B2:B)"
+            }
+          },{
+            "userEnteredValue": {
+              "formulaValue": "=ARRAYFORMULA(aggregated!C2:C)"
+            }
+          },{
+            "userEnteredValue": {
+              "formulaValue": "=ARRAYFORMULA(aggregated!D2:D)"
+            }
+          },{
+            "userEnteredValue": {
+              "formulaValue": "=ARRAYFORMULA(IF(ISBLANK(A:A), \"\", VALUE(LEFT(aggregated!E2:E,FIND(\",\", aggregated!E2:E)-1))))"
+            }
+          },{
+            "userEnteredValue": {
+              "formulaValue": "=ARRAYFORMULA(IF(D:D=1, \"\", IF(ISBLANK(A:A),\"\", VALUE(LEFT(aggregated!F2:F,FIND(\",\", aggregated!F2:F)-1)))))"
+            }
+          },{
+            "userEnteredValue": {
+              "formulaValue": "=ARRAYFORMULA(IF(ISBLANK(A:A), \"\", MID(aggregated!E2:E,FIND(\",\", aggregated!E2:E)+1, 255)))"
+            }
+          }]
+        }]
+      }]
+    },
+    {
+      "properties": {
+        "sheetId": 130,
+        "title": "stats",
+        "index": 4,
+        "sheetType": "GRID",
+        "gridProperties": {
+          "columnCount": 1,
           "frozenRowCount": 0
         }
       },
@@ -99,43 +146,31 @@
         },{
           "values": [{
             "userEnteredValue": {
-              "formulaValue": "=COUNTIF(aggregated!C:C, \"=1\")"
+              "formulaValue": "=COUNT(plots!C:C)"
             }
           }]
         },{
           "values": [{
             "userEnteredValue": {
-              "formulaValue": "=PERCENTILE(aggregated!D:D, 0.999)"
+              "formulaValue": "=COUNTIF(plots!C:C, \"=1\")"
             }
           }]
         },{
           "values": [{
             "userEnteredValue": {
-              "formulaValue": "=LEFT(B4,FIND(\",\", B4)-1)"
-            }
-          },{
-            "userEnteredValue": {
-              "formulaValue": "=SORTN(reports!E:E, 1, 0, 1, true)"
+              "formulaValue": "=PERCENTILE(plots!D:D, 0.999)"
             }
           }]
         },{
           "values": [{
             "userEnteredValue": {
-              "formulaValue": "=LEFT(B5,FIND(\",\", B5)-1)"
-            }
-          },{
-            "userEnteredValue": {
-              "formulaValue": "=INDIRECT(\"aggregated!\" & ADDRESS(COUNTA(aggregated!E:E), 5))"
+              "formulaValue": "=MIN(plots!F:F)"
             }
           }]
         },{
           "values": [{
             "userEnteredValue": {
-              "formulaValue": "=LEFT(B6,FIND(\",\", B6)-1)"
-            }
-          },{
-            "userEnteredValue": {
-              "formulaValue": "=aggregated!E2"
+              "formulaValue": "=MAX(plots!E:E)"
             }
           }]
         }]
@@ -145,16 +180,16 @@
   "namedRanges": [{
     "name": "lastReportTime",
     "range": {
-      "sheetId": 110,
-      "startRowIndex": 1,
-      "endRowIndex": 2,
-      "startColumnIndex": 4,
-      "endColumnIndex": 5
+      "sheetId": 130,
+      "startRowIndex": 5,
+      "endRowIndex": 6,
+      "startColumnIndex": 0,
+      "endColumnIndex": 1
     }
   },{
     "name": "stats",
     "range": {
-      "sheetId": 120,
+      "sheetId": 130,
       "startRowIndex": 0,
       "endRowIndex": 6,
       "startColumnIndex": 0,
