@@ -1,6 +1,9 @@
-import { assertEquals } from "https://deno.land/std@0.175.0/testing/asserts.ts";
+import { assertEquals } from "https://deno.land/std@0.186.0/testing/asserts.ts";
 import { Report, Mail, Range } from "./model.ts";
-import testData from "./modelTest.json" assert { type: "json" };
+
+
+import testData from "./model.test.json" assert { type: "json" };
+
 
 Deno.test({
     name: "Report#toSpreradsheetsRow()",
@@ -43,12 +46,11 @@ Deno.test({
 Deno.test({
     name: "Mail#toReportArray()",
     fn: async () => {
-        const mailLinkDestroyed = new Mail(1662685525001, testData.mailBase64LinkDestroyed);
-        assertEquals(mailLinkDestroyed.toReportArray().length, 7);
+        const mailLinkDestroyed = new Mail(1662685525001, testData.payloadBase64);
+        assertEquals(mailLinkDestroyed.toReportArray().length, 10);
 
     }
 });
-
 
 
 Deno.test({
@@ -63,4 +65,6 @@ Deno.test({
     }
 });
 
+/*
 
+*/
