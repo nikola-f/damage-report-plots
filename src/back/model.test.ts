@@ -45,9 +45,9 @@ Deno.test({
 
 Deno.test({
     name: "Mail#toReportArray()",
-    fn: async () => {
-        const mailLinkDestroyed = new Mail(1662685525001, testData.payloadBase64);
-        assertEquals(mailLinkDestroyed.toReportArray().length, 10);
+    fn: () => {
+        const mail = new Mail(1662685525001, testData.payloadBase64);
+        assertEquals(mail.toReportArray().length, 10);
 
     }
 });
@@ -55,16 +55,10 @@ Deno.test({
 
 Deno.test({
     name: "Range.createArray()",
-    fn: async () => {
+    fn: () => {
         const ranges = Range.createArray(new Date(Date.now()-1000)); // a little ago
         assertEquals(ranges.length, 1);
-
-
-        console.log(ranges[0].toQueryString());
 
     }
 });
 
-/*
-
-*/

@@ -1,5 +1,5 @@
 import { decode } from "https://deno.land/std@0.175.0/encoding/base64url.ts";
-import { datetime } from "https://deno.land/x/ptera/mod.ts";
+import { datetime } from "https://deno.land/x/ptera@v1.0.2/mod.ts";
 import Hashids from "npm:hashids@^2.2.10";
 import cheerio from "npm:cheerio@^1.0.0-rc.12";
 
@@ -34,7 +34,7 @@ export class Range {
             pointer.setUTCMonth(pointer.getUTCMonth()+1, 1);  // 1st of next month
             const to: number = pointer.getTime();
             ranges.push(new Range(new Date(from), new Date(to)));
-        };
+        }
         return ranges;
     }
 
@@ -78,7 +78,7 @@ export class Mail {
 
             }
         });
-    };
+    }
 
     toReportArray = (): Report[] => {
         return this.reports;
@@ -96,7 +96,7 @@ export class Report {
         private longitude: number,
         private owned: boolean,
         private name: string
-    ){};
+    ){}
 
 
     static dedupe = (reports: Report[]): Report[] => {
@@ -126,7 +126,7 @@ export class Report {
     };
 
 
-    private hash = async (): Promise<string> => {
+    private hash = (): string => {
         const hashids = new Hashids(); // eliminate decimals and signs
         const latToHash = (this.latitude +90) *1000000;
         const lngToHash = (this.longitude +180) *1000000;
@@ -134,9 +134,9 @@ export class Report {
     }
 
 
-    toSpreradsheetsRow = async (): Promise<Array<string | number>> => {
+    toSpreradsheetsRow = (): Array<string | number> => {
         return [
-            await this.hash(),
+            this.hash(),
             this.latitude,
             this.longitude,
             this.owned ? 1 : 0,
