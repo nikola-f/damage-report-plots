@@ -1,8 +1,6 @@
 import { Queue } from "./handler.ts";
 
-import { assertEquals } from "https://deno.land/std@0.186.0/testing/asserts.ts";
-import { mockClient } from "npm:aws-sdk-client-mock";
-import { SQSClient, GetQueueAttributesCommand } from "npm:@aws-sdk/client-sqs";
+import { assertEquals, mockClient, SQSClient, GetQueueAttributesCommand } from "./deps.ts";
 
 Deno.test({
     name: "MockQueue#length()",
@@ -11,9 +9,11 @@ Deno.test({
         mockSQS.on(GetQueueAttributesCommand).resolves({Attributes: {
             ApproximateNumberOfMessages: "123"
         }});
+
         const url = '';
         const queue = new Queue(url);
         assertEquals(await queue.length(), 123);
 
+        mockSQS.reset();
     }
 })

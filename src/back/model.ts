@@ -1,7 +1,4 @@
-import { decode } from "https://deno.land/std@0.175.0/encoding/base64url.ts";
-import { datetime } from "https://deno.land/x/ptera@v1.0.2/mod.ts";
-import Hashids from "npm:hashids@^2.2.10";
-import cheerio from "npm:cheerio@^1.0.0-rc.12";
+import { decode, datetime, Hashids, cheerioAPI } from "./deps.ts";
 
 // class Job {
 
@@ -53,13 +50,13 @@ export class Mail {
     }
 
     constructor(internalDate: number, base64: string) {
-        const $ = cheerio.load(new TextDecoder().decode(decode(base64)));
+        const $ = cheerioAPI(new TextDecoder().decode(decode(base64)));
 
         const agent = $("div > table > tbody > tr:nth-child(2) > td > table > tbody > tr:first-child > td > span:nth-child(2)").text();
 
         let latitude: number, longitude: number, name: string;
         const reportBase = $("div > table > tbody > tr:nth-child(2) > td > table > tbody > tr > td:has(div):gt(0)");
-        reportBase.each((i, td) => {
+        reportBase.each((i: number, td) => {
 
             if(i % 2 === 0) { // lat, lng, name
                 const url = $(td).find("div > a").attr("href");
