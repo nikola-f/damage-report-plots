@@ -7,22 +7,21 @@ import testData from "./model.test.json" assert { type: "json" };
 
 Deno.test({
     name: "Report#toSpreradsheetsRow()",
-    fn: async () => {
+    fn: () => {
         const name = "AAA Portal テスト 测试 Name";
         const report = new Report(1662685525000, 35.695427, -139.770442, true, name);
 
         assertEquals(
-            ["VBjzn0Szymyg", 35.695427, -139.770442, 1, `${1662685525000/1000},${name}`],
-            (await report.toSpreradsheetsRow()).slice(0, 5)
+            report.toSpreradsheetsRow().slice(0, 5),
+            ['N4r15#g4z5Z0', 35.695427, -139.770442, 1, `${1662685525000/1000},${name}`]
         )
-        // console.log(await report.toSpreradsheetsRow());
     }
 });
 
 
 Deno.test({
     name: "Report.dedupe()",
-    fn: async () => {
+    fn: () => {
         const deduped = Report.dedupe([
             new Report(1662685525000, 35.695427, -139.770442, false, "old name"),
             new Report(1662685526000, 35.695427, -139.770442, true,  "old name/owned"),
@@ -32,12 +31,11 @@ Deno.test({
         ]);
 
         assertEquals(deduped.length, 3);
-        assertEquals((await deduped[0].toSpreradsheetsRow())[3], 1);
-        assertEquals((await deduped[0].toSpreradsheetsRow())[4], "1662685525,new name");
-        assertEquals((await deduped[1].toSpreradsheetsRow())[0], "7VkkEgiAD9J7m");
-        assertEquals((await deduped[2].toSpreradsheetsRow())[0], "VBjzn0Szymyg");
+        assertEquals(deduped[0].toSpreradsheetsRow()[3], 1);
+        assertEquals(deduped[0].toSpreradsheetsRow()[4], "1662685525,new name");
+        assertEquals(deduped[1].toSpreradsheetsRow()[0], "}5}RN`IQD06Q");
+        assertEquals(deduped[2].toSpreradsheetsRow()[0], "N4r15#g4z5Z0");
 
-        // console.log(await deduped[1].toSpreradsheetsRow());
     }
 });
 

@@ -124,7 +124,10 @@ export class Report {
 
 
     private hash = (): string => {
-        const hashids = new Hashids(); // eliminate decimals and signs
+        const hashids = new Hashids('', 0,
+            'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!#$%&()*+-;<=>?@^_`{|}~'
+        );
+        // eliminate decimals and signs
         const latToHash = (this.latitude +90) *1000000;
         const lngToHash = (this.longitude +180) *1000000;
         return hashids.encode(latToHash, lngToHash);
