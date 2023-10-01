@@ -10,7 +10,10 @@ import { decode, datetime, Hashids, cheerioAPI } from "./deps.ts";
 
 // }
 
-
+export interface Auth {
+    accessToken: string,
+    userId: string
+}
 
 
 export class Range {
@@ -22,7 +25,7 @@ export class Range {
         private to: Date
     ){}
 
-    static createArray = (start?: Date): Range[] => {
+    static createArray = (start?: Date): Array<Range> => {
 
         const ranges: Range[] = [];
         const pointer: Date = start ? start : Range.INGRESS_EPOCH;
@@ -77,7 +80,7 @@ export class Mail {
         });
     }
 
-    toReportArray = (): Report[] => {
+    toReportArray = (): Array<Report> => {
         return this.reports;
     }
 
@@ -96,7 +99,7 @@ export class Report {
     ){}
 
 
-    static dedupe = (reports: Report[]): Report[] => {
+    static dedupe = (reports: Array<Report>): Array<Report> => {
         const dedupedMap = new Map<string, Report>;
 
         for(let aReport of reports) {

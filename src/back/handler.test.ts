@@ -17,3 +17,21 @@ Deno.test({
         mockSQS.reset();
     }
 })
+
+
+Deno.test({
+    name: "MockQueue#queue()",
+    fn: async () => {
+        // const mockSQS = mockClient(SQSClient);
+        // mockSQS.on(GetQueueAttributesCommand).resolves({Attributes: {
+        //     ApproximateNumberOfMessages: "123"
+        // }});
+
+        const url = '';
+        const queue = new Queue(url);
+        const queued = await queue.queue([], null);
+
+        // mockSQS.reset();
+    }
+});
+
