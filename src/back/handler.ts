@@ -1,5 +1,6 @@
 import { SQSClient, GetQueueAttributesCommand, SendMessageBatchCommand,
     SendMessageBatchRequestEntry } from "npm:@aws-sdk/client-sqs";
+import { jsonSizeOf } from "./deps.ts";
 import { Report, Auth } from "./model.ts";
 
 
@@ -41,17 +42,49 @@ export class Queue {
         return Promise.resolve({successful, failed});
     };
 
-    /**
-     * divide messages into array, max size 255KiB
-     * @param messages 
-     * @param auth 
-     * @returns 
-     */
+    private mapBodyBySize = (messages: Array<Report>): Array<string> => {
+
+        const bodyArray: Array<string> = [];
+        let rawArray: Array<Report> = [];
+        let i = 0;
+        do {
+            rawArray.push(messages[i]);
+            if(jsonSizeOf(rawArray) > Queue.MAX_MESSAGE_SIZE) {
+                rawArray.pop();
+                bodyArray.push(JSON.stringify(rawArray));
+                rawArray = [];
+            }else{
+                i++;
+            }
+
+            if(messages.length > i) { // last
+                bodyArray.push(JSON.stringify(rawArray));
+            }
+        } while (messages.length > i);
+
+        return bodyArray;
+    }
+
+
     private packetize = (messages: Array<Report>, auth: Auth): Array<Array<SendMessageBatchRequestEntry>> => {
         
+        const result: Array<Array<SendMessageBatchRequestEntry>> = [];
+        const bodyArray = this.mapBodyBySize(messages);
 
+        for (let i = 0; i < bodyArray.length; i += 10) {
+            const chunk = bodyArray.slice(i, i + 10);
 
-        return [];
+            const entryArray: Array<SendMessageBatchRequestEntry> = chunk.map((body, index) => {
+                return {
+                    Id: String(index), // just unique number
+                    MessageBody: body,
+                    MessageGroupId: auth.userId
+                }
+            });
+            result.push(entryArray);
+        }
+
+        return result;
     };
 
     length = async (): Promise<number> => {

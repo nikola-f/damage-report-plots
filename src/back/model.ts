@@ -96,7 +96,9 @@ export class Report {
         private longitude: number,
         private owned: boolean,
         private name: string
-    ){}
+    ){
+        //TO DO: validate byte size
+    }
 
 
     static dedupe = (reports: Array<Report>): Array<Report> => {
@@ -125,15 +127,19 @@ export class Report {
         return Array.from(dedupedMap.values());
     };
 
-
+    private hashed: string
     private hash = (): string => {
+        if(this.hashed) return this.hashed;
+
         const hashids = new Hashids('', 0,
             'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!#$%&()*+-;<=>?@^_`{|}~'
         );
         // eliminate decimals and signs
         const latToHash = (this.latitude +90) *1000000;
         const lngToHash = (this.longitude +180) *1000000;
-        return hashids.encode(latToHash, lngToHash);
+
+        this.hashed = hashids.encode(latToHash, lngToHash);
+        return this.hashed;
     }
 
 

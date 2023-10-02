@@ -156,7 +156,8 @@
       "@types/node": "@types/node@18.11.18",
       "aws-sdk-client-mock": "aws-sdk-client-mock@3.0.0",
       "cheerio@^1.0.0-rc.12": "cheerio@1.0.0-rc.12",
-      "hashids@^2.2.10": "hashids@2.3.0"
+      "hashids@^2.2.10": "hashids@2.3.0",
+      "json-sizeof@^1.5.0": "json-sizeof@1.5.0"
     },
     "packages": {
       "@aws-crypto/crc32@3.0.0": {
@@ -1032,6 +1033,10 @@
       },
       "isarray@0.0.1": {
         "integrity": "sha512-D2S+3GLxWH+uhrNEcoh/fnmYeP8E8/zHl644d/jdA0g2uyXvy3sb0qxotE+ne0LtccHknQzWwZEzhak7oJ0COQ==",
+        "dependencies": {}
+      },
+      "json-sizeof@1.5.0": {
+        "integrity": "sha512-Uy5izXj/FC6pPxgWszvb7HZVVE6KRU8Tt4ZEQvq4aYjkpsSrAGjYTupZWCVZAaQtEcrkQnsgcnV2OvCdOvVVlw==",
         "dependencies": {}
       },
       "just-extend@4.2.1": {

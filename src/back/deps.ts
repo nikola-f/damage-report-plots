@@ -17,3 +17,6 @@ export { Hashids };
 import CheerioAPI from "npm:cheerio@^1.0.0-rc.12";
 const cheerioAPI = CheerioAPI.load;
 export { cheerioAPI };
+
+import { jsonSizeOf } from "npm:json-sizeof@^1.5.0";
+export { jsonSizeOf };
