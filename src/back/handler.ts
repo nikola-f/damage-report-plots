@@ -1,6 +1,5 @@
 import { SQSClient, GetQueueAttributesCommand, SendMessageBatchCommand,
-    SendMessageBatchRequestEntry } from "npm:@aws-sdk/client-sqs";
-import { jsonSizeOf } from "./deps.ts";
+        SendMessageBatchRequestEntry, jsonSizeOf } from "./deps.ts";
 import { Report, Auth } from "./model.ts";
 
 
@@ -12,11 +11,10 @@ export class Queue {
 
     constructor(private url: string){}
 
-    // queue(), dequeue()
-    queue = async (messages: Array<Report>, auth: Auth): Promise<{successful: number, failed: number}> => {
+    send = async (messages: Array<Report>, auth: Auth): Promise<{successful: number, failed: number, batch: number}> => {
 
         const messageBatchArray = this.packetize(messages, auth);
-        let successful = 0, failed = 0;
+        let successful = 0, failed = 0, batch = 0;
 
         for(const aMessageBatch of messageBatchArray) {
             const command = new SendMessageBatchCommand({
@@ -25,21 +23,23 @@ export class Queue {
             });
 
             let response = null;
+            batch++;
             try {
                 response = await this.client.send(command);
-                successful += response.Successful.length;
-                failed += response.Failed.length;
+                successful += response?.Successful?.length? response.Successful.length : 0;
+                failed += response?.Failed?.length? response.Failed.length : 0;
     
             }catch(err){
                 if(response?.Failed) {
                     failed += response.Failed.length;
                 }
                 console.error(err);
+                response = null;
                 continue;
             }
         }
 
-        return Promise.resolve({successful, failed});
+        return Promise.resolve({successful, failed, batch});
     };
 
     private mapBodyBySize = (messages: Array<Report>): Array<string> => {

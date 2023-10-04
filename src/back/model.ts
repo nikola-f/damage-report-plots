@@ -97,7 +97,7 @@ export class Report {
         private owned: boolean,
         private name: string
     ){
-        //TO DO: validate byte size
+        if(this.name.length > 255) this.name = this.name.slice(0, 255);
     }
 
 

@@ -6,7 +6,9 @@ export { mockClient } from "npm:aws-sdk-client-mock";
 
 export {
     SQSClient,
-    GetQueueAttributesCommand
+    GetQueueAttributesCommand,
+    SendMessageBatchCommand,
+    type SendMessageBatchRequestEntry
 } from "npm:@aws-sdk/client-sqs";
 
 export { decode } from "https://deno.land/std@0.201.0/encoding/base64url.ts";
