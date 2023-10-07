@@ -97,7 +97,7 @@ export class Report {
         private owned: boolean,
         private name: string
     ){
-        if(this.name.length > 255) this.name = this.name.slice(0, 255);
+        if(this.name.length > 255) this.name = this.name.slice(0, 252) + "...";
     }
 
 
@@ -153,5 +153,11 @@ export class Report {
             Number(datetime(new Date()).toUTC().format("YYMMddHHmmss"))
         ];
     }
+
+    dump = (): Array<string | number> => {
+        return [this.internalDate/1000, this.latitude, this.longitude, this.owned ? 1 : 0, this.name];
+    }
+
+
 
 }

@@ -11,10 +11,12 @@ export class Queue {
 
     constructor(private url: string){}
 
-    send = async (messages: Array<Report>, auth: Auth): Promise<{successful: number, failed: number, batch: number}> => {
+    send = async (messages: Array<Report>, auth: Auth): Promise<{
+                        successful: number, failed: number, message: number, batch: number
+                    }> => {
 
         const messageBatchArray = this.packetize(messages, auth);
-        let successful = 0, failed = 0, batch = 0;
+        let successful = 0, failed = 0, message = 0, batch = 0;
 
         for(const aMessageBatch of messageBatchArray) {
             const command = new SendMessageBatchCommand({
@@ -24,6 +26,7 @@ export class Queue {
 
             let response = null;
             batch++;
+            message += aMessageBatch.length;
             try {
                 response = await this.client.send(command);
                 successful += response?.Successful?.length? response.Successful.length : 0;
@@ -39,17 +42,17 @@ export class Queue {
             }
         }
 
-        return Promise.resolve({successful, failed, batch});
+        return Promise.resolve({successful, failed, message, batch});
     };
 
     private mapBodyBySize = (messages: Array<Report>): Array<string> => {
 
         const bodyArray: Array<string> = [];
-        let rawArray: Array<Report> = [];
+        let rawArray: Array<Array<string | number>> = [];
         let i = 0;
         do {
-            rawArray.push(messages[i]);
-            if(jsonSizeOf(rawArray) > Queue.MAX_MESSAGE_SIZE) {
+            rawArray.push(messages[i].dump());
+            if(rawArray.length>2500 && jsonSizeOf(rawArray) > Queue.MAX_MESSAGE_SIZE) { // 2500 is just a guess, enough less than MAX
                 rawArray.pop();
                 bodyArray.push(JSON.stringify(rawArray));
                 rawArray = [];
@@ -57,7 +60,7 @@ export class Queue {
                 i++;
             }
 
-            if(messages.length > i) { // last
+            if(messages.length <= i) { // last
                 bodyArray.push(JSON.stringify(rawArray));
             }
         } while (messages.length > i);
@@ -67,10 +70,9 @@ export class Queue {
 
 
     private packetize = (messages: Array<Report>, auth: Auth): Array<Array<SendMessageBatchRequestEntry>> => {
-        
+
         const result: Array<Array<SendMessageBatchRequestEntry>> = [];
         const bodyArray = this.mapBodyBySize(messages);
-
         for (let i = 0; i < bodyArray.length; i += 10) {
             const chunk = bodyArray.slice(i, i + 10);
 
