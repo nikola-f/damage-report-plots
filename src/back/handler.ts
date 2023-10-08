@@ -1,5 +1,6 @@
 import { SQSClient, GetQueueAttributesCommand, SendMessageBatchCommand,
-        SendMessageBatchRequestEntry, jsonSizeOf } from "./deps.ts";
+        SendMessageBatchRequestEntry, ReceiveMessageCommand, DeleteMessageBatchCommand,
+        jsonSizeOf } from "./deps.ts";
 import { Report, Auth } from "./model.ts";
 
 
@@ -10,6 +11,77 @@ export class Queue {
     private static readonly MAX_MESSAGE_SIZE = 255 * 1024; // 1KiB reserved
 
     constructor(private url: string){}
+
+
+    receive = async (): Promise<{messages: Array<Report>, done: {(): void}}> => {
+
+        const messages: Array<Report> = [];
+        const handles: Array<string> = [];
+        while(messages.length < 10000) {
+            try {
+                const response = await this.client.send(new ReceiveMessageCommand({
+                    QueueUrl: this.url,
+                    MaxNumberOfMessages: 10,
+                    WaitTimeSeconds: 20
+                }));
+                if(response?.Messages) {
+                    response.Messages.map((message) => {
+                        Report.parse(message.Body).map((report) => {
+                            messages.push(report);
+                        });
+                        handles.push(message.ReceiptHandle);
+                    });
+                    // const done = async (success: boolean) => {
+                    //     if(success) {
+                    //         await this.client.send(new DeleteMessageCommand({
+                    //             QueueUrl: this.url,
+                    //             ReceiptHandle: response.Messages[0].ReceiptHandle
+                    //         }));
+                    //     }
+                    // }
+                }else{
+                    break;
+                }
+            }catch(err){
+                console.error(err);
+                break;
+            }
+    
+        }
+
+        return Promise.resolve({messages: messages, done: async () => {
+            for(let i = 0; i < handles.length; i += 10) {
+                const chunk = handles.slice(i, i+10);
+                const command = new DeleteMessageBatchCommand({
+                    QueueUrl: this.url,
+                    Entries: chunk.map((handle, index) => ({
+                        Id: String(index),
+                        ReceiptHandle: handle
+                    }))
+                });
+                try {
+                    await this.client.send(command);
+                }catch(err){
+                    console.error(err);
+                }
+            }
+            //             const command = new DeleteMessageBatchCommand({
+            //     QueueUrl: this.url, 
+            //     Entries: handles.map((handle, index) => {
+            //         return {
+            //             Id: String(index),
+            //             ReceiptHandle: handle
+            //         }
+            //     })
+            // });
+            // try {
+            //     await this.client.send(command);
+            // }catch(err){
+            //     console.error(err);
+            // }
+        }});
+    }
+
 
     send = async (messages: Array<Report>, auth: Auth): Promise<{
                         successful: number, failed: number, message: number, batch: number
@@ -78,9 +150,19 @@ export class Queue {
 
             const entryArray: Array<SendMessageBatchRequestEntry> = chunk.map((body, index) => {
                 return {
-                    Id: String(index), // just unique number
+                    Id: String(index),
                     MessageBody: body,
-                    MessageGroupId: auth.userId
+                    MessageGroupId: auth.userId.replaceAll("@", "&"), // group id doesn't accept @
+                    MessageSystemAttributes: {
+                        'accessToken': {
+                            DataType: 'String',
+                            StringValue: auth.accessToken
+                        },
+                        'userId': {
+                            DataType: 'String',
+                            StringValue: auth.userId
+                        },
+                    }
                 }
             });
             result.push(entryArray);

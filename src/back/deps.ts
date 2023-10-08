@@ -8,6 +8,8 @@ export {
     SQSClient,
     GetQueueAttributesCommand,
     SendMessageBatchCommand,
+    ReceiveMessageCommand,
+    DeleteMessageBatchCommand,
     type SendMessageBatchRequestEntry
 } from "npm:@aws-sdk/client-sqs";
 

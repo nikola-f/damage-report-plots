@@ -101,6 +101,20 @@ export class Report {
     }
 
 
+    static parse = (stringifiedArray: string): Array<Report> => {
+        const outerArray: Array<Array<string | number>> = JSON.parse(stringifiedArray);
+        return outerArray.map((innerArray) => {
+            return new Report(
+                Number(innerArray[0]),
+                Number(innerArray[1]),
+                Number(innerArray[2]),
+                innerArray[3]===1,
+                String(innerArray[4])
+            );
+        });
+    }
+    
+
     static dedupe = (reports: Array<Report>): Array<Report> => {
         const dedupedMap = new Map<string, Report>;
 
