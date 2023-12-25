@@ -8,7 +8,7 @@ export class Queue {
 
     private client = new SQSClient({});
 
-    private static readonly MAX_MESSAGE_SIZE = 255 * 1024; // 1KiB reserved
+    private static readonly DEFAULT_MAX_MESSAGE_SIZE = 250 * 1024; // 6KiB reserved
 
     constructor(private url: string){}
 
@@ -31,14 +31,6 @@ export class Queue {
                         });
                         handles.push(message.ReceiptHandle);
                     });
-                    // const done = async (success: boolean) => {
-                    //     if(success) {
-                    //         await this.client.send(new DeleteMessageCommand({
-                    //             QueueUrl: this.url,
-                    //             ReceiptHandle: response.Messages[0].ReceiptHandle
-                    //         }));
-                    //     }
-                    // }
                 }else{
                     break;
                 }
@@ -49,7 +41,7 @@ export class Queue {
     
         }
 
-        return Promise.resolve({messages: messages, done: async () => {
+        const done = async () => {
             for(let i = 0; i < handles.length; i += 10) {
                 const chunk = handles.slice(i, i+10);
                 const command = new DeleteMessageBatchCommand({
@@ -65,21 +57,9 @@ export class Queue {
                     console.error(err);
                 }
             }
-            //             const command = new DeleteMessageBatchCommand({
-            //     QueueUrl: this.url, 
-            //     Entries: handles.map((handle, index) => {
-            //         return {
-            //             Id: String(index),
-            //             ReceiptHandle: handle
-            //         }
-            //     })
-            // });
-            // try {
-            //     await this.client.send(command);
-            // }catch(err){
-            //     console.error(err);
-            // }
-        }});
+        }
+
+        return Promise.resolve({messages: messages, done: done});
     }
 
 
@@ -117,41 +97,59 @@ export class Queue {
         return Promise.resolve({successful, failed, message, batch});
     };
 
-    private mapBodyBySize = (messages: Array<Report>): Array<string> => {
+    // private mapBodyBySize = (messages: Array<Report>, maxSize?: number): Array<string> => {
 
-        const bodyArray: Array<string> = [];
-        let rawArray: Array<Array<string | number>> = [];
-        let i = 0;
-        do {
-            rawArray.push(messages[i].dump());
-            if(rawArray.length>2500 && jsonSizeOf(rawArray) > Queue.MAX_MESSAGE_SIZE) { // 2500 is just a guess, enough less than MAX
-                rawArray.pop();
-                bodyArray.push(JSON.stringify(rawArray));
-                rawArray = [];
-            }else{
-                i++;
-            }
+    //     const designatedMaxSize = maxSize? maxSize : Queue.DEFAULT_MAX_MESSAGE_SIZE;
+    //     const bodyArray: Array<string> = [];
+    //     let rawArray: Array<Array<string | number>> = [];
+    //     let i = 0;
+    //     do {
+    //         rawArray.push(messages[i].dump());
+    //         if(rawArray.length>2500 && jsonSizeOf(rawArray) > Queue.DEFAULT_MAX_MESSAGE_SIZE) { // 2500 is just a guess, enough less than MAX
+    //             rawArray.pop();
+    //             bodyArray.push(JSON.stringify(rawArray));
+    //             rawArray = [];
+    //         }else{
+    //             i++;
+    //         }
 
-            if(messages.length <= i) { // last
-                bodyArray.push(JSON.stringify(rawArray));
-            }
-        } while (messages.length > i);
+    //         if(messages.length <= i) { // last
+    //             bodyArray.push(JSON.stringify(rawArray));
+    //         }
+    //     } while (messages.length > i);
 
-        return bodyArray;
-    }
+    //     return bodyArray;
+    // }
 
 
-    private packetize = (messages: Array<Report>, auth: Auth): Array<Array<SendMessageBatchRequestEntry>> => {
+    private splitBySize = (splitArray: Array<Array<Array<string | number>>>, dumpedReportArray: Array<Array<string | number>>, maxSize: number): void => {
+
+        if(jsonSizeOf(dumpedReportArray) <= maxSize) {
+            splitArray.push(dumpedReportArray);
+
+        }else{
+            const half = (dumpedReportArray.length +1) / 2;
+            this.splitBySize(splitArray, dumpedReportArray.slice(0, half), maxSize);
+            this.splitBySize(splitArray, dumpedReportArray.slice(half), maxSize);
+        }
+    };
+
+
+    private packetize = (messages: Array<Report>, auth: Auth, maxSize?: number): Array<Array<SendMessageBatchRequestEntry>> => {
+
+        const actualMaxSize = maxSize? maxSize : Queue.DEFAULT_MAX_MESSAGE_SIZE;
+        const dumpedReportArray = messages.map((report) => report.dump());
 
         const result: Array<Array<SendMessageBatchRequestEntry>> = [];
-        const bodyArray = this.mapBodyBySize(messages);
-        for (let i = 0; i < bodyArray.length; i += 10) {
-            const chunk = bodyArray.slice(i, i + 10);
+        const splitArray: Array<Array<Array<string | number>>> = [];
+        this.splitBySize(splitArray, dumpedReportArray, actualMaxSize);
+        for (let i = 0; i < splitArray.length; i += 10) {
+            const chunk = splitArray.slice(i, i + 10);
 
-            const entryArray: Array<SendMessageBatchRequestEntry> = chunk.map((body, index) => {
+            const entryArray: Array<SendMessageBatchRequestEntry> = chunk.map((split, index) => {
                 return {
                     Id: String(index),
-                    MessageBody: body,
+                    MessageBody: JSON.stringify(split),
                     MessageGroupId: auth.userId.replaceAll("@", "&"), // group id doesn't accept @
                     MessageSystemAttributes: {
                         'accessToken': {

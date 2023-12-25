@@ -1,5 +1,5 @@
 import { assertEquals, mockClient, SQSClient, GetQueueAttributesCommand,
-    SendMessageBatchCommand } from "./deps.ts";
+    SendMessageBatchCommand, ReceiveMessageCommand } from "./deps.ts";
 import { Queue } from "./handler.ts";
 import { Report } from "./model.ts";
 
@@ -51,7 +51,7 @@ Deno.test({
         });
 
         await t.step({
-            name: "33000 reports, 12 messages, 2 batches",
+            name: "33000 reports, 16 messages, 2 batches",
             fn: async () => {
                 const reportArray = [];
                 for(let i=0; i<33000; i++) {
@@ -60,7 +60,7 @@ Deno.test({
                 const response = await queue.send(reportArray, auth);
                 assertEquals(response.successful, 2); // mock
                 assertEquals(response.failed, 0);
-                assertEquals(response.message, 12);
+                assertEquals(response.message, 16);
                 assertEquals(response.batch, 2);
             }
         });
@@ -69,3 +69,19 @@ Deno.test({
     }
 });
 
+Deno.test({
+    name: "MockQueue#receive()",
+    fn: async (t) => {
+        const mockSQS = mockClient(SQSClient);
+        mockSQS.on(ReceiveMessageCommand).resolves({Messages: []});
+        const url = '';
+        const queue = new Queue(url);
+        const auth = {
+            accessToken: "dummy-token",
+            userId: "dummy-user-id@example.com"
+        };
+
+
+        mockSQS.reset();
+    }
+});
