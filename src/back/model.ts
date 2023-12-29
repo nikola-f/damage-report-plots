@@ -18,7 +18,7 @@ export interface Auth {
 
 export class Range {
 
-    private static INGRESS_EPOCH: Date = new Date(Date.UTC(2012, 10, 15, 0, 0, 0, 0));
+    private static readonly INGRESS_EPOCH: Date = new Date(Date.UTC(2012, 10, 15, 0, 0, 0, 0));
 
     private constructor(
         private from: Date,
@@ -90,6 +90,11 @@ export class Mail {
 
 export class Report {
 
+    private static readonly hashids = new Hashids('', 0,
+        'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!#$%&()*+-;<=>?@^_`{|}~'
+    );
+    private hashed: string;
+
     constructor(
         private internalDate: number,
         private latitude: number,
@@ -141,18 +146,14 @@ export class Report {
         return Array.from(dedupedMap.values());
     };
 
-    private hashed: string
     private hash = (): string => {
         if(this.hashed) return this.hashed;
 
-        const hashids = new Hashids('', 0,
-            'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!#$%&()*+-;<=>?@^_`{|}~'
-        );
         // eliminate decimals and signs
         const latToHash = (this.latitude +90) *1000000;
         const lngToHash = (this.longitude +180) *1000000;
 
-        this.hashed = hashids.encode(latToHash, lngToHash);
+        this.hashed = Report.hashids.encode(latToHash, lngToHash);
         return this.hashed;
     }
 

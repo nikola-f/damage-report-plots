@@ -1,5 +1,5 @@
 import { assertEquals, mockClient, SQSClient, GetQueueAttributesCommand,
-    SendMessageBatchCommand, ReceiveMessageCommand } from "./deps.ts";
+    SendMessageBatchCommand, ReceiveMessageCommand, DeleteMessageBatchCommand } from "./deps.ts";
 import { Queue } from "./handler.ts";
 import { Report } from "./model.ts";
 
@@ -73,14 +73,30 @@ Deno.test({
     name: "MockQueue#receive()",
     fn: async (t) => {
         const mockSQS = mockClient(SQSClient);
-        mockSQS.on(ReceiveMessageCommand).resolves({Messages: []});
+        mockSQS.on(ReceiveMessageCommand).resolvesOnce({
+            Messages: [
+                {
+                    Body: "[[1662685525,35.695427,-139.770442,0,\"old name\"],[1662685526,35.695427,-139.770442,1,\"old name/owned\"],[1662685525,-35.695427,139.770442,0,\"another portal\"]]",
+                    ReceiptHandle: "dummy-handle-0"
+                },
+            ]})
+        .on(DeleteMessageBatchCommand).resolvesOnce({
+            Successful: [{Id: "0"}, {Id: "1"}, {Id: "2"}],
+            Failed: []
+        });
         const url = '';
         const queue = new Queue(url);
-        const auth = {
-            accessToken: "dummy-token",
-            userId: "dummy-user-id@example.com"
-        };
 
+        await t.step({
+            name: "3 reports",
+            fn: async () => {
+                const response = await queue.receive();
+                assertEquals(response.messages.length, 3);
+                const done = await response.done();
+                assertEquals(done.successful, 3);
+                assertEquals(done.failed, 0);
+            }
+        });
 
         mockSQS.reset();
     }

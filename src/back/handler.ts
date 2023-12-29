@@ -8,16 +8,16 @@ export class Queue {
 
     private client = new SQSClient({});
 
-    private static readonly DEFAULT_MAX_MESSAGE_SIZE = 250 * 1024; // 6KiB reserved
+    private static readonly DEFAULT_MAX_MESSAGE_SIZE = 252 * 1024; // 4KiB reserved
 
     constructor(private url: string){}
 
 
-    receive = async (): Promise<{messages: Array<Report>, done: {(): void}}> => {
+    receive = async (): Promise<{messages: Array<Report>, done: {(): Promise<{successful: number, failed: number}>}}> => {
 
         const messages: Array<Report> = [];
         const handles: Array<string> = [];
-        while(messages.length < 10000) {
+        while(messages.length < 1000) {
             try {
                 const response = await this.client.send(new ReceiveMessageCommand({
                     QueueUrl: this.url,
@@ -41,7 +41,8 @@ export class Queue {
     
         }
 
-        const done = async () => {
+        const done = async (): Promise<{successful: number, failed: number}> => {
+            let successful = 0, failed = 0;
             for(let i = 0; i < handles.length; i += 10) {
                 const chunk = handles.slice(i, i+10);
                 const command = new DeleteMessageBatchCommand({
@@ -52,11 +53,17 @@ export class Queue {
                     }))
                 });
                 try {
-                    await this.client.send(command);
-                }catch(err){
+                    const response = await this.client.send(command);
+                    successful += response?.Successful?.length? response.Successful.length : 0;
+                    failed += response?.Failed?.length? response.Failed.length : 0;
+                 }catch(err){
                     console.error(err);
                 }
             }
+            return Promise.resolve({
+                successful: successful,
+                failed: failed
+            });
         }
 
         return Promise.resolve({messages: messages, done: done});
@@ -96,30 +103,6 @@ export class Queue {
 
         return Promise.resolve({successful, failed, message, batch});
     };
-
-    // private mapBodyBySize = (messages: Array<Report>, maxSize?: number): Array<string> => {
-
-    //     const designatedMaxSize = maxSize? maxSize : Queue.DEFAULT_MAX_MESSAGE_SIZE;
-    //     const bodyArray: Array<string> = [];
-    //     let rawArray: Array<Array<string | number>> = [];
-    //     let i = 0;
-    //     do {
-    //         rawArray.push(messages[i].dump());
-    //         if(rawArray.length>2500 && jsonSizeOf(rawArray) > Queue.DEFAULT_MAX_MESSAGE_SIZE) { // 2500 is just a guess, enough less than MAX
-    //             rawArray.pop();
-    //             bodyArray.push(JSON.stringify(rawArray));
-    //             rawArray = [];
-    //         }else{
-    //             i++;
-    //         }
-
-    //         if(messages.length <= i) { // last
-    //             bodyArray.push(JSON.stringify(rawArray));
-    //         }
-    //     } while (messages.length > i);
-
-    //     return bodyArray;
-    // }
 
 
     private splitBySize = (splitArray: Array<Array<Array<string | number>>>, dumpedReportArray: Array<Array<string | number>>, maxSize: number): void => {
@@ -168,6 +151,7 @@ export class Queue {
 
         return result;
     };
+
 
     length = async (): Promise<number> => {
 
