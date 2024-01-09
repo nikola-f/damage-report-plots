@@ -2,5 +2,8 @@
     "compilerOptions": {
         "strict": true,
         "strictNullChecks": false
+    },
+    "tasks": {
+        "cdk": "deno run --allow-all npm:aws-cdk --app 'deno run --allow-all'"
     }
 }
