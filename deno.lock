@@ -6,6 +6,7 @@
       "npm:@types/node": "npm:@types/node@18.11.18",
       "npm:aws-cdk": "npm:aws-cdk@2.117.0",
       "npm:aws-cdk-lib": "npm:aws-cdk-lib@2.117.0_constructs@10.3.0",
+      "npm:aws-cdk-lib@2.118.0": "npm:aws-cdk-lib@2.118.0_constructs@10.3.0",
       "npm:aws-sdk-client-mock": "npm:aws-sdk-client-mock@3.0.0",
       "npm:cheerio@^1.0.0-rc.12": "npm:cheerio@1.0.0-rc.12",
       "npm:constructs": "npm:constructs@10.3.0",
@@ -815,6 +816,25 @@
       },
       "aws-cdk-lib@2.117.0_constructs@10.3.0": {
         "integrity": "sha512-My5T4hn34H6+tnZxKK2VlcvGI2N5SjqGt9lXWADcahdobuUcNizYrls7h/vcQ3BfwcZ5/tHTKtivkNyL8I1LDg==",
+        "dependencies": {
+          "@aws-cdk/asset-awscli-v1": "@aws-cdk/asset-awscli-v1@2.2.201",
+          "@aws-cdk/asset-kubectl-v20": "@aws-cdk/asset-kubectl-v20@2.1.2",
+          "@aws-cdk/asset-node-proxy-agent-v6": "@aws-cdk/asset-node-proxy-agent-v6@2.0.1",
+          "@balena/dockerignore": "@balena/dockerignore@1.0.2",
+          "case": "case@1.6.3",
+          "constructs": "constructs@10.3.0",
+          "fs-extra": "fs-extra@11.2.0",
+          "ignore": "ignore@5.3.0",
+          "jsonschema": "jsonschema@1.4.1",
+          "minimatch": "minimatch@3.1.2",
+          "punycode": "punycode@2.3.1",
+          "semver": "semver@7.5.4",
+          "table": "table@6.8.1",
+          "yaml": "yaml@1.10.2"
+        }
+      },
+      "aws-cdk-lib@2.118.0_constructs@10.3.0": {
+        "integrity": "sha512-i3At9HOuXNVLxQCo/y7Sb2Zj4Ir4tichG+755AAldebRcqXrCJizZq+sMMt6/Bkjggj2imWmhwHPZw518M9VMw==",
         "dependencies": {
           "@aws-cdk/asset-awscli-v1": "@aws-cdk/asset-awscli-v1@2.2.201",
           "@aws-cdk/asset-kubectl-v20": "@aws-cdk/asset-kubectl-v20@2.1.2",

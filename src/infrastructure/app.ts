@@ -1,5 +1,6 @@
 import { App, Stack, StackProps, Duration } from 'npm:aws-cdk-lib/core';
 import { Queue } from 'npm:aws-cdk-lib/aws-sqs';
+import { Table, AttributeType, BillingMode } from 'npm:aws-cdk-lib/aws-dynamodb'
 import { Construct } from 'npm:constructs';
 
 
@@ -19,6 +20,18 @@ export class DefaultStack extends Stack {
             deadLetterQueue: {
                 queue: reportDeadLetterQueue,
                 maxReceiveCount: 2
+            }
+        });
+
+        const jobTable = new Table(this, 'JobTable', {
+            partitionKey: {
+                name: 'userId',
+                type: AttributeType.STRING
+            },
+            billingMode: BillingMode.PAY_PER_REQUEST,
+            sortKey: {
+                name: 'createdAt',
+                type: AttributeType.NUMBER
             }
         });
 
