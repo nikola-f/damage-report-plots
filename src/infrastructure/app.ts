@@ -1,6 +1,6 @@
-import { App, Stack, StackProps, Duration } from 'npm:aws-cdk-lib/core';
-import { Queue } from 'npm:aws-cdk-lib/aws-sqs';
-import { Table, AttributeType, BillingMode } from 'npm:aws-cdk-lib/aws-dynamodb'
+import { App, Stack, StackProps, Duration } from 'npm:aws-cdk-lib@2.121.1/core';
+import { Queue } from 'npm:aws-cdk-lib@2.121.1/aws-sqs';
+import { Table, AttributeType, BillingMode } from 'npm:aws-cdk-lib@2.121.1/aws-dynamodb'
 import { Construct } from 'npm:constructs';
 
 
@@ -9,11 +9,11 @@ export class DefaultStack extends Stack {
         super(scope, id, props);
 
 
-        const reportDeadLetterQueue = new Queue(this, 'ReportDeadLetterQueue.fifo', {
+        const reportDeadLetterQueue = new Queue(this, 'ReportDeadLetter.fifo', {
             fifo: true,
             retentionPeriod: Duration.days(14),
         });
-        const reportQueue = new Queue(this, 'ReportQueue.fifo', {
+        new Queue(this, 'Report.fifo', {
             fifo: true,
             visibilityTimeout: Duration.seconds(60),
             retentionPeriod: Duration.hours(1),
@@ -23,15 +23,22 @@ export class DefaultStack extends Stack {
             }
         });
 
-        const jobTable = new Table(this, 'JobTable', {
+        const jobTable = new Table(this, 'Job', {
+            billingMode: BillingMode.PAY_PER_REQUEST,
             partitionKey: {
-                name: 'userId',
+                name: 'hashedUserId',
                 type: AttributeType.STRING
             },
-            billingMode: BillingMode.PAY_PER_REQUEST,
             sortKey: {
                 name: 'createdAt',
                 type: AttributeType.NUMBER
+            }
+        });
+        jobTable.addLocalSecondaryIndex({
+            indexName: 'userId',
+            sortKey: {
+                name: 'userId',
+                type: AttributeType.STRING
             }
         });
 

@@ -1,7 +1,12 @@
-import { assertEquals, mockClient, SQSClient, GetQueueAttributesCommand,
-    SendMessageBatchCommand, ReceiveMessageCommand, DeleteMessageBatchCommand } from "./deps.ts";
-import { Queue } from "./handler.ts";
+import { mockClient } from "npm:aws-sdk-client-mock";
+import { assertEquals, assertGreater } from "https://deno.land/std@0.201.0/assert/mod.ts";
+import { SQSClient, GetQueueAttributesCommand,
+    SendMessageBatchCommand, ReceiveMessageCommand, DeleteMessageBatchCommand,
+    DynamoDBDocumentClient } from "./deps.ts";
+import { Queue, Scheduler } from "./handler.ts";
 import { Report } from "./model.ts";
+import { PutItemCommand } from "./deps.ts";
+
 
 Deno.test({
     name: "MockQueue#length()",
@@ -99,5 +104,28 @@ Deno.test({
         });
 
         mockSQS.reset();
+    }
+});
+
+
+Deno.test({
+    name: "Scheduler#add()",
+    fn: async (t) => {
+        const mockDynamoDB = mockClient(DynamoDBDocumentClient);
+        mockDynamoDB.on(PutItemCommand).resolves({
+            Attributes: {
+                createdAt: {N: String(Date.now())},
+                hashedUserId: {S: "hashed user id"}
+            }
+        });
+
+        const auth = {
+            userId: "plain user id",
+            accessToken: "dummy access token"
+        };
+        const scheduler = new Scheduler();
+        const response = await scheduler.add(auth, new Date());
+        assertGreater(response.createdAt, Date.now() - 100);
+        assertEquals(response.hashedUserId, 'hashed user id');
     }
 });

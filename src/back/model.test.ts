@@ -1,5 +1,6 @@
-import { assertEquals } from "./deps.ts";
-import { Report, Mail, Range } from "./model.ts";
+import { assertEquals } from "https://deno.land/std@0.201.0/assert/mod.ts";
+
+import { Report, Mail, Range, Job } from "./model.ts";
 
 
 import testData from "./model.test.json" assert { type: "json" };
@@ -56,6 +57,20 @@ Deno.test({
     fn: () => {
         const ranges = Range.createArray(new Date(Date.now()-1000)); // a little ago
         assertEquals(ranges.length, 1);
+
+    }
+});
+
+
+Deno.test({
+    name: "Job.constructor()",
+    fn: () => {
+        const job = new Job(
+            {userId: 'plain user id', accessToken: 'dummy token'},
+            null, null, new Date()
+        );
+        assertEquals(job.getHashedUserId(), ':MA3xO&h9Lz2&x@rVOm%di55+1:Nm6>5e=$');
+        assertEquals(job.getAuth(), {userId: 'plain user id', accessToken: 'dummy token'});
 
     }
 });

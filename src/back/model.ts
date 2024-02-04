@@ -1,19 +1,37 @@
-import { decode, datetime, Hashids, cheerioAPI } from "./deps.ts";
-
-// class Job {
-
-//     static OAUTH2_SCOPE: string;
-
-//     accessToken: string;
-//     expiresAt: number;
-//     analysisStartDate: number;
-
-// }
+import { decodeBase64Url, datetime, Hashids, cheerioAPI, crypto, encodeAscii85 } from "./deps.ts";
 
 export interface Auth {
     accessToken: string,
     userId: string
 }
+
+export class Job {
+    private static readonly HASH_SECRET = Deno.env.get("DRP_HASH_SECRET") || "   ";
+    private hashedUserId: string;
+
+    constructor(
+        private auth: Auth,
+        private createdAt: number,
+        private updatedAt: number,
+        private start: Date
+    ){
+        const uIntHash = crypto.subtle.digestSync("SHA3-224", new TextEncoder().encode(`${Job.HASH_SECRET}@${auth.userId}`));
+        this.hashedUserId = encodeAscii85(uIntHash, {standard: "Z85"});
+    }
+
+    getHashedUserId(): string {
+        return this.hashedUserId;
+    }
+
+    getAuth(): Auth {
+        return this.auth;
+    }
+
+    getStart(): Date {
+        return this.start;
+    }
+
+};
 
 
 export class Range {
@@ -32,6 +50,7 @@ export class Range {
         while(pointer.getTime() < Date.now()) {
             const from: number = pointer.getTime();
             pointer.setUTCMonth(pointer.getUTCMonth()+1, 1);  // 1st of next month
+            pointer.setUTCHours(0, 0, 0, 0);
             const to: number = pointer.getTime();
             ranges.push(new Range(new Date(from), new Date(to)));
         }
@@ -53,7 +72,7 @@ export class Mail {
     }
 
     constructor(internalDate: number, base64: string) {
-        const $ = cheerioAPI(new TextDecoder().decode(decode(base64)));
+        const $ = cheerioAPI(new TextDecoder().decode(decodeBase64Url(base64)));
 
         const agent = $("div > table > tbody > tr:nth-child(2) > td > table > tbody > tr:first-child > td > span:nth-child(2)").text();
 

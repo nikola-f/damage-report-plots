@@ -1,7 +1,8 @@
 import { SQSClient, GetQueueAttributesCommand, SendMessageBatchCommand,
         SendMessageBatchRequestEntry, ReceiveMessageCommand, DeleteMessageBatchCommand,
-        jsonSizeOf } from "./deps.ts";
-import { Report, Auth } from "./model.ts";
+        PutItemCommand, DynamoDBClient, DynamoDBDocumentClient, marshall, unmarshall,
+        jsonSizeOf, Hashids } from "./deps.ts";
+import { Report, Auth, Job } from "./model.ts";
 
 
 export class Queue {
@@ -134,7 +135,7 @@ export class Queue {
                     Id: String(index),
                     MessageBody: JSON.stringify(split),
                     MessageGroupId: auth.userId.replaceAll("@", "&"), // group id doesn't accept @
-                    MessageSystemAttributes: {
+                    MessageAttributes: {
                         'accessToken': {
                             DataType: 'String',
                             StringValue: auth.accessToken
@@ -170,9 +171,70 @@ export class Queue {
 
         } catch(err) {
             console.error(err);
+            return Promise.reject(err);
         }
         return Promise.resolve(length);
     }
 
-}
+};
 
+
+export class Scheduler {
+
+    private client = new DynamoDBClient({});
+    private docClient = DynamoDBDocumentClient.from(this.client);
+    // private static readonly hashids = new Hashids('drp email', 0,
+    //     'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!#$%&()*+-;<=>?@^_`{|}~'
+    // );
+
+    available = async (): Promise<boolean> => {
+        // count unprocessed job, ignore queue length
+
+        return await Promise.resolve(true);
+    };
+
+
+    add = async (auth: Auth, start?: Date): Promise<{hashedUserId: string, createdAt: number}> => {
+        const createdAt = Date.now();
+        const job = new Job(auth, createdAt, null, start);
+
+        const command = new PutItemCommand({
+            TableName: "Job",
+            Item: marshall({
+                hashedUserId: job.getHashedUserId(),
+                createdAt: createdAt,
+                userId: job.getAuth().userId,
+                accessToken: job.getAuth().accessToken,
+                start: job.getStart() ? job.getStart().getTime() : null,
+            }),
+            // Item: {
+            //     hashedUserId: job.getHashedUserId(),
+            //     createdAt: createdAt,
+            //     accessToken: job.getAuth().accessToken,
+            //     userId: job.getAuth().userId,
+            //     start: job.getStart() ? job.getStart().getTime() : null,
+            // },
+            ReturnValues: "ALL_NEW"
+        });
+        try {
+            const response = await this.docClient.send(command);
+            const putItem = unmarshall(response.Attributes);
+            return await Promise.resolve({
+                hashedUserId: putItem.hashedUserId,
+                createdAt: putItem.createdAt
+            });
+    
+        }catch(err){
+            console.error(err);
+            return Promise.reject(job.getHashedUserId());
+        }
+            
+    }
+
+};
+
+
+
+export class Mailer {
+
+};
